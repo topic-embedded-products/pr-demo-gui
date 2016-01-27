@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/image">
         <file alias="topic">topic-ep-logo.png</file>
+        <file alias="fpga">fpga-floorplan.png</file>
     </qresource>
 </RCC>

@@ -460,11 +460,78 @@
    <widget class="QFrame" name="floorplanFrame">
     <property name="geometry">
      <rect>
-      <x>1330</x>
+      <x>1220</x>
       <y>110</y>
-      <width>581</width>
+      <width>691</width>
       <height>950</height>
      </rect>
+    </property>
+    <property name="palette">
+     <palette>
+      <active>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </active>
+      <inactive>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </inactive>
+      <disabled>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </disabled>
+     </palette>
+    </property>
+    <property name="autoFillBackground">
+     <bool>true</bool>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -472,13 +539,117 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
+    <widget class="QLabel" name="label_10">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>281</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>255</green>
+           <blue>255</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>127</red>
+           <green>127</green>
+           <blue>127</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>127</red>
+           <green>127</green>
+           <blue>127</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>16</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Zynq xc7z030 floorplan</string>
+     </property>
+     <property name="scaledContents">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>671</width>
+       <height>841</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="resources.qrc">:/image/fpga</pixmap>
+     </property>
+    </widget>
    </widget>
    <widget class="QFrame" name="videoFrameApp">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>110</y>
-      <width>1311</width>
+      <width>1201</width>
       <height>310</height>
      </rect>
     </property>
@@ -494,7 +665,7 @@
     <widget class="QWidget" name="video" native="true">
      <property name="geometry">
       <rect>
-       <x>880</x>
+       <x>770</x>
        <y>10</y>
        <width>421</width>
        <height>291</height>
@@ -1078,13 +1249,21 @@ QPushButton
       <string>Laplacian filter</string>
      </property>
     </widget>
+    <zorder>video</zorder>
+    <zorder>label</zorder>
+    <zorder>label_7</zorder>
+    <zorder>pushButton_4</zorder>
+    <zorder>pushButton_5</zorder>
+    <zorder>label_8</zorder>
+    <zorder>audio</zorder>
+    <zorder>mandelbrot</zorder>
    </widget>
    <widget class="QFrame" name="mandelbrotApp">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>430</y>
-      <width>1311</width>
+      <width>1201</width>
       <height>310</height>
      </rect>
     </property>
@@ -1100,7 +1279,7 @@ QPushButton
     <widget class="QWidget" name="mandelbrot" native="true">
      <property name="geometry">
       <rect>
-       <x>880</x>
+       <x>770</x>
        <y>10</y>
        <width>421</width>
        <height>291</height>
@@ -1739,7 +1918,7 @@ QPushButton
      <rect>
       <x>10</x>
       <y>750</y>
-      <width>1311</width>
+      <width>1201</width>
       <height>310</height>
      </rect>
     </property>
@@ -1752,7 +1931,7 @@ QPushButton
     <widget class="QWidget" name="audio" native="true">
      <property name="geometry">
       <rect>
-       <x>880</x>
+       <x>770</x>
        <y>10</y>
        <width>421</width>
        <height>291</height>
