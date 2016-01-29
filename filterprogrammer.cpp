@@ -1,6 +1,7 @@
 #include "filterprogrammer.h"
 
-FilterProgrammer::FilterProgrammer(QObject *parent) : QObject(parent)
+FilterProgrammer::FilterProgrammer(DyploContext& context) :
+    dyploContext(context)
 {
     prRegions.insert(PrRegion1);
     prRegions.insert(PrRegion2);
@@ -114,6 +115,17 @@ bool FilterProgrammer::DisableFilter(FilterProgrammer::Filters filter,
     }
 
     return disabled;
+}
+
+bool FilterProgrammer::IsFilterProgrammed(FilterProgrammer::Filters filter)
+{
+    return programmedPartials.contains(filter);
+}
+
+FilterProgrammer::PrRegion FilterProgrammer::GetProgramRegion(FilterProgrammer::Filters filter)
+{
+    Q_ASSERT(IsFilterProgrammed(filter));
+    return programmedPartials[filter];
 }
 
 QString FilterProgrammer::getPartialFilename(FilterProgrammer::Filters filter)

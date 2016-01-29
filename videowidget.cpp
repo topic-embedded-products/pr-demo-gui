@@ -26,6 +26,16 @@ VideoWidget::~VideoWidget()
     delete framerateTimer;
 }
 
+void VideoWidget::start(int dyploNodeId)
+{
+    dyplothread.startRendering(dyploNodeId);
+}
+
+void VideoWidget::stop()
+{
+    dyplothread.stopRendering();
+}
+
 void VideoWidget::paintEvent(QPaintEvent * /* event */)
 {
     QPainter painter(this);

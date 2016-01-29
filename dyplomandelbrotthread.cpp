@@ -7,22 +7,16 @@
 
 #include "dyplo/hardware.hpp"
 
-DyploMandelbrotThread::DyploMandelbrotThread(QObject *parent)
-    : QThread(parent)
+DyploMandelbrotThread::DyploMandelbrotThread(QObject* parent)
+    : QThread(parent),
+      dyploOutputNodeId(-1)
 {
     abort = false;
-
-    start(NormalPriority);
 }
 
 DyploMandelbrotThread::~DyploMandelbrotThread()
 {
-    {
-        QMutexLocker lock(&mutex);
-        abort = true;
-    }
-
-    wait();
+    stopRendering();
 }
 
 void DyploMandelbrotThread::grabNextFrame()
@@ -32,22 +26,39 @@ void DyploMandelbrotThread::grabNextFrame()
     condition.wakeOne();
 }
 
+void DyploMandelbrotThread::startRendering(int dyploOutputNodeId)
+{
+    this->dyploOutputNodeId = dyploOutputNodeId;
+    abort = false;
+    start(NormalPriority);
+}
+
+void DyploMandelbrotThread::stopRendering()
+{
+    {
+        QMutexLocker lock(&mutex);
+        abort = true;
+    }
+
+    wait();
+}
+
 void DyploMandelbrotThread::run()
 {
+    Q_ASSERT(dyploOutputNodeId != -1);
+
     // Create objects for hardware control
     try
     {
-        // TODO implement the dyplo part:
-        dyplo::HardwareContext hardware;
-        dyplo::HardwareControl hwControl(hardware);
-        dyplo::HardwareDMAFifo mandelbrotNode(hardware.openDMA(0, O_RDONLY));
+        // TODO test & implement more
+        dyplo::HardwareDMAFifo mandelbrotOutput(DyploContext::getInstance().GetHardwareContext().openDMA(dyploOutputNodeId, O_RDONLY));
 
         static const unsigned int bytes_per_block = FpgaMandelbrotWidget::RESOLUTION_X * FpgaMandelbrotWidget::RESOLUTION_Y * FpgaMandelbrotWidget::BYTES_PER_PIXEL;
         static const unsigned int num_blocks = 2;
-        mandelbrotNode.reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, bytes_per_block, num_blocks, true);
+        mandelbrotOutput.reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, bytes_per_block, num_blocks, true);
 
         forever {
-            dyplo::HardwareDMAFifo::Block* block = mandelbrotNode.dequeue();
+            dyplo::HardwareDMAFifo::Block* block = mandelbrotOutput.dequeue();
             const uchar* pixelbuffer = (const uchar*)block->data;
 
             if (abort)

@@ -18,6 +18,10 @@ public:
     static const quint32 RESOLUTION_Y;
     static const quint32 BYTES_PER_PIXEL;
 
+public slots:
+    void start(int dyploNodeId);
+    void stop();
+
 protected:
     virtual void paintEvent(QPaintEvent *event);
 

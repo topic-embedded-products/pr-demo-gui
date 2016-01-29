@@ -1,16 +1,16 @@
 #ifndef FILTERPROGRAMMER_H
 #define FILTERPROGRAMMER_H
 
-#include <QObject>
 #include <QList>
 #include <QMap>
 #include <QSet>
+#include "dyplocontext.h"
 
-class FilterProgrammer : public QObject
+// responsible for programming filters in available PR regions
+class FilterProgrammer
 {
-    Q_OBJECT
 public:
-    explicit FilterProgrammer(QObject *parent = 0);
+    explicit FilterProgrammer(DyploContext& context);
 
     enum PrRegion
     {
@@ -40,6 +40,10 @@ public:
     // output parameter indicates which region was disabled.
     bool DisableFilter(Filters filter, PrRegion& disabledRegion);
 
+
+    bool IsFilterProgrammed(Filters filter);
+    PrRegion GetProgramRegion(Filters filter);
+
 signals:
 
 public slots:
@@ -51,6 +55,8 @@ private:
     typedef QMap<Filters, TPrRegionSet> TPartialPrRegionListMap;
     typedef QMap<Filters, PrRegion> TPartialPrRegionMap;
     typedef QMap<Filters, QString> TPartialFilenameMap;
+
+    DyploContext& dyploContext;
 
     // Filter mapped to filename
     TPartialFilenameMap partialFileNames;

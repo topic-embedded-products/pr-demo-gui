@@ -18,6 +18,10 @@ public:
 
     void grabNextFrame();
 
+public slots:
+    void startRendering(int dyploOutputNodeId);
+    void stopRendering();
+
 signals:
     void renderedImage(const QImage& image);
 
@@ -29,6 +33,7 @@ private:
     QWaitCondition condition;
     bool abort;
     bool continueGrabbing;
+    int dyploOutputNodeId;
 };
 
 #endif // DyploVideoThread_H

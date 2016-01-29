@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include "filterprogrammer.h"
+#include "dyplocontext.h"
+#include "dyplorouter.h"
 
 namespace Ui {
 class MainWindow;
@@ -33,12 +35,15 @@ private slots:
     void on_buttonMandelbrot_toggled(bool checked);
 
 private:
-    void SetFilterStatus(FilterProgrammer::Filters filter, bool enabled);
+    void setFilterStatus(FilterProgrammer::Filters filter, bool enabled);
     void showOverlay(FilterProgrammer::PrRegion prRegion, const QColor& color);
     void hideOverlay(FilterProgrammer::PrRegion prRegion);
 
     Ui::MainWindow*   ui;
-    FilterProgrammer  programmer;
+
+    FilterProgrammer  filterProgrammer;
+    DyploRouter       dyploRouter;
+
     QMap<FilterProgrammer::Filters, QColor> filterColorMap;
 
     QString getOverlayBackgroundColor(const QColor& color);

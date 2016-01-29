@@ -5,7 +5,7 @@ const quint32 FpgaMandelbrotWidget::RESOLUTION_X = 421;
 const quint32 FpgaMandelbrotWidget::RESOLUTION_Y = 291;
 const quint32 FpgaMandelbrotWidget::BYTES_PER_PIXEL = 3;
 
-FpgaMandelbrotWidget::FpgaMandelbrotWidget(QWidget *parent) :
+FpgaMandelbrotWidget::FpgaMandelbrotWidget(QWidget* parent) :
     QWidget(parent),
     dyplothread(),
     frameRenderCount(0)
@@ -30,6 +30,16 @@ void FpgaMandelbrotWidget::paintEvent(QPaintEvent * /* event */)
     QPainter painter(this);
     painter.fillRect(rect(), Qt::black);
     painter.drawPixmap(pixmapOffset, pixmap);
+}
+
+void FpgaMandelbrotWidget::start(int dyploNodeId)
+{
+    dyplothread.startRendering(dyploNodeId);
+}
+
+void FpgaMandelbrotWidget::stop()
+{
+    dyplothread.stopRendering();
 }
 
 void FpgaMandelbrotWidget::updatePixmap(const QImage& image)

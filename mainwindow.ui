@@ -778,7 +778,7 @@
       <x>10</x>
       <y>110</y>
       <width>1201</width>
-      <height>310</height>
+      <height>330</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -793,10 +793,10 @@
     <widget class="VideoWidget" name="video" native="true">
      <property name="geometry">
       <rect>
-       <x>770</x>
-       <y>10</y>
-       <width>421</width>
-       <height>291</height>
+       <x>715</x>
+       <y>5</y>
+       <width>480</width>
+       <height>320</height>
       </rect>
      </property>
      <property name="palette">
@@ -1382,9 +1382,9 @@ QPushButton
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>430</y>
+      <y>444</y>
       <width>1201</width>
-      <height>310</height>
+      <height>271</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -1399,10 +1399,10 @@ QPushButton
     <widget class="QWidget" name="audio" native="true">
      <property name="geometry">
       <rect>
-       <x>770</x>
-       <y>10</y>
-       <width>421</width>
-       <height>291</height>
+       <x>715</x>
+       <y>5</y>
+       <width>480</width>
+       <height>260</height>
       </rect>
      </property>
      <property name="palette">
@@ -1889,7 +1889,7 @@ QPushButton
      <property name="geometry">
       <rect>
        <x>210</x>
-       <y>70</y>
+       <y>52</y>
        <width>221</width>
        <height>61</height>
       </rect>
@@ -1925,7 +1925,7 @@ QPushButton
      <property name="geometry">
       <rect>
        <x>210</x>
-       <y>140</y>
+       <y>122</y>
        <width>221</width>
        <height>61</height>
       </rect>
@@ -1961,7 +1961,7 @@ QPushButton
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>90</y>
+       <y>72</y>
        <width>141</width>
        <height>17</height>
       </rect>
@@ -1974,7 +1974,7 @@ QPushButton
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>160</y>
+       <y>142</y>
        <width>141</width>
        <height>17</height>
       </rect>
@@ -1987,7 +1987,7 @@ QPushButton
      <property name="geometry">
       <rect>
        <x>210</x>
-       <y>210</y>
+       <y>192</y>
        <width>221</width>
        <height>61</height>
       </rect>
@@ -2023,7 +2023,7 @@ QPushButton
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>230</y>
+       <y>212</y>
        <width>67</width>
        <height>17</height>
       </rect>
@@ -2037,9 +2037,9 @@ QPushButton
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>750</y>
+      <y>721</y>
       <width>1201</width>
-      <height>310</height>
+      <height>330</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -2051,10 +2051,10 @@ QPushButton
     <widget class="FpgaMandelbrotWidget" name="mandelbrot" native="true">
      <property name="geometry">
       <rect>
-       <x>770</x>
-       <y>10</y>
-       <width>421</width>
-       <height>291</height>
+       <x>715</x>
+       <y>4</y>
+       <width>480</width>
+       <height>320</height>
       </rect>
      </property>
      <property name="palette">

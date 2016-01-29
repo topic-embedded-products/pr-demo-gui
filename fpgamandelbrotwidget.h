@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QTimer>
 #include "dyplomandelbrotthread.h"
+#include "dyplocontext.h"
 
 class FpgaMandelbrotWidget : public QWidget
 {
@@ -20,6 +21,10 @@ public:
 
 protected:
     virtual void paintEvent(QPaintEvent *event);
+
+public slots:
+    void start(int dyploNodeId);
+    void stop();
 
 signals:
     void frameRate(const quint32 framerate);

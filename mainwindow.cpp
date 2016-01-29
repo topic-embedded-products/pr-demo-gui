@@ -6,7 +6,8 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    programmer()
+    filterProgrammer(DyploContext::getInstance()),
+    dyploRouter(DyploContext::getInstance(), filterProgrammer)
 {
     ui->setupUi(this);
 
@@ -104,15 +105,15 @@ QString MainWindow::getOverlayBackgroundColor(const QColor& color)
 
 void MainWindow::on_buttonGrayscale_toggled(bool checked)
 {
-    SetFilterStatus(FilterProgrammer::FilterVideoGrayscale, checked);
+    setFilterStatus(FilterProgrammer::FilterVideoGrayscale, checked);
 }
 
-void MainWindow::SetFilterStatus(FilterProgrammer::Filters filter, bool enabled)
+void MainWindow::setFilterStatus(FilterProgrammer::Filters filter, bool enabled)
 {
     if (enabled)
     {
         FilterProgrammer::PrRegion programRegion;
-        bool programmingSucceeded = programmer.ProgramFilter(filter, programRegion);
+        bool programmingSucceeded = filterProgrammer.ProgramFilter(filter, programRegion);
         if (programmingSucceeded)
         {
             // TODO: show performance metrics of programming
@@ -123,7 +124,7 @@ void MainWindow::SetFilterStatus(FilterProgrammer::Filters filter, bool enabled)
     else
     {
         FilterProgrammer::PrRegion disableRegion;
-        bool disabledNode = programmer.DisableFilter(filter, disableRegion);
+        bool disabledNode = filterProgrammer.DisableFilter(filter, disableRegion);
         if (disabledNode)
         {
             hideOverlay(disableRegion);
@@ -131,28 +132,27 @@ void MainWindow::SetFilterStatus(FilterProgrammer::Filters filter, bool enabled)
     }
 }
 
-
 void MainWindow::on_buttonLaplacian_toggled(bool checked)
 {
-    SetFilterStatus(FilterProgrammer::FilterVideoLaplacian, checked);
+    setFilterStatus(FilterProgrammer::FilterVideoLaplacian, checked);
 }
 
 void MainWindow::on_buttonLowPass_toggled(bool checked)
 {
-    SetFilterStatus(FilterProgrammer::FilterAudioLowpass, checked);
+    setFilterStatus(FilterProgrammer::FilterAudioLowpass, checked);
 }
 
 void MainWindow::on_buttonHighPass_toggled(bool checked)
 {
-    SetFilterStatus(FilterProgrammer::FilterAudioHighpass, checked);
+    setFilterStatus(FilterProgrammer::FilterAudioHighpass, checked);
 }
 
 void MainWindow::on_buttonFFT_toggled(bool checked)
 {
-    SetFilterStatus(FilterProgrammer::FilterAudioFFT, checked);
+    setFilterStatus(FilterProgrammer::FilterAudioFFT, checked);
 }
 
 void MainWindow::on_buttonMandelbrot_toggled(bool checked)
 {
-    SetFilterStatus(FilterProgrammer::FilterMandelbrot, checked);
+    setFilterStatus(FilterProgrammer::FilterMandelbrot, checked);
 }

@@ -6,23 +6,18 @@
 #include <QDebug>
 
 #include "dyplo/hardware.hpp"
+#include "dyplocontext.h"
 
 DyploVideoThread::DyploVideoThread(QObject *parent)
-    : QThread(parent)
+    : QThread(parent),
+      dyploOutputNodeId(-1)
 {
     abort = false;
-
-    start(NormalPriority);
 }
 
 DyploVideoThread::~DyploVideoThread()
 {
-    {
-        QMutexLocker lock(&mutex);
-        abort = true;
-    }
-
-    wait();
+    stopRendering();
 }
 
 void DyploVideoThread::grabNextFrame()
@@ -32,22 +27,39 @@ void DyploVideoThread::grabNextFrame()
     condition.wakeOne();
 }
 
+void DyploVideoThread::startRendering(int dyploOutputNodeId)
+{
+    this->dyploOutputNodeId = dyploOutputNodeId;
+    abort = false;
+    start(NormalPriority);
+}
+
+void DyploVideoThread::stopRendering()
+{
+    {
+        QMutexLocker lock(&mutex);
+        abort = true;
+    }
+
+    wait();
+}
+
 void DyploVideoThread::run()
 {
+    Q_ASSERT(dyploOutputNodeId != -1);
+
     // Create objects for hardware control
     try
     {
-        // TODO implement the Dyplo part:
-        dyplo::HardwareContext hardware;
-        dyplo::HardwareControl hwControl(hardware);
-        dyplo::HardwareDMAFifo mandelbrotNode(hardware.openDMA(0, O_RDONLY));
+        // TODO test & implement more
+        dyplo::HardwareDMAFifo videoOutputNode(DyploContext::getInstance().GetHardwareContext().openDMA(dyploOutputNodeId, O_RDONLY));
 
         static const unsigned int bytes_per_block = VideoWidget::RESOLUTION_X * VideoWidget::RESOLUTION_Y * VideoWidget::BYTES_PER_PIXEL;
         static const unsigned int num_blocks = 2;
-        mandelbrotNode.reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, bytes_per_block, num_blocks, true);
+        videoOutputNode.reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, bytes_per_block, num_blocks, true);
 
         forever {
-            dyplo::HardwareDMAFifo::Block* block = mandelbrotNode.dequeue();
+            dyplo::HardwareDMAFifo::Block* block = videoOutputNode.dequeue();
             const uchar* pixelbuffer = (const uchar*)block->data;
 
             if (abort)
@@ -55,6 +67,7 @@ void DyploVideoThread::run()
                 return;
             }
 
+            // TODO, add scaling
             QImage image(pixelbuffer, VideoWidget::RESOLUTION_X, VideoWidget::RESOLUTION_Y, QImage::Format_RGB888);
             emit renderedImage(image);
 
