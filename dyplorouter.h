@@ -6,6 +6,7 @@
 
 #include "filterprogrammer.h"
 #include "dyplocontext.h"
+#include "types.h"
 
 // responsible for setting up the routes of the activated filters in Dyplo.
 class DyploRouter
@@ -13,34 +14,26 @@ class DyploRouter
 public:
     explicit DyploRouter(DyploContext& context, FilterProgrammer& programmer);
 
-    enum Demo
-    {
-        UndefinedDemo,
-        VideoDemo,
-        AudioDemo,
-        MandelbrotDemo
-    };
-
-    void RouteFilter(FilterProgrammer::Filters filter);
-    void UnrouteFilter(FilterProgrammer::Filters filter);
+    void RouteFilter(EFilters filter);
+    void UnrouteFilter(EFilters filter);
 
     // get the output node of a specific demo
-    int GetDemoOutputNode(Demo demo);
+    int GetDemoOutputNode(EDemo demo);
 
     // get the input node of a specific demo
-    int GetDemoInputNode(Demo demo);
+    int GetDemoInputNode(EDemo demo);
 
 private:
-    Demo getDemoByFilter(FilterProgrammer::Filters filter);
-    FilterProgrammer::Filters getFilterRoutedBefore(FilterProgrammer::Filters filter);
-    FilterProgrammer::Filters getFilterRoutedAfter(FilterProgrammer::Filters filter);
+    EDemo getDemoByFilter(EFilters filter);
+    EFilters getFilterRoutedBefore(EFilters filter);
+    EFilters getFilterRoutedAfter(EFilters filter);
 
-    typedef QList<FilterProgrammer::Filters> TFilterList;
+    typedef QList<EFilters> TFilterList;
 
     // ordered list of the routed filters
-    QMap<Demo, TFilterList> iRoutedFilters;
+    QMap<EDemo, TFilterList> iRoutedFilters;
 
-    typedef QMap<Demo, TFilterList> TDemoFilterMap;
+    typedef QMap<EDemo, TFilterList> TDemoFilterMap;
     TDemoFilterMap filtersPerDemo;
 
     DyploContext& dyploContext;

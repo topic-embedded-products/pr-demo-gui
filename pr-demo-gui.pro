@@ -22,8 +22,8 @@ SOURCES +=  main.cpp\
             fpgamandelbrotwidget.cpp \
             videowidget.cpp \
             dyplovideothread.cpp \
-    dyplocontext.cpp \
-    dyplorouter.cpp
+            dyplocontext.cpp \
+            dyplorouter.cpp
 
 
 
@@ -33,8 +33,9 @@ HEADERS  += mainwindow.h \
             fpgamandelbrotwidget.h \
             videowidget.h \
             dyplovideothread.h \
-    dyplocontext.h \
-    dyplorouter.h
+            dyplocontext.h \
+            dyplorouter.h \
+            types.h
 
 FORMS    += mainwindow.ui
 

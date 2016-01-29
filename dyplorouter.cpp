@@ -6,23 +6,23 @@ DyploRouter::DyploRouter(DyploContext& context,
     dyploContext(context),
     filterProgrammer(programmer)
 {
-    filtersPerDemo[AudioDemo].append(FilterProgrammer::FilterAudioFFT);
-    filtersPerDemo[AudioDemo].append(FilterProgrammer::FilterAudioLowpass);
-    filtersPerDemo[AudioDemo].append(FilterProgrammer::FilterAudioHighpass);
+    filtersPerDemo[DemoAudio].append(FilterAudioFFT);
+    filtersPerDemo[DemoAudio].append(FilterAudioLowpass);
+    filtersPerDemo[DemoAudio].append(FilterAudioHighpass);
 
-    filtersPerDemo[VideoDemo].append(FilterProgrammer::FilterAudioFFT);
-    filtersPerDemo[VideoDemo].append(FilterProgrammer::FilterAudioLowpass);
+    filtersPerDemo[DemoVideo].append(FilterVideoGrayscale);
+    filtersPerDemo[DemoVideo].append(FilterVideoLaplacian);
 
-    filtersPerDemo[MandelbrotDemo].append(FilterProgrammer::FilterMandelbrot);
+    filtersPerDemo[DemoMandelbrot].append(FilterMandelbrot);
 }
 
-void DyploRouter::RouteFilter(FilterProgrammer::Filters filter)
+void DyploRouter::RouteFilter(EFilters filter)
 {
     // get demo
-    Demo targetDemo = getDemoByFilter(filter);
+    EDemo targetDemo = getDemoByFilter(filter);
 
     // get the PR region that the new filter is programmed on
-    FilterProgrammer::PrRegion newRegion = filterProgrammer.GetProgramRegion(filter);
+    EPrRegion newRegion = filterProgrammer.GetProgramRegion(filter);
 
     TFilterList& routedFilters = iRoutedFilters[targetDemo];
 
@@ -30,10 +30,10 @@ void DyploRouter::RouteFilter(FilterProgrammer::Filters filter)
     if (!routedFilters.empty())
     {
         // get the last programmed filter
-        FilterProgrammer::Filters lastFilter = routedFilters.back();
+        EFilters lastFilter = routedFilters.back();
 
         // get the PR region that the last filter is programmed on
-        FilterProgrammer::PrRegion lastRegion = filterProgrammer.GetProgramRegion(lastFilter);
+        EPrRegion lastRegion = filterProgrammer.GetProgramRegion(lastFilter);
 
         try
         {
@@ -69,23 +69,20 @@ void DyploRouter::RouteFilter(FilterProgrammer::Filters filter)
     }
 }
 
-void DyploRouter::UnrouteFilter(FilterProgrammer::Filters filter)
+void DyploRouter::UnrouteFilter(EFilters filter)
 {
     try
     {
         // get demo
-        Demo targetDemo = getDemoByFilter(filter);
-        const TFilterList& routedFilters = iRoutedFilters[targetDemo];
+        EDemo targetDemo = getDemoByFilter(filter);
 
-        FilterProgrammer::PrRegion filterRegion = filterProgrammer.GetProgramRegion(filter);
+        // if there is a previous filter or a next filter, it needs to be rerouted
+        EFilters beforeFilter = getFilterRoutedBefore(filter);
+        EFilters afterFilter = getFilterRoutedAfter(filter);
 
-        // if there is a previous filter or a next filter, reroute it
-        FilterProgrammer::Filters beforeFilter = getFilterRoutedBefore(filter);
-        FilterProgrammer::Filters afterFilter = getFilterRoutedAfter(filter);
-
-        if (beforeFilter != FilterProgrammer::FilterUndefined)
+        if (beforeFilter != FilterUndefined)
         {
-            if (afterFilter != FilterProgrammer::FilterUndefined)
+            if (afterFilter != FilterUndefined)
             {
                 // route beforefilter to afterfilter
                 // TODO: test and implement fully
@@ -97,7 +94,7 @@ void DyploRouter::UnrouteFilter(FilterProgrammer::Filters filter)
                 // TODO: test and implement fully
                 //DyploContext::getInstance().GetHardwareControl().routeAddSingle(beforeFilter, 0, GetDemoOutputNode(targetDemo), 0);
             }
-        } else if (afterFilter != FilterProgrammer::FilterUndefined)
+        } else if (afterFilter != FilterUndefined)
         {
             // route Input node to afterfilter
             // TODO: test and implement fully
@@ -113,16 +110,16 @@ void DyploRouter::UnrouteFilter(FilterProgrammer::Filters filter)
     }
 }
 
-int DyploRouter::GetDemoOutputNode(DyploRouter::Demo demo)
+int DyploRouter::GetDemoOutputNode(EDemo demo)
 {
     // TEMPORARY VALUES:
     switch (demo)
     {
-        case VideoDemo:
+        case DemoVideo:
             return 0;
-        case AudioDemo:
+        case DemoAudio:
             return 1;
-        case MandelbrotDemo:
+        case DemoMandelbrot:
             return 2;
         default:
             break;
@@ -131,16 +128,16 @@ int DyploRouter::GetDemoOutputNode(DyploRouter::Demo demo)
     return -1;
 }
 
-int DyploRouter::GetDemoInputNode(DyploRouter::Demo demo)
+int DyploRouter::GetDemoInputNode(EDemo demo)
 {
     // TEMPORARY VALUES:
     switch (demo)
     {
-        case VideoDemo:
+        case DemoVideo:
             return 0;
-        case AudioDemo:
+        case DemoAudio:
             return 1;
-        case MandelbrotDemo:
+        case DemoMandelbrot:
             return 2;
         default:
             break;
@@ -149,7 +146,7 @@ int DyploRouter::GetDemoInputNode(DyploRouter::Demo demo)
     return -1;
 }
 
-DyploRouter::Demo DyploRouter::getDemoByFilter(FilterProgrammer::Filters filter)
+EDemo DyploRouter::getDemoByFilter(EFilters filter)
 {
     for (TDemoFilterMap::iterator it = filtersPerDemo.begin(); it != filtersPerDemo.end(); ++it)
     {
@@ -161,15 +158,15 @@ DyploRouter::Demo DyploRouter::getDemoByFilter(FilterProgrammer::Filters filter)
         }
     }
 
-    return UndefinedDemo;
+    return DemoUndefined;
 }
 
-FilterProgrammer::Filters DyploRouter::getFilterRoutedBefore(FilterProgrammer::Filters filter)
+EFilters DyploRouter::getFilterRoutedBefore(EFilters filter)
 {
-    Demo targetDemo = getDemoByFilter(filter);
+    EDemo targetDemo = getDemoByFilter(filter);
     const TFilterList& routedFilters = iRoutedFilters[targetDemo];
 
-    FilterProgrammer::Filters beforeFilter = FilterProgrammer::FilterUndefined;
+    EFilters beforeFilter = FilterUndefined;
 
     for (TFilterList::const_iterator it = routedFilters.begin(); it != routedFilters.end(); it++)
     {
@@ -184,9 +181,9 @@ FilterProgrammer::Filters DyploRouter::getFilterRoutedBefore(FilterProgrammer::F
     return beforeFilter;
 }
 
-FilterProgrammer::Filters DyploRouter::getFilterRoutedAfter(FilterProgrammer::Filters filter)
+EFilters DyploRouter::getFilterRoutedAfter(EFilters filter)
 {
-    Demo targetDemo = getDemoByFilter(filter);
+    EDemo targetDemo = getDemoByFilter(filter);
     const TFilterList& routedFilters = iRoutedFilters[targetDemo];
 
     bool foundFilter = false;
@@ -204,5 +201,5 @@ FilterProgrammer::Filters DyploRouter::getFilterRoutedAfter(FilterProgrammer::Fi
         }
     }
 
-    return FilterProgrammer::FilterUndefined;
+    return FilterUndefined;
 }

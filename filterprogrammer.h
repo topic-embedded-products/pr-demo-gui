@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QSet>
 #include "dyplocontext.h"
+#include "types.h"
 
 // responsible for programming filters in available PR regions
 class FilterProgrammer
@@ -12,50 +13,29 @@ class FilterProgrammer
 public:
     explicit FilterProgrammer(DyploContext& context);
 
-    enum PrRegion
-    {
-        PrRegion1 = 0,
-        PrRegion2 = 1,
-        PrRegion3 = 2,
-        PrRegion4 = 3,
-        PrRegion5 = 4,
-        PrRegion6 = 5,
-        PrRegion7 = 6
-    };
-
-    enum Filters {
-        FilterUndefined,
-        FilterVideoGrayscale,
-        FilterVideoLaplacian,
-        FilterAudioLowpass,
-        FilterAudioHighpass,
-        FilterAudioFFT,
-        FilterMandelbrot
-    };
-
     // returns if the programming succeeded.
     // output parameter indicates which region was used to program succesfully.
-    bool ProgramFilter(Filters filter, PrRegion& programmedInRegion);
+    bool ProgramFilter(EFilters filter, EPrRegion& programmedInRegion);
 
     // returns if the disabling succeeded.
     // output parameter indicates which region was disabled.
-    bool DisableFilter(Filters filter, PrRegion& disabledRegion);
+    bool DisableFilter(EFilters filter, EPrRegion& disabledRegion);
 
 
-    bool IsFilterProgrammed(Filters filter);
-    PrRegion GetProgramRegion(Filters filter);
+    bool IsFilterProgrammed(EFilters filter);
+    EPrRegion GetProgramRegion(EFilters filter);
 
 signals:
 
 public slots:
 
 private:
-    QString getPartialFilename(Filters filter);
+    QString getPartialFilename(EFilters filter);
 
-    typedef QSet<PrRegion> TPrRegionSet;
-    typedef QMap<Filters, TPrRegionSet> TPartialPrRegionListMap;
-    typedef QMap<Filters, PrRegion> TPartialPrRegionMap;
-    typedef QMap<Filters, QString> TPartialFilenameMap;
+    typedef QSet<EPrRegion> TPrRegionSet;
+    typedef QMap<EFilters, TPrRegionSet> TPartialPrRegionListMap;
+    typedef QMap<EFilters, EPrRegion> TPartialPrRegionMap;
+    typedef QMap<EFilters, QString> TPartialFilenameMap;
 
     DyploContext& dyploContext;
 

@@ -69,8 +69,8 @@ FilterProgrammer::FilterProgrammer(DyploContext& context) :
     partialFileNames[FilterMandelbrot] = "mandelbrot_node";
 }
 
-bool FilterProgrammer::ProgramFilter(Filters filter,
-                                     PrRegion& programmedInRegion)
+bool FilterProgrammer::ProgramFilter(EFilters filter,
+                                     EPrRegion& programmedInRegion)
 {
    bool programmed = false;
 
@@ -81,7 +81,7 @@ bool FilterProgrammer::ProgramFilter(Filters filter,
 
    for (it = prRegions.begin(); it != prRegions.end() && !programmed; ++it)
    {
-       const PrRegion& region = *it;
+       const EPrRegion& region = *it;
        // check if PR region is already programmed
        if (!programmedPartials.values().contains(region))
        {
@@ -122,14 +122,14 @@ bool FilterProgrammer::ProgramFilter(Filters filter,
    return programmed;
 }
 
-bool FilterProgrammer::DisableFilter(FilterProgrammer::Filters filter,
-                                     FilterProgrammer::PrRegion& disabledRegion)
+bool FilterProgrammer::DisableFilter(EFilters filter,
+                                     EPrRegion& disabledRegion)
 {
     bool disabled = false;
 
     if (programmedPartials.contains(filter))
     {
-        PrRegion& region = programmedPartials[filter];
+        EPrRegion& region = programmedPartials[filter];
 
         // disable partial using Dyplo API
         try
@@ -157,18 +157,18 @@ bool FilterProgrammer::DisableFilter(FilterProgrammer::Filters filter,
     return disabled;
 }
 
-bool FilterProgrammer::IsFilterProgrammed(FilterProgrammer::Filters filter)
+bool FilterProgrammer::IsFilterProgrammed(EFilters filter)
 {
     return programmedPartials.contains(filter);
 }
 
-FilterProgrammer::PrRegion FilterProgrammer::GetProgramRegion(FilterProgrammer::Filters filter)
+EPrRegion FilterProgrammer::GetProgramRegion(EFilters filter)
 {
     Q_ASSERT(IsFilterProgrammed(filter));
     return programmedPartials[filter];
 }
 
-QString FilterProgrammer::getPartialFilename(FilterProgrammer::Filters filter)
+QString FilterProgrammer::getPartialFilename(EFilters filter)
 {
     Q_ASSERT(partialFileNames.contains(filter));
     return partialFileNames[filter];
