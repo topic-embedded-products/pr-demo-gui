@@ -14,8 +14,8 @@ public:
     explicit FilterProgrammer(DyploContext& context);
 
     // returns if the programming succeeded.
-    // output parameter indicates which region was used to program succesfully.
-    bool ProgramFilter(EFilters filter, EPrRegion& programmedInRegion);
+    // output parameter indicates which region was used to program succesfully and how long it took.
+    bool ProgramFilter(EFilters filter, EPrRegion& programmedInRegion, quint32& programmedInMs);
 
     // returns if the disabling succeeded.
     // output parameter indicates which region was disabled.

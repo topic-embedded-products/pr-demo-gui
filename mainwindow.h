@@ -34,7 +34,10 @@ private slots:
 
     void on_buttonMandelbrot_toggled(bool checked);
 
+    void hideProgrammingMetrics();
+
 private:
+    void showProgrammingMetrics(EPrRegion programRegion, quint32 programTimeMs);
     void setFilterStatus(EFilters filter, bool enabled);
     void showOverlay(EPrRegion prRegion, const QColor& color);
     void hideOverlay(EPrRegion prRegion);

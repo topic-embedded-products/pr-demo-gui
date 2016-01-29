@@ -460,7 +460,7 @@
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>:/image/topic</pixmap>
+     <pixmap resource="resources.qrc">:/image/topic</pixmap>
     </property>
    </widget>
    <widget class="QFrame" name="floorplanFrame">
@@ -646,7 +646,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap>:/image/fpga</pixmap>
+      <pixmap resource="resources.qrc">:/image/fpga</pixmap>
      </property>
     </widget>
     <widget class="QLabel" name="node1_overlay">
@@ -2708,6 +2708,44 @@ QPushButton
      <string/>
     </property>
    </widget>
+   <widget class="QLabel" name="partialProgramMetrics">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>550</y>
+      <width>821</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>OpenSymbol</family>
+      <pointsize>20</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(94, 94, 94);
+color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="lineWidth">
+     <number>5</number>
+    </property>
+    <property name="midLineWidth">
+     <number>0</number>
+    </property>
+    <property name="text">
+     <string>Programmed bitstream in x ms</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
@@ -2725,6 +2763,8 @@ QPushButton
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

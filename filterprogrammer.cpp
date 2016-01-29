@@ -1,5 +1,6 @@
 #include "filterprogrammer.h"
 #include <QDebug>
+#include <QTime>
 
 FilterProgrammer::FilterProgrammer(DyploContext& context) :
     dyploContext(context)
@@ -70,7 +71,8 @@ FilterProgrammer::FilterProgrammer(DyploContext& context) :
 }
 
 bool FilterProgrammer::ProgramFilter(EFilters filter,
-                                     EPrRegion& programmedInRegion)
+                                     EPrRegion& programmedInRegion,
+                                     quint32& programmedInMs)
 {
    bool programmed = false;
 
@@ -101,9 +103,15 @@ bool FilterProgrammer::ProgramFilter(EFilters filter,
               std::string filename = hwContext.findPartition(partialFileName.toStdString().c_str(), region);
 
               // Program task on FPGA
+
               dyplo::HardwareConfig nodeCfg(hwContext, region);
               nodeCfg.disableNode();
-              hwContext.program(filename.c_str());
+              */
+              QTime myTimer;
+              myTimer.start();
+              //hwContext.program(filename.c_str());
+              programmedInMs = myTimer.elapsed();
+              /*
               nodeCfg.enableNode();
               */
            }

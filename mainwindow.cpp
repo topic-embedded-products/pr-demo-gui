@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 
 #include <QTimer>
+#include <QGraphicsOpacityEffect>
+#include <QPropertyAnimation>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -10,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     dyploRouter(DyploContext::getInstance(), filterProgrammer)
 {
     ui->setupUi(this);
+    ui->partialProgramMetrics->hide();
 
     hideOverlay(PrRegion1);
     hideOverlay(PrRegion2);
@@ -116,9 +119,11 @@ void MainWindow::setFilterStatus(EFilters filter, bool enabled)
     if (enabled)
     {
         EPrRegion programRegion;
-        bool programmingSucceeded = filterProgrammer.ProgramFilter(filter, programRegion);
+        quint32 programTimeMs;
+        bool programmingSucceeded = filterProgrammer.ProgramFilter(filter, programRegion, programTimeMs);
         if (programmingSucceeded)
         {
+            showProgrammingMetrics(programRegion, programTimeMs);
             dyploRouter.RouteFilter(filter);
 
             // TODO: show performance metrics of programming
@@ -161,4 +166,29 @@ void MainWindow::on_buttonFFT_toggled(bool checked)
 void MainWindow::on_buttonMandelbrot_toggled(bool checked)
 {
     setFilterStatus(FilterMandelbrot, checked);
+}
+
+void MainWindow::hideProgrammingMetrics()
+{
+    ui->partialProgramMetrics->hide();
+}
+
+void MainWindow::showProgrammingMetrics(EPrRegion programRegion,
+                                    quint32 programTimeMs)
+{
+    ui->partialProgramMetrics->setText(QString("Partial bitstream programmed on PR Node %1 in %2 ms")
+        .arg(programRegion).arg(programTimeMs));
+    ui->partialProgramMetrics->show();
+
+    // TODO: check if this object leaks:
+    QGraphicsOpacityEffect* eff = new QGraphicsOpacityEffect(this);
+    ui->partialProgramMetrics->setGraphicsEffect(eff);
+    QPropertyAnimation* a = new QPropertyAnimation(eff, "opacity");
+    a->setDuration(2000);
+    a->setStartValue(1);
+    a->setEndValue(0);
+    a->setEasingCurve(QEasingCurve::InBack);
+    a->start(QPropertyAnimation::DeleteWhenStopped);
+    connect(a, SIGNAL(finished()),this, SLOT(hideProgrammingMetrics()), Qt::UniqueConnection);
+    connect(a, SIGNAL(finished()),eff, SLOT(deleteLater()), Qt::UniqueConnection);
 }
