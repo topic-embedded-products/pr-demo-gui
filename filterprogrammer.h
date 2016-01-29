@@ -14,16 +14,17 @@ public:
 
     enum PrRegion
     {
-        PrRegion1,
-        PrRegion2,
-        PrRegion3,
-        PrRegion4,
-        PrRegion5,
-        PrRegion6,
-        PrRegion7
+        PrRegion1 = 0,
+        PrRegion2 = 1,
+        PrRegion3 = 2,
+        PrRegion4 = 3,
+        PrRegion5 = 4,
+        PrRegion6 = 5,
+        PrRegion7 = 6
     };
 
     enum Filters {
+        FilterUndefined,
         FilterVideoGrayscale,
         FilterVideoLaplacian,
         FilterAudioLowpass,

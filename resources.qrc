@@ -2,5 +2,6 @@
     <qresource prefix="/image">
         <file alias="topic">topic-ep-logo.png</file>
         <file alias="fpga">fpga-floorplan.png</file>
+        <file alias="ecosystem">ecosystem.png</file>
     </qresource>
 </RCC>

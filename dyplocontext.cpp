@@ -7,6 +7,9 @@ DyploContext::DyploContext()
     {
         hardwareCtx = new dyplo::HardwareContext();
         hwControl = new dyplo::HardwareControl(*hardwareCtx);
+
+        // All bitstreams are partial streams.
+        hardwareCtx->setProgramMode(true);
     }
     catch (const std::exception& ex)
     {

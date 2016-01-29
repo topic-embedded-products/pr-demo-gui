@@ -793,9 +793,9 @@
     <widget class="VideoWidget" name="video" native="true">
      <property name="geometry">
       <rect>
-       <x>715</x>
+       <x>630</x>
        <y>5</y>
-       <width>480</width>
+       <width>564</width>
        <height>320</height>
       </rect>
      </property>
@@ -1399,9 +1399,9 @@ QPushButton
     <widget class="QWidget" name="audio" native="true">
      <property name="geometry">
       <rect>
-       <x>715</x>
+       <x>630</x>
        <y>5</y>
-       <width>480</width>
+       <width>564</width>
        <height>260</height>
       </rect>
      </property>
@@ -2051,9 +2051,9 @@ QPushButton
     <widget class="FpgaMandelbrotWidget" name="mandelbrot" native="true">
      <property name="geometry">
       <rect>
-       <x>715</x>
+       <x>630</x>
        <y>4</y>
-       <width>480</width>
+       <width>564</width>
        <height>320</height>
       </rect>
      </property>
@@ -2586,6 +2586,46 @@ QPushButton
       <string>Mandelbrot algorithm</string>
      </property>
     </widget>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>40</y>
+      <width>731</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>OpenSymbol</family>
+      <pointsize>26</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(233, 80, 34);</string>
+    </property>
+    <property name="text">
+     <string>PARTIAL RECONFIGURATION DEMO</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>1330</x>
+      <y>5</y>
+      <width>601</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">image: url(:/image/ecosystem);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
    </widget>
   </widget>
  </widget>

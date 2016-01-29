@@ -25,6 +25,9 @@ MainWindow::MainWindow(QWidget *parent) :
     filterColorMap[FilterProgrammer::FilterAudioHighpass] = QColor(255,0,0);
     filterColorMap[FilterProgrammer::FilterAudioLowpass] = QColor(255,0,0);
     filterColorMap[FilterProgrammer::FilterMandelbrot] = QColor(0,255,0);
+
+    ui->mandelbrot->start(dyploRouter.GetDemoOutputNode(DyploRouter::MandelbrotDemo));
+    ui->video->start(dyploRouter.GetDemoOutputNode(DyploRouter::MandelbrotDemo));
 }
 
 void MainWindow::showOverlay(FilterProgrammer::PrRegion prRegion, const QColor& color)
@@ -116,6 +119,8 @@ void MainWindow::setFilterStatus(FilterProgrammer::Filters filter, bool enabled)
         bool programmingSucceeded = filterProgrammer.ProgramFilter(filter, programRegion);
         if (programmingSucceeded)
         {
+            dyploRouter.RouteFilter(filter);
+
             // TODO: show performance metrics of programming
             Q_ASSERT(filterColorMap.contains(filter));
             showOverlay(programRegion, filterColorMap[filter]);
@@ -124,6 +129,7 @@ void MainWindow::setFilterStatus(FilterProgrammer::Filters filter, bool enabled)
     else
     {
         FilterProgrammer::PrRegion disableRegion;
+        dyploRouter.UnrouteFilter(filter);
         bool disabledNode = filterProgrammer.DisableFilter(filter, disableRegion);
         if (disabledNode)
         {

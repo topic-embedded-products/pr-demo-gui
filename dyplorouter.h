@@ -2,6 +2,7 @@
 #define DYPLOROUTER_H
 
 #include <QObject>
+#include <QMap>
 
 #include "filterprogrammer.h"
 #include "dyplocontext.h"
@@ -14,6 +15,7 @@ public:
 
     enum Demo
     {
+        UndefinedDemo,
         VideoDemo,
         AudioDemo,
         MandelbrotDemo
@@ -25,9 +27,21 @@ public:
     // get the output node of a specific demo
     int GetDemoOutputNode(Demo demo);
 
+    // get the input node of a specific demo
+    int GetDemoInputNode(Demo demo);
+
 private:
+    Demo getDemoByFilter(FilterProgrammer::Filters filter);
+    FilterProgrammer::Filters getFilterRoutedBefore(FilterProgrammer::Filters filter);
+    FilterProgrammer::Filters getFilterRoutedAfter(FilterProgrammer::Filters filter);
+
+    typedef QList<FilterProgrammer::Filters> TFilterList;
+
     // ordered list of the routed filters
-    QList<FilterProgrammer::Filters> routedFilters;
+    QMap<Demo, TFilterList> iRoutedFilters;
+
+    typedef QMap<Demo, TFilterList> TDemoFilterMap;
+    TDemoFilterMap filtersPerDemo;
 
     DyploContext& dyploContext;
     FilterProgrammer& filterProgrammer;

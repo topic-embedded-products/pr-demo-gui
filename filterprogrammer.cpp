@@ -1,4 +1,5 @@
 #include "filterprogrammer.h"
+#include <QDebug>
 
 FilterProgrammer::FilterProgrammer(DyploContext& context) :
     dyploContext(context)
@@ -84,8 +85,32 @@ bool FilterProgrammer::ProgramFilter(Filters filter,
        // check if PR region is already programmed
        if (!programmedPartials.values().contains(region))
        {
-           // TODO: program partial using Dyplo API
            QString partialFileName = getPartialFilename(filter);
+
+           try
+           {
+              // TODO: test & implement fully:
+               /*
+              dyplo::HardwareContext hwContext = dyploContext.GetHardwareContext();
+
+              std::string libraryName = "pr_demo";
+              std::string bitstreamBasePath = "/usr/share/bitstreams/" + libraryName;
+              hwContext.setBitstreamBasepath(bitstreamBasePath);
+
+               // Search for the filename of the partial
+              std::string filename = hwContext.findPartition(partialFileName.toStdString().c_str(), region);
+
+              // Program task on FPGA
+              dyplo::HardwareConfig nodeCfg(hwContext, region);
+              nodeCfg.disableNode();
+              hwContext.program(filename.c_str());
+              nodeCfg.enableNode();
+              */
+           }
+           catch (const std::exception& ex)
+           {
+              qCritical() << "ERROR:\n" << QString(ex.what());
+           }
 
            programmed = true;
 
@@ -106,12 +131,27 @@ bool FilterProgrammer::DisableFilter(FilterProgrammer::Filters filter,
     {
         PrRegion& region = programmedPartials[filter];
 
-        // TODO: disable partial using Dyplo API
+        // disable partial using Dyplo API
+        try
+        {
+           // TODO: test & implement fully:
+            /*
+           dyplo::HardwareContext hwContext = dyploContext.GetHardwareContext();
 
-        disabledRegion = region;
-        disabled = true;
+           // Program task on FPGA
+           dyplo::HardwareConfig nodeCfg(hwContext, region);
+           nodeCfg.disableNode();
+           */
 
-        programmedPartials.remove(filter);
+           disabledRegion = region;
+           disabled = true;
+
+           programmedPartials.remove(filter);
+        }
+        catch (const std::exception& ex)
+        {
+           qCritical() << "ERROR:\n" << QString(ex.what());
+        }
     }
 
     return disabled;
