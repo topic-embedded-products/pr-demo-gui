@@ -13,7 +13,6 @@ public:
     virtual ~SpectrumWidget();
 
     virtual void paintEvent(QPaintEvent *event);
-    virtual bool eventFilter(QObject *object, QEvent *event);
 
 public slots:
     void updateSpectrum(float* spectrumValues);

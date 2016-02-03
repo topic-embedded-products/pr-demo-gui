@@ -29,25 +29,12 @@ SpectrumWidget::SpectrumWidget(QWidget *parent) :
     connect(&iMicrophoneCapture, SIGNAL(capturedAudio(short*,uint)), this, SLOT(audioData(short*,uint)));
     QString audioDeviceName("default");
     iMicrophoneCapture.startCapturing(audioDeviceName);
-
-    //this->installEventFilter(this);
 }
 
 SpectrumWidget::~SpectrumWidget()
 {
     delete[] iCurrentBarHeight;
 }
-
-/*
-bool SpectrumWidget::eventFilter(QObject* object, QEvent* event)
-{
-    if (object != this)
-    {
-        return true;
-    }
-    return false;
-}
-*/
 
 void SpectrumWidget::paintEvent(QPaintEvent* )
 {
@@ -111,7 +98,7 @@ void SpectrumWidget::updateSpectrum(float* spectrumValues)
     iNewSpectrum = spectrumValues;
     iMaxValue = std::max<float>(iMaxValue, getMaxValue(spectrumValues));
 
-    //update();
+    update();
 }
 
 void SpectrumWidget::audioData(short* buf, unsigned int)
