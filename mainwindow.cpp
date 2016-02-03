@@ -7,6 +7,7 @@
 #include <QPropertyAnimation>
 #include <cstdlib>
 #include <ctime>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -221,7 +222,6 @@ void MainWindow::showProgrammingMetrics(EPrRegion programRegion,
         .arg(programRegion).arg(programTimeMs));
     ui->partialProgramMetrics->show();
 
-    // TODO: check if these objects leaks:
     QGraphicsOpacityEffect* eff = new QGraphicsOpacityEffect(this);
     ui->partialProgramMetrics->setGraphicsEffect(eff);
     QPropertyAnimation* a = new QPropertyAnimation(eff, "opacity");

@@ -24,3 +24,7 @@ missing
 /config.h.in
 m4
 compile
+libfourier.a
+stamp-h1
+test-driver
+testfourier
