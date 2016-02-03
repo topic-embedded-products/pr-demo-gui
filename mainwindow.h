@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
 #include "filterprogrammer.h"
 #include "dyplocontext.h"
 #include "dyplorouter.h"
@@ -36,11 +37,14 @@ private slots:
 
     void hideProgrammingMetrics();
 
+    void updateSpectrum();
+
 private:
     void showProgrammingMetrics(EPrRegion programRegion, quint32 programTimeMs);
     void setFilterStatus(EFilters filter, bool enabled);
     void showOverlay(EPrRegion prRegion, const QColor& color);
     void hideOverlay(EPrRegion prRegion);
+
 
     Ui::MainWindow*   ui;
 
@@ -48,6 +52,9 @@ private:
     DyploRouter       dyploRouter;
 
     QMap<EFilters, QColor> filterColorMap;
+
+    float spectrumValues[100];
+    QTimer* spectrumTimer;
 
     QString getOverlayBackgroundColor(const QColor& color);
 };

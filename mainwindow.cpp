@@ -1,9 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "fourierfilter.h"
 
 #include <QTimer>
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
+#include <cstdlib>
+#include <ctime>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -31,6 +34,33 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->mandelbrot->start(dyploRouter.GetDemoOutputNode(DemoMandelbrot));
     ui->video->start(dyploRouter.GetDemoOutputNode(DemoMandelbrot));
+
+
+    // temporary test code
+    /*
+    short input_data[2048];
+    gen_signal(2048, &input_data[0], 2000.0f * 5, 3000.0f * (6-1)); // Create input
+
+    FourierFilter* filter = new FourierFilter(2048, 100);
+    float* spectrumValues = filter->getSpectrum(&input_data[0]);
+
+    std::srand(std::time(0));
+    for (int i = 0; i < 100; i++)
+    {
+        spectrumValues[i] = std::rand();
+    }
+    spectrumValues[24] = 15359473.0/2;
+    spectrumValues[2] = 15359473.0/3;
+    spectrumValues[1] = 15359473.0/1.1;
+    */
+
+    // For testing purposes:
+    ui->spectrum->setSpectrumSize(100);
+    spectrumTimer = new QTimer(this);
+    connect(spectrumTimer, SIGNAL(timeout()), this, SLOT(updateSpectrum()));
+    spectrumTimer->start(33);
+
+    std::srand(std::time(0));
 }
 
 void MainWindow::showOverlay(EPrRegion prRegion, const QColor& color)
@@ -96,9 +126,20 @@ void MainWindow::hideOverlay(EPrRegion prRegion)
     }
 }
 
+void MainWindow::updateSpectrum()
+{
+    for (int i = 0; i < 100; i++)
+    {
+        spectrumValues[i] = std::rand() % 100;
+    }
+
+    ui->spectrum->updateSpectrum(spectrumValues);
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete spectrumTimer;
 }
 
 QString MainWindow::getOverlayBackgroundColor(const QColor& color)
@@ -180,7 +221,7 @@ void MainWindow::showProgrammingMetrics(EPrRegion programRegion,
         .arg(programRegion).arg(programTimeMs));
     ui->partialProgramMetrics->show();
 
-    // TODO: check if this object leaks:
+    // TODO: check if these objects leaks:
     QGraphicsOpacityEffect* eff = new QGraphicsOpacityEffect(this);
     ui->partialProgramMetrics->setGraphicsEffect(eff);
     QPropertyAnimation* a = new QPropertyAnimation(eff, "opacity");

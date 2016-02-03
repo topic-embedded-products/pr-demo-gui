@@ -1423,7 +1423,7 @@ QPushButton
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QWidget" name="audio" native="true">
+    <widget class="SpectrumWidget" name="spectrum" native="true">
      <property name="geometry">
       <rect>
        <x>630</x>
@@ -2760,6 +2760,12 @@ color: rgb(255, 255, 255);</string>
    <class>VideoWidget</class>
    <extends>QWidget</extends>
    <header>videowidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SpectrumWidget</class>
+   <extends>QWidget</extends>
+   <header>spectrumwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

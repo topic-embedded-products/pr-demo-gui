@@ -15,6 +15,9 @@ TEMPLATE = app
 LIBS        +=  -L$(HOME)/lib -ldyplo
 INCLUDEPATH +=  $(HOME)/include
 
+# include fftw3
+LIBS        += -lfftw3f
+
 SOURCES +=  main.cpp\
             mainwindow.cpp \
             filterprogrammer.cpp \
@@ -23,7 +26,9 @@ SOURCES +=  main.cpp\
             videowidget.cpp \
             dyplovideothread.cpp \
             dyplocontext.cpp \
-            dyplorouter.cpp
+            dyplorouter.cpp \
+            fourierfilter.cpp \
+    spectrumwidget.cpp
 
 
 
@@ -35,7 +40,9 @@ HEADERS  += mainwindow.h \
             dyplovideothread.h \
             dyplocontext.h \
             dyplorouter.h \
-            types.h
+            types.h \
+            fourierfilter.h \
+    spectrumwidget.h
 
 FORMS    += mainwindow.ui
 
