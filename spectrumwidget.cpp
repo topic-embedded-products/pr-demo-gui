@@ -6,23 +6,48 @@
 #include <cstring>
 #include <QTime>
 #include <cmath>
+#include <QEvent>
+
+const unsigned int SpectrumWidget::SPECTRUM_SIZE = 100;
 
 SpectrumWidget::SpectrumWidget(QWidget *parent) :
     QWidget(parent),
-    iSpectrumSize(0),
+    iSpectrumSize(SPECTRUM_SIZE),
     iMaxValue(0.0f),
     iNewSpectrum(NULL),
     iDrawnCurrentBars(false),
-    iCurrentBarHeight(NULL)
+    iCurrentBarHeight(NULL),
+    iMicrophoneCapture(),
+    iFourierFilter(MicrophoneCaptureThread::CAPTURE_SIZE, iSpectrumSize)
 {
+    iCurrentBarHeight = new int[iSpectrumSize];
+    memset(iCurrentBarHeight, 0, iSpectrumSize*sizeof(int));
+
     // force no complete redraw
     setAttribute(Qt::WA_OpaquePaintEvent);
+
+    connect(&iMicrophoneCapture, SIGNAL(capturedAudio(short*,uint)), this, SLOT(audioData(short*,uint)));
+    QString audioDeviceName("default");
+    iMicrophoneCapture.startCapturing(audioDeviceName);
+
+    //this->installEventFilter(this);
 }
 
 SpectrumWidget::~SpectrumWidget()
 {
     delete[] iCurrentBarHeight;
 }
+
+/*
+bool SpectrumWidget::eventFilter(QObject* object, QEvent* event)
+{
+    if (object != this)
+    {
+        return true;
+    }
+    return false;
+}
+*/
 
 void SpectrumWidget::paintEvent(QPaintEvent* )
 {
@@ -81,23 +106,22 @@ void SpectrumWidget::paintEvent(QPaintEvent* )
     }
 }
 
-void SpectrumWidget::setSpectrumSize(int size)
-{
-    iSpectrumSize = size;
-
-    if (iCurrentBarHeight != NULL)
-        delete[] iCurrentBarHeight;
-
-    iCurrentBarHeight = new int[size];
-    memset(iCurrentBarHeight, 0, size*sizeof(int));
-}
-
 void SpectrumWidget::updateSpectrum(float* spectrumValues)
 {
     iNewSpectrum = spectrumValues;
     iMaxValue = std::max<float>(iMaxValue, getMaxValue(spectrumValues));
 
-    update();
+    //update();
+}
+
+void SpectrumWidget::audioData(short* buf, unsigned int)
+{
+    float* spectrum = iFourierFilter.getSpectrum(buf);
+
+    // 'buf' has been used to generate the spectrum, continue capturing
+    iMicrophoneCapture.continueCapturing();
+
+    updateSpectrum(spectrum);
 }
 
 float SpectrumWidget::getMaxValue(float* spectrumValues)

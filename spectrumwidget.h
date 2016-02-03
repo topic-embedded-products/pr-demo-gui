@@ -2,6 +2,8 @@
 #define SPECTRUMWIDGET_H
 
 #include <QWidget>
+#include "microphonecapturethread.h"
+#include "fourierfilter.h"
 
 class SpectrumWidget : public QWidget
 {
@@ -11,16 +13,18 @@ public:
     virtual ~SpectrumWidget();
 
     virtual void paintEvent(QPaintEvent *event);
-
-    void setSpectrumSize(int size);
-    void updateSpectrum(float* spectrumValues);
-    float getMaxValue(float* spectrumValues);
-
-signals:
+    virtual bool eventFilter(QObject *object, QEvent *event);
 
 public slots:
+    void updateSpectrum(float* spectrumValues);
+
+    void audioData(short* buf, unsigned int len);
 
 private:
+    float getMaxValue(float* spectrumValues);
+
+    static const unsigned int SPECTRUM_SIZE;
+
     int     iSpectrumSize;
     float   iMaxValue;
     bool    iKeepPainting;
@@ -28,6 +32,9 @@ private:
     float*  iNewSpectrum;
     bool    iDrawnCurrentBars;
     int*    iCurrentBarHeight;
+
+    MicrophoneCaptureThread iMicrophoneCapture;
+    FourierFilter iFourierFilter;
 };
 
 #endif // SPECTRUMWIDGET_H

@@ -6,6 +6,7 @@
 #include "filterprogrammer.h"
 #include "dyplocontext.h"
 #include "dyplorouter.h"
+#include "microphonecapturethread.h"
 
 namespace Ui {
 class MainWindow;
@@ -54,7 +55,8 @@ private:
     QMap<EFilters, QColor> filterColorMap;
 
     float spectrumValues[100];
-    QTimer* spectrumTimer;
+
+    MicrophoneCaptureThread microphoneCaptureThread;
 
     QString getOverlayBackgroundColor(const QColor& color);
 };

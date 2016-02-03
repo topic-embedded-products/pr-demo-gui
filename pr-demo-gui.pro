@@ -18,6 +18,9 @@ INCLUDEPATH +=  $(HOME)/include
 # include fftw3
 LIBS        += -lfftw3f
 
+# include alsa
+LIBS        += -lasound
+
 SOURCES +=  main.cpp\
             mainwindow.cpp \
             filterprogrammer.cpp \
@@ -28,7 +31,8 @@ SOURCES +=  main.cpp\
             dyplocontext.cpp \
             dyplorouter.cpp \
             fourierfilter.cpp \
-    spectrumwidget.cpp
+            spectrumwidget.cpp \
+            microphonecapturethread.cpp
 
 
 
@@ -42,7 +46,8 @@ HEADERS  += mainwindow.h \
             dyplorouter.h \
             types.h \
             fourierfilter.h \
-    spectrumwidget.h
+            spectrumwidget.h \
+            microphonecapturethread.h
 
 FORMS    += mainwindow.ui
 
