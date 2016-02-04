@@ -16,6 +16,7 @@ PKGCONFIG += fftw3f dyplo alsa
 
 SOURCES +=  main.cpp\
             mainwindow.cpp \
+            mousemonitor.cpp \
             filterprogrammer.cpp \
             dyplomandelbrotthread.cpp \
             fpgamandelbrotwidget.cpp \
@@ -30,6 +31,7 @@ SOURCES +=  main.cpp\
 
 
 HEADERS  += mainwindow.h \
+            mousemonitor.h \
             filterprogrammer.h \
             dyplomandelbrotthread.h \
             fpgamandelbrotwidget.h \
