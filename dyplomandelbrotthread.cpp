@@ -58,6 +58,7 @@ void DyploMandelbrotThread::run()
         mandelbrotOutput.reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, bytes_per_block, num_blocks, true);
 
         forever {
+            /* TODO: enable when integrating
             dyplo::HardwareDMAFifo::Block* block = mandelbrotOutput.dequeue();
             const uchar* pixelbuffer = (const uchar*)block->data;
 
@@ -68,6 +69,7 @@ void DyploMandelbrotThread::run()
 
             QImage image(pixelbuffer, FpgaMandelbrotWidget::RESOLUTION_X, FpgaMandelbrotWidget::RESOLUTION_Y, QImage::Format_RGB888);
             emit renderedImage(image);
+            */
 
             mutex.lock();
             if (!continueGrabbing)

@@ -52,6 +52,7 @@ void DyploVideoThread::run()
     try
     {
         // TODO test & implement more
+
         dyplo::HardwareDMAFifo videoOutputNode(DyploContext::getInstance().GetHardwareContext().openDMA(dyploOutputNodeId, O_RDONLY));
 
         static const unsigned int bytes_per_block = VideoWidget::RESOLUTION_X * VideoWidget::RESOLUTION_Y * VideoWidget::BYTES_PER_PIXEL;
@@ -59,6 +60,7 @@ void DyploVideoThread::run()
         videoOutputNode.reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, bytes_per_block, num_blocks, true);
 
         forever {
+            /* TODO: enable when integrating
             dyplo::HardwareDMAFifo::Block* block = videoOutputNode.dequeue();
             const uchar* pixelbuffer = (const uchar*)block->data;
 
@@ -70,6 +72,7 @@ void DyploVideoThread::run()
             // TODO, add scaling
             QImage image(pixelbuffer, VideoWidget::RESOLUTION_X, VideoWidget::RESOLUTION_Y, QImage::Format_RGB888);
             emit renderedImage(image);
+            */
 
             mutex.lock();
             if (!continueGrabbing)

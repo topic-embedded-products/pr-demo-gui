@@ -96,7 +96,11 @@ void SpectrumWidget::paintEvent(QPaintEvent* )
 void SpectrumWidget::updateSpectrum(float* spectrumValues)
 {
     iNewSpectrum = spectrumValues;
+
     iMaxValue = std::max<float>(iMaxValue, getMaxValue(spectrumValues));
+
+    // deduct a small percentage of the maximum (correction for loud noises).
+    iMaxValue =  iMaxValue * 0.9995;
 
     update();
 }
