@@ -11,15 +11,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = pr-demo-gui
 TEMPLATE = app
 
-# include dyplo
-LIBS        +=  -L$(HOME)/lib -ldyplo
-INCLUDEPATH +=  $(HOME)/include
-
-# include fftw3
-LIBS        += -lfftw3f
-
-# include alsa
-LIBS        += -lasound
+CONFIG += link_pkgconfig
+PKGCONFIG += fftw3f dyplo alsa
 
 SOURCES +=  main.cpp\
             mainwindow.cpp \
@@ -53,3 +46,6 @@ FORMS    += mainwindow.ui
 
 RESOURCES += \
     resources.qrc
+
+target.path = /usr/bin
+INSTALLS += target
