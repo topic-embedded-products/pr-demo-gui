@@ -26,7 +26,8 @@ SOURCES +=  main.cpp\
             dyplorouter.cpp \
             fourierfilter.cpp \
             spectrumwidget.cpp \
-            microphonecapturethread.cpp
+            microphonecapturethread.cpp \
+    video-capture.cpp
 
 
 
@@ -42,7 +43,8 @@ HEADERS  += mainwindow.h \
             types.h \
             fourierfilter.h \
             spectrumwidget.h \
-            microphonecapturethread.h
+            microphonecapturethread.h \
+    video-capture.h
 
 FORMS    += mainwindow.ui
 
