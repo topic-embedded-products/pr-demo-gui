@@ -4,7 +4,6 @@
 #include <QPixmap>
 #include <QWidget>
 #include <QTimer>
-#include "dyplovideothread.h"
 
 class VideoWidget : public QWidget
 {
@@ -18,10 +17,6 @@ public:
     static const quint32 RESOLUTION_Y;
     static const quint32 BYTES_PER_PIXEL;
 
-public slots:
-    void start(int dyploNodeId);
-    void stop();
-
 protected:
     virtual void paintEvent(QPaintEvent *event);
 
@@ -34,7 +29,6 @@ private slots:
     void updateFramerate();
 
 private:
-    DyploVideoThread dyplothread;
     QAtomicInt frameRenderCount;
     QTimer* framerateTimer;
     QPixmap pixmap;

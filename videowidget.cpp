@@ -1,6 +1,5 @@
 #include <QPainter>
 #include "videowidget.h"
-#include "dyplovideothread.h"
 
 const quint32 VideoWidget::RESOLUTION_X = 421;
 const quint32 VideoWidget::RESOLUTION_Y = 291;
@@ -8,32 +7,17 @@ const quint32 VideoWidget::BYTES_PER_PIXEL = 3;
 
 VideoWidget::VideoWidget(QWidget *parent) :
     QWidget(parent),
-    dyplothread(),
     frameRenderCount(0)
 {
-    connect(&dyplothread, SIGNAL(renderedImage(QImage)), this, SLOT(updatePixmap(QImage)));
-
     framerateTimer = new QTimer(this);
     connect(framerateTimer, SIGNAL(timeout()), this, SLOT(updateFramerate()));
     framerateTimer->start(1000);
     pixmapOffset = QPoint();
-
-    setWindowTitle("Topic Products - Mandelbrot demo");
 }
 
 VideoWidget::~VideoWidget()
 {
     delete framerateTimer;
-}
-
-void VideoWidget::start(int dyploNodeId)
-{
-    dyplothread.startRendering(dyploNodeId);
-}
-
-void VideoWidget::stop()
-{
-    dyplothread.stopRendering();
 }
 
 void VideoWidget::paintEvent(QPaintEvent * /* event */)
@@ -49,7 +33,6 @@ void VideoWidget::updatePixmap(const QImage& image)
 
     pixmap = QPixmap::fromImage(image);
     update();
-    dyplothread.grabNextFrame();
 }
 
 void VideoWidget::updateFramerate()

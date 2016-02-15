@@ -2115,7 +2115,7 @@ QPushButton
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="FpgaMandelbrotWidget" name="mandelbrot" native="true">
+    <widget class="QWidget" name="mandelbrot" native="true">
      <property name="geometry">
       <rect>
        <x>630</x>
@@ -2750,12 +2750,6 @@ color: rgb(255, 255, 255);</string>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
-  <customwidget>
-   <class>FpgaMandelbrotWidget</class>
-   <extends>QWidget</extends>
-   <header>fpgamandelbrotwidget.h</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>VideoWidget</class>
    <extends>QWidget</extends>

@@ -33,9 +33,6 @@ MainWindow::MainWindow(QWidget *parent) :
     filterColorMap[FilterAudioHighpass] = QColor(255,0,0);
     filterColorMap[FilterAudioLowpass] = QColor(255,0,0);
     filterColorMap[FilterMandelbrot] = QColor(0,255,0);
-
-    ui->mandelbrot->start(dyploRouter.GetDemoOutputNode(DemoMandelbrot));
-    ui->video->start(dyploRouter.GetDemoOutputNode(DemoMandelbrot));
 }
 
 void MainWindow::showOverlay(EPrRegion prRegion, const QColor& color)

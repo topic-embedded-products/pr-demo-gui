@@ -18,10 +18,7 @@ SOURCES +=  main.cpp\
             mainwindow.cpp \
             mousemonitor.cpp \
             filterprogrammer.cpp \
-            dyplomandelbrotthread.cpp \
-            fpgamandelbrotwidget.cpp \
             videowidget.cpp \
-            dyplovideothread.cpp \
             dyplocontext.cpp \
             dyplorouter.cpp \
             fourierfilter.cpp \
@@ -34,10 +31,7 @@ SOURCES +=  main.cpp\
 HEADERS  += mainwindow.h \
             mousemonitor.h \
             filterprogrammer.h \
-            dyplomandelbrotthread.h \
-            fpgamandelbrotwidget.h \
             videowidget.h \
-            dyplovideothread.h \
             dyplocontext.h \
             dyplorouter.h \
             types.h \
