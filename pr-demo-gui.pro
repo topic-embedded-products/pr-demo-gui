@@ -24,7 +24,8 @@ SOURCES +=  main.cpp\
             fourierfilter.cpp \
             spectrumwidget.cpp \
             microphonecapturethread.cpp \
-    video-capture.cpp
+    video-capture.cpp \
+    frameratecounter.cpp
 
 
 
@@ -38,7 +39,8 @@ HEADERS  += mainwindow.h \
             fourierfilter.h \
             spectrumwidget.h \
             microphonecapturethread.h \
-    video-capture.h
+    video-capture.h \
+    frameratecounter.h
 
 FORMS    += mainwindow.ui
 

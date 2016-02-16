@@ -1,44 +1,29 @@
 #include <QPainter>
 #include "videowidget.h"
 
-const quint32 VideoWidget::RESOLUTION_X = 421;
-const quint32 VideoWidget::RESOLUTION_Y = 291;
-const quint32 VideoWidget::BYTES_PER_PIXEL = 3;
-
 VideoWidget::VideoWidget(QWidget *parent) :
-    QWidget(parent),
-    frameRenderCount(0)
+    QWidget(parent)
 {
-    framerateTimer = new QTimer(this);
-    connect(framerateTimer, SIGNAL(timeout()), this, SLOT(updateFramerate()));
-    framerateTimer->start(1000);
-    pixmapOffset = QPoint();
-}
-
-VideoWidget::~VideoWidget()
-{
-    delete framerateTimer;
+    setAttribute(Qt::WA_OpaquePaintEvent);
 }
 
 void VideoWidget::paintEvent(QPaintEvent * /* event */)
 {
     QPainter painter(this);
-    painter.fillRect(rect(), Qt::black);
-    painter.drawPixmap(pixmapOffset, pixmap);
+    int w = width();
+    int h = height();
+    int pw = pixmap.width();
+    int ph = pixmap.height();
+
+    painter.drawPixmap(0, 0, pixmap);
+    /* Paint the areas the pixmap did not cover in black */
+    painter.fillRect(pw, 0, w - pw, ph, Qt::black);
+    painter.fillRect(0, ph, w, h - ph, Qt::black);
 }
 
 void VideoWidget::updatePixmap(const QImage& image)
 {
-    frameRenderCount = frameRenderCount + 1;
-
+    framerateCounter.frame();
     pixmap = QPixmap::fromImage(image);
     update();
-}
-
-void VideoWidget::updateFramerate()
-{
-    quint32 fps = frameRenderCount;
-    emit frameRate(fps);
-    emit trafficFPGA((fps * RESOLUTION_X * RESOLUTION_Y * BYTES_PER_PIXEL) / 1024 / 1024);
-    frameRenderCount = 0;
 }

@@ -1285,7 +1285,7 @@
       <rect>
        <x>40</x>
        <y>80</y>
-       <width>131</width>
+       <width>191</width>
        <height>17</height>
       </rect>
      </property>
@@ -1298,7 +1298,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Grayscale filter</string>
+      <string>YUV to RGB conversion</string>
      </property>
     </widget>
     <widget class="QPushButton" name="buttonGrayscale">
@@ -2115,7 +2115,7 @@ QPushButton
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QWidget" name="mandelbrot" native="true">
+    <widget class="VideoWidget" name="mandelbrot" native="true">
      <property name="geometry">
       <rect>
        <x>630</x>
