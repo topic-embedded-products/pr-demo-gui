@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QLabel>
 #include "filterprogrammer.h"
 #include "dyplocontext.h"
 #include "dyplorouter.h"
@@ -26,20 +27,22 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_buttonGrayscale_toggled(bool checked);
-    void on_buttonLaplacian_toggled(bool checked);
-    void on_buttonLowPass_toggled(bool checked);
-    void on_buttonHighPass_toggled(bool checked);
-    void on_buttonFFT_toggled(bool checked);
-    void on_buttonMandelbrot_toggled(bool checked);
     void hideProgrammingMetrics();
 
-private:
-    void showProgrammingMetrics(EPrRegion programRegion, quint32 programTimeMs);
-    void setFilterStatus(EFilters filter, bool enabled);
-    void showOverlay(EPrRegion prRegion, const QColor& color);
-    void hideOverlay(EPrRegion prRegion);
+    void on_buttonVideodemo_toggled(bool checked);
+    void on_buttonAudioDemo_toggled(bool checked);
+    void on_buttonMandelbrotDemo_toggled(bool checked);
 
+private:
+    void programmedDemo(EDemo prDemo, const QList<EPrRegion>& prRegionsUsed);
+    void disabledDemo(EDemo prDemo);
+
+    void showProgrammingMetrics(quint32 programTimeMs);
+
+    // OLD implementation. Will be removed in future:
+    //void setFilterStatus(EFilters filter, bool enabled);
+
+    QLabel* getPrRegion(EPrRegion prRegion);
 
     Ui::MainWindow*   ui;
 
@@ -48,7 +51,8 @@ private:
 
     VideoPipeline video;
 
-    QMap<EFilters, QColor> filterColorMap;
+    QMap<EDemo, QColor> demoColorMap;
+    QMap<EDemo, QList<EPrRegion> > demoPrRegionsUsedMap;
 
     MicrophoneCaptureThread microphoneCaptureThread;
 

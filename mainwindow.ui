@@ -776,7 +776,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>110</y>
+      <y>111</y>
       <width>1201</width>
       <height>330</height>
      </rect>
@@ -1280,128 +1280,93 @@
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label_7">
+    <widget class="QPushButton" name="buttonVideodemo">
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>80</y>
-       <width>191</width>
-       <height>17</height>
+       <y>150</y>
+       <width>141</width>
+       <height>61</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>OpenSymbol</family>
-       <weight>50</weight>
-       <italic>false</italic>
-       <bold>false</bold>
+      </font>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton:checked
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(0,0,255);
+        color: rgb(255,255,255);
+}
+
+QPushButton
+{
+        border: 1;
+        border-style: solid
+}
+
+</string>
+     </property>
+     <property name="text">
+      <string>Enable demo</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="cbYUVToRGB">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>60</y>
+       <width>261</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>OpenSymbol</family>
       </font>
      </property>
      <property name="text">
       <string>YUV to RGB conversion</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="buttonGrayscale">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>60</y>
-       <width>221</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton:checked
-{
-        border: 1;
-        border-style: solid;
-        background-color: rgb(0,0,255);
-        color: rgb(255,255,255);
-}
-
-QPushButton
-{
-        border: 1;
-        border-style: solid
-}
-
-</string>
-     </property>
-     <property name="text">
-      <string>Accelerate with FPGA</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="buttonLaplacian">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>130</y>
-       <width>221</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton:checked
-{
-        border: 1;
-        border-style: solid;
-        background-color: rgb(0,0,255);
-        color: rgb(255,255,255);
-}
-
-QPushButton
-{
-        border: 1;
-        border-style: solid
-}
-
-</string>
-     </property>
-     <property name="text">
-      <string>Accelerate with FPGA</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_8">
+    <widget class="QCheckBox" name="cbLaplacian">
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>150</y>
-       <width>131</width>
-       <height>17</height>
+       <y>105</y>
+       <width>231</width>
+       <height>41</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>OpenSymbol</family>
-       <weight>50</weight>
-       <italic>false</italic>
-       <bold>false</bold>
       </font>
      </property>
      <property name="text">
       <string>Laplacian filter</string>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>16</width>
+       <height>16</height>
+      </size>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>
@@ -1913,137 +1878,72 @@ QPushButton
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="buttonLowPass">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>52</y>
-       <width>221</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton:checked
-{
-        border: 1;
-        border-style: solid;
-        background-color: rgb(255,0,0);
-        color: rgb(255,255,255);
-}
-
-QPushButton
-{
-        border: 1;
-        border-style: solid
-}
-
-</string>
-     </property>
-     <property name="text">
-      <string>Accelerate with FPGA</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="buttonHighPass">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>122</y>
-       <width>221</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton:checked
-{
-        border: 1;
-        border-style: solid;
-        background-color: rgb(255,0,0);
-        color: rgb(255,255,255);
-}
-
-QPushButton
-{
-        border: 1;
-        border-style: solid
-}
-
-</string>
-     </property>
-     <property name="text">
-      <string>Accelerate with FPGA</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_4">
+    <widget class="QPushButton" name="buttonAudioDemo">
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>72</y>
-       <width>151</width>
-       <height>17</height>
+       <y>190</y>
+       <width>131</width>
+       <height>61</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>OpenSymbol</family>
-       <weight>50</weight>
-       <italic>false</italic>
-       <bold>false</bold>
+      </font>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton:checked
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(255,0,0);
+        color: rgb(255,255,255);
+}
+
+QPushButton
+{
+        border: 1;
+        border-style: solid
+}
+
+</string>
+     </property>
+     <property name="text">
+      <string>Enable demo</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="cbLowPassFIR">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>60</y>
+       <width>251</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>OpenSymbol</family>
       </font>
      </property>
      <property name="text">
       <string>Low-pass filter (FIR)</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_5">
+    <widget class="QCheckBox" name="cbHighPassFIR">
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>142</y>
-       <width>161</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-       <weight>50</weight>
-       <italic>false</italic>
-       <bold>false</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>High-pass filter (FIR)</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="buttonFFT">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>192</y>
-       <width>221</width>
-       <height>61</height>
+       <y>105</y>
+       <width>251</width>
+       <height>41</height>
       </rect>
      </property>
      <property name="font">
@@ -2051,48 +1951,22 @@ QPushButton
        <family>OpenSymbol</family>
       </font>
      </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton:checked
-{
-        border: 1;
-        border-style: solid;
-        background-color: rgb(255,0,0);
-        color: rgb(255,255,255);
-}
-
-QPushButton
-{
-        border: 1;
-        border-style: solid
-}
-
-</string>
-     </property>
      <property name="text">
-      <string>Accelerate with FPGA</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
+      <string>High-pass filter (FIR)</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_9">
+    <widget class="QCheckBox" name="cbFFT">
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>212</y>
-       <width>67</width>
-       <height>17</height>
+       <y>150</y>
+       <width>71</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>OpenSymbol</family>
-       <weight>50</weight>
-       <italic>false</italic>
-       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -2104,7 +1978,7 @@ QPushButton
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>721</y>
+      <y>729</y>
       <width>1201</width>
       <height>330</height>
      </rect>
@@ -2605,12 +2479,12 @@ QPushButton
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="buttonMandelbrot">
+    <widget class="QPushButton" name="buttonMandelbrotDemo">
      <property name="geometry">
       <rect>
-       <x>250</x>
-       <y>70</y>
-       <width>221</width>
+       <x>40</x>
+       <y>60</y>
+       <width>131</width>
        <height>61</height>
       </rect>
      </property>
@@ -2640,31 +2514,10 @@ QPushButton
 </string>
      </property>
      <property name="text">
-      <string>Accelerate with FPGA</string>
+      <string>Enable demo</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_6">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>90</y>
-       <width>171</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-       <weight>50</weight>
-       <italic>false</italic>
-       <bold>false</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Mandelbrot algorithm</string>
      </property>
     </widget>
    </widget>
