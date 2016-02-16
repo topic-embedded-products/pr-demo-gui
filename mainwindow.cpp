@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "fourierfilter.h"
 #include "microphonecapturethread.h"
+#include "dyplocontext.h"
 
 #include <QTimer>
 #include <QGraphicsOpacityEffect>
@@ -10,11 +11,13 @@
 #include <ctime>
 #include <QDebug>
 
+static DyploContext dyploContext;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    filterProgrammer(DyploContext::getInstance()),
-    dyploRouter(DyploContext::getInstance(), filterProgrammer)
+    filterProgrammer(dyploContext),
+    dyploRouter(dyploContext, filterProgrammer)
 {
     ui->setupUi(this);
     ui->partialProgramMetrics->hide();

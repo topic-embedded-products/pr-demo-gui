@@ -5,7 +5,6 @@
 #include <QTimer>
 #include <QLabel>
 #include "filterprogrammer.h"
-#include "dyplocontext.h"
 #include "dyplorouter.h"
 #include "microphonecapturethread.h"
 

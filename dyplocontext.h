@@ -7,21 +7,13 @@
 class DyploContext
 {
 public:
-    // singleton
-    static DyploContext& getInstance()
-    {
-        static DyploContext instance;
-        return instance;
-    }
-
+    DyploContext();
     ~DyploContext();
 
     dyplo::HardwareContext& GetHardwareContext();
     dyplo::HardwareControl& GetHardwareControl();
 
 private:
-
-    DyploContext();                         // Constructor? (the {} brackets) are needed here.
     DyploContext(DyploContext const&);      // Don't Implement
     void operator=(DyploContext const&);    // Don't implement
 
