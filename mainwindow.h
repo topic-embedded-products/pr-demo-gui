@@ -8,6 +8,8 @@
 #include "dyplorouter.h"
 #include "microphonecapturethread.h"
 
+#include "videopipeline.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -25,20 +27,12 @@ public:
 
 private slots:
     void on_buttonGrayscale_toggled(bool checked);
-
     void on_buttonLaplacian_toggled(bool checked);
-
     void on_buttonLowPass_toggled(bool checked);
-
     void on_buttonHighPass_toggled(bool checked);
-
     void on_buttonFFT_toggled(bool checked);
-
     void on_buttonMandelbrot_toggled(bool checked);
-
     void hideProgrammingMetrics();
-
-    void updateSpectrum();
 
 private:
     void showProgrammingMetrics(EPrRegion programRegion, quint32 programTimeMs);
@@ -52,13 +46,15 @@ private:
     FilterProgrammer  filterProgrammer;
     DyploRouter       dyploRouter;
 
-    QMap<EFilters, QColor> filterColorMap;
+    VideoPipeline video;
 
-    float spectrumValues[100];
+    QMap<EFilters, QColor> filterColorMap;
 
     MicrophoneCaptureThread microphoneCaptureThread;
 
     QString getOverlayBackgroundColor(const QColor& color);
+
+
 };
 
 #endif // MAINWINDOW_H

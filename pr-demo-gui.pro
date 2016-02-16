@@ -25,7 +25,8 @@ SOURCES +=  main.cpp\
             spectrumwidget.cpp \
             microphonecapturethread.cpp \
     video-capture.cpp \
-    frameratecounter.cpp
+    frameratecounter.cpp \
+    videopipeline.cpp
 
 
 
@@ -40,7 +41,8 @@ HEADERS  += mainwindow.h \
             spectrumwidget.h \
             microphonecapturethread.h \
     video-capture.h \
-    frameratecounter.h
+    frameratecounter.h \
+    videopipeline.h
 
 FORMS    += mainwindow.ui
 

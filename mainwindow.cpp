@@ -33,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent) :
     filterColorMap[FilterAudioHighpass] = QColor(255,0,0);
     filterColorMap[FilterAudioLowpass] = QColor(255,0,0);
     filterColorMap[FilterMandelbrot] = QColor(0,255,0);
+
+    connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
 }
 
 void MainWindow::showOverlay(EPrRegion prRegion, const QColor& color)
@@ -98,16 +100,6 @@ void MainWindow::hideOverlay(EPrRegion prRegion)
     }
 }
 
-void MainWindow::updateSpectrum()
-{
-    for (int i = 0; i < 100; i++)
-    {
-        spectrumValues[i] = std::rand() % 100;
-    }
-
-    ui->spectrum->updateSpectrum(spectrumValues);
-}
-
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -123,6 +115,10 @@ QString MainWindow::getOverlayBackgroundColor(const QColor& color)
 
 void MainWindow::on_buttonGrayscale_toggled(bool checked)
 {
+    if (checked)
+        video.activate();
+    else
+        video.deactivate();
     setFilterStatus(FilterVideoGrayscale, checked);
 }
 

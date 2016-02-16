@@ -177,17 +177,22 @@ int VideoCapture::stop()
 
 void VideoCapture::teardown()
 {
-    for (unsigned int i = 0; i < n_buffers; ++i)
-            munmap(buffers[i].start, buffers[i].length);
-    delete [] buffers;
-    n_buffers = 0;
-    buffers = NULL;
+    if (buffers)
+    {
+        stop(); /* In case the user forgot to cal it */
+        for (unsigned int i = 0; i < n_buffers; ++i)
+                munmap(buffers[i].start, buffers[i].length);
+        delete [] buffers;
+        n_buffers = 0;
+        buffers = NULL;
+    }
 }
 
 void VideoCapture::close()
 {
     if (fd != -1)
     {
+        teardown();
         ::close(fd);
         fd = -1;
     }
