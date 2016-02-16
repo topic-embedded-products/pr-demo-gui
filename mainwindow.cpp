@@ -175,16 +175,13 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
         bool enableYUVtoRGB = ui->cbYUVToRGB->isChecked();
         bool enableLaplacian = ui->cbLaplacian->isChecked();
 
-        video.activate();
-
+        if (video.activate() != 0)
+            updateVideoDemoState(false);
     }
     else
     {
         video.deactivate();
     }
-
-    ui->cbYUVToRGB->setEnabled(!checked);
-    ui->cbLaplacian->setEnabled(!checked);
 }
 
 void MainWindow::on_buttonAudioDemo_toggled(bool checked)
@@ -210,4 +207,11 @@ void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
     {
 
     }
+}
+
+void MainWindow::updateVideoDemoState(bool active)
+{
+    ui->buttonVideodemo->setChecked(active);
+    ui->cbYUVToRGB->setEnabled(!active);
+    ui->cbLaplacian->setEnabled(!active);
 }

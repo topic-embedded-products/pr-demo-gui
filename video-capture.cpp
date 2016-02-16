@@ -1,4 +1,3 @@
-
 #include "video-capture.h"
 
 #include <stdlib.h>
@@ -31,7 +30,8 @@ static int xioctl(int fh, int request, void *arg)
 VideoCapture::VideoCapture():
       fd(-1),
       buffers(NULL),
-      n_buffers(0)
+      n_buffers(0),
+      current_buf(new struct v4l2_buffer)
 {
 }
 
@@ -135,15 +135,13 @@ int VideoCapture::start()
     return 0;
 }
 
-int VideoCapture::grab(const void **data, unsigned int *bytesused)
+int VideoCapture::begin_grab(const void **data, unsigned int *bytesused)
 {
-    struct v4l2_buffer buf;
+    CLEAR(*current_buf);
+    current_buf->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    current_buf->memory = V4L2_MEMORY_MMAP;
 
-    CLEAR(buf);
-    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    buf.memory = V4L2_MEMORY_MMAP;
-
-    if (-1 == xioctl(fd, VIDIOC_DQBUF, &buf)) {
+    if (-1 == xioctl(fd, VIDIOC_DQBUF, current_buf)) {
             switch (errno) {
             case EAGAIN:
                     return 0;
@@ -155,17 +153,21 @@ int VideoCapture::grab(const void **data, unsigned int *bytesused)
             }
     }
 
-    if (buf.index >= n_buffers)
+    if (current_buf->index >= n_buffers)
         return -EFAULT;
 
-    *data = buffers[buf.index].start;
-    *bytesused = buf.bytesused;
-
-    if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
-            return -errno;
+    *data = buffers[current_buf->index].start;
+    *bytesused = current_buf->bytesused;
 
     return 1;
 }
+
+int VideoCapture::end_grab()
+{
+    if (-1 == xioctl(fd, VIDIOC_QBUF, current_buf))
+            return -errno;
+}
+
 
 int VideoCapture::stop()
 {

@@ -20,6 +20,7 @@ public:
 
 signals:
     void renderedImage(const QImage &image);
+    void setActive(bool active);
 
 private slots:
     void frameAvailable(int socket);

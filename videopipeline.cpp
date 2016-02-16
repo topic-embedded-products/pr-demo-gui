@@ -4,6 +4,9 @@
 #include <QImage>
 #include <QSocketNotifier>
 
+#define VIDEO_WIDTH  640
+#define VIDEO_HEIGHT 320
+
 VideoPipeline::VideoPipeline():
     socketNotifier(NULL)
 {
@@ -27,7 +30,7 @@ int VideoPipeline::activate()
         return r;
     }
 
-    r = capture.setup(640, 320);
+    r = capture.setup(VIDEO_WIDTH, VIDEO_HEIGHT);
     if (r < 0) {
         qWarning() << "Failed to configure video capture device";
         return r;
@@ -43,6 +46,7 @@ int VideoPipeline::activate()
     connect(socketNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailable(int)));
     socketNotifier->setEnabled(true);
 
+    emit setActive(true);
     return r;
 }
 
@@ -51,6 +55,8 @@ void VideoPipeline::deactivate()
     delete socketNotifier;
     socketNotifier = NULL;
     capture.close();
+    emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
+    emit setActive(false);
 }
 
 static unsigned char clamp(short v)
@@ -96,8 +102,8 @@ void VideoPipeline::frameAvailable(int)
     const void* data;
     unsigned int size;
     int r;
-    r = capture.grab(&data, &size);
 
+    r = capture.begin_grab(&data, &size);
     if ( r <= 0) {
         if (r < 0)
             deactivate();
@@ -105,12 +111,16 @@ void VideoPipeline::frameAvailable(int)
     }
 
     if (!rgb_buffer)
-        rgb_buffer = new unsigned char[640*320*3];
+        rgb_buffer = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT*3];
 
-    if (size > 640*320*2)
-        size = 640*320*2;
+    if (size > VIDEO_WIDTH * VIDEO_HEIGHT * 2)
+        size = VIDEO_WIDTH * VIDEO_HEIGHT * 2;
     torgb((const uchar*)data, size, rgb_buffer);
 
-    QImage image(rgb_buffer, 640, 320, QImage::Format_RGB888);
+    QImage image(rgb_buffer, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888);
     emit renderedImage(image);
+
+    r = capture.end_grab();
+    if (r < 0)
+            deactivate();
 }

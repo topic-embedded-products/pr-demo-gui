@@ -9,8 +9,8 @@ public:
     int open(const char* filename); /* returns -1 on error */
     int setup(int width, int height);
     int start();
-    int grab(const void **data, unsigned int *bytesused);
-    int wait();
+    int begin_grab(const void **data, unsigned int *bytesused);
+    int end_grab();
     int stop();
     void teardown();
     void close();
@@ -23,10 +23,10 @@ protected:
         void *start;
         unsigned int length;
     };
-
     int fd;
     buffer* buffers;
     unsigned int n_buffers;
-	
+    struct v4l2_buffer *current_buf;
+
     int init_mmap();
 };

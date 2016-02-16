@@ -33,6 +33,7 @@ private slots:
     void on_buttonAudioDemo_toggled(bool checked);
     void on_buttonMandelbrotDemo_toggled(bool checked);
 
+    void updateVideoDemoState(bool active);
 private:
     void programmedDemo(EDemo prDemo, const QList<EPrRegion>& prRegionsUsed);
     void disabledDemo(EDemo prDemo);
