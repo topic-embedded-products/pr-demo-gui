@@ -17,10 +17,8 @@ PKGCONFIG += fftw3f dyplo alsa
 SOURCES +=  main.cpp\
             mainwindow.cpp \
             mousemonitor.cpp \
-            filterprogrammer.cpp \
             videowidget.cpp \
             dyplocontext.cpp \
-            dyplorouter.cpp \
             fourierfilter.cpp \
             spectrumwidget.cpp \
             microphonecapturethread.cpp \
@@ -32,10 +30,8 @@ SOURCES +=  main.cpp\
 
 HEADERS  += mainwindow.h \
             mousemonitor.h \
-            filterprogrammer.h \
             videowidget.h \
             dyplocontext.h \
-            dyplorouter.h \
             types.h \
             fourierfilter.h \
             spectrumwidget.h \

@@ -15,9 +15,7 @@ static DyploContext dyploContext;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    filterProgrammer(dyploContext),
-    dyploRouter(dyploContext, filterProgrammer)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     ui->partialProgramMetrics->hide();
@@ -30,82 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->node6_overlay->hide();
     ui->node7_overlay->hide();
 
-    demoColorMap[DemoVideo] = QColor(0,0,255);
-    demoColorMap[DemoAudio] = QColor(255,0,0);
-    demoColorMap[DemoMandelbrot] = QColor(0,255,0);
-
     connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
     connect(&video, SIGNAL(setActive(bool)), this, SLOT(updateVideoDemoState(bool)));
     connect(&dyploContext, SIGNAL(programmedPartial(int,const char*,uint,uint)), this, SLOT(showProgrammingMetrics(int,const char*,uint,uint)));
     connect(&ui->video->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showVideoStats(uint,uint)));
-}
-
-void MainWindow::programmedDemo(EDemo prDemo, const QList<EPrRegion>& prRegionsUsed)
-{
-    Q_ASSERT(demoColorMap.contains(prDemo));
-    QColor& color = demoColorMap[prDemo];
-
-    demoPrRegionsUsedMap[prDemo] = prRegionsUsed;
-
-    QList<EPrRegion>::const_iterator it;
-    for (it = prRegionsUsed.begin(); it != prRegionsUsed.end(); ++it)
-    {
-        EPrRegion prRegion = *it;
-
-        QLabel* prRegionOverlay = getPrRegion(prRegion);
-        Q_ASSERT(prRegionOverlay != NULL);
-        prRegionOverlay->setStyleSheet(getOverlayBackgroundColor(color));
-        prRegionOverlay->show();
-    }
-}
-
-void MainWindow::disabledDemo(EDemo prDemo)
-{
-    Q_ASSERT(demoPrRegionsUsedMap.contains(prDemo));
-    QList<EPrRegion>& prRegionsUsed = demoPrRegionsUsedMap[prDemo];
-    QList<EPrRegion>::iterator it;
-    for (it = prRegionsUsed.begin(); it != prRegionsUsed.end(); ++it)
-    {
-        EPrRegion prRegion = *it;
-
-        QLabel* prRegionOverlay = getPrRegion(prRegion);
-        Q_ASSERT(prRegionOverlay != NULL);
-        prRegionOverlay->hide();
-    }
-
-    demoPrRegionsUsedMap[prDemo].clear();
-}
-
-QLabel* MainWindow::getPrRegion(EPrRegion prRegion)
-{
-    QLabel* prRegionOverlay = NULL;
-
-    switch (prRegion)
-    {
-    case PrRegion1:
-        prRegionOverlay = ui->node1_overlay;
-        break;
-    case PrRegion2:
-        prRegionOverlay = ui->node2_overlay;
-        break;
-    case PrRegion3:
-        prRegionOverlay = ui->node3_overlay;
-        break;
-    case PrRegion4:
-        prRegionOverlay = ui->node4_overlay;
-        break;
-    case PrRegion5:
-        prRegionOverlay = ui->node5_overlay;
-        break;
-    case PrRegion6:
-        prRegionOverlay = ui->node6_overlay;
-        break;
-    case PrRegion7:
-        prRegionOverlay = ui->node7_overlay;
-        break;
-    }
-
-    return prRegionOverlay;
 }
 
 MainWindow::~MainWindow()
@@ -113,12 +39,50 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-QString MainWindow::getOverlayBackgroundColor(const QColor& color)
+static QString getOverlayBackgroundColor(const QColor& color)
 {
     int red, green, blue = 0;
     color.getRgb(&red, &green, &blue);
 
     return QString("background-color: rgba(%1, %2, %3, 50\%);").arg(red).arg(green).arg(blue);
+}
+
+static void showLabelColor(QLabel* label, const QColor& color)
+{
+    label->setStyleSheet(getOverlayBackgroundColor(color));
+    label->show();
+}
+
+QLabel* MainWindow::getPrRegion(int id)
+{
+    QLabel* prRegionOverlay = NULL;
+
+    switch (id)
+    {
+    case 2:
+        prRegionOverlay = ui->node1_overlay;
+        break;
+    case 3:
+        prRegionOverlay = ui->node2_overlay;
+        break;
+    case 4:
+        prRegionOverlay = ui->node3_overlay;
+        break;
+    case 5:
+        prRegionOverlay = ui->node4_overlay;
+        break;
+    case 6:
+        prRegionOverlay = ui->node5_overlay;
+        break;
+    case 7:
+        prRegionOverlay = ui->node6_overlay;
+        break;
+    case 8:
+        prRegionOverlay = ui->node7_overlay;
+        break;
+    }
+
+    return prRegionOverlay;
 }
 
 
