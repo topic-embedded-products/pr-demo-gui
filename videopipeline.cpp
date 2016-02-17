@@ -4,12 +4,21 @@
 #include <QImage>
 #include <QSocketNotifier>
 
+#include <dyplo/hardware.hpp>
+#include "dyplocontext.h"
+
 #define VIDEO_WIDTH  640
 #define VIDEO_HEIGHT 320
+#define VIDEO_YUV_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*2)
+#define VIDEO_RGB_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*3)
 
 VideoPipeline::VideoPipeline():
-    socketNotifier(NULL),
-    rgb_buffer(NULL)
+    captureNotifier(NULL),
+    fromLogicNotifier(NULL),
+    rgb_buffer(NULL),
+    to_logic(NULL),
+    from_logic(NULL),
+    yuv2rgb(NULL)
 {
 
 }
@@ -19,7 +28,7 @@ VideoPipeline::~VideoPipeline()
     deactivate();
 }
 
-int VideoPipeline::activate()
+int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV)
 {
     int r;
 
@@ -43,9 +52,47 @@ int VideoPipeline::activate()
         return r;
     }
 
-    socketNotifier = new QSocketNotifier(capture.device_handle(), QSocketNotifier::Read, this);
-    connect(socketNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailable(int)));
-    socketNotifier->setEnabled(true);
+    if (hardwareYUV)
+    {
+        try
+        {
+            yuv2rgb = dyplo->createConfig("yuvtorgb");
+            from_logic = dyplo->createDMAFifo(O_RDONLY);
+            to_logic = dyplo->createDMAFifo(O_RDWR);
+            int node = yuv2rgb->getNodeIndex();
+            from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_RGB_SIZE, 2, true);
+            from_logic->addRouteFrom(node);
+            to_logic->addRouteTo(node);
+            to_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_YUV_SIZE, 2, false);
+            /* Prime reader */
+            yuv2rgb->enableNode();
+            for (unsigned int i = 0; i < from_logic->count(); ++i)
+            {
+                dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
+                block->bytes_used = VIDEO_RGB_SIZE;
+                from_logic->enqueue(block);
+            }
+            from_logic->fcntl_set_flag(O_NONBLOCK);
+            captureNotifier = new QSocketNotifier(capture.device_handle(), QSocketNotifier::Read, this);
+            connect(captureNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableHard(int)));
+            captureNotifier->setEnabled(true);
+            fromLogicNotifier = new QSocketNotifier(from_logic->handle, QSocketNotifier::Read, this);
+            connect(fromLogicNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableDyplo(int)));
+            fromLogicNotifier->setEnabled(true);
+        }
+        catch (const std::exception& ex)
+        {
+            qCritical() << ex.what();
+            deactivate(); /* Cleanup */
+            return -1; /* Hmm... */
+        }
+    }
+    else
+    {
+        captureNotifier = new QSocketNotifier(capture.device_handle(), QSocketNotifier::Read, this);
+        connect(captureNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableSoft(int)));
+        captureNotifier->setEnabled(true);
+    }
 
     emit setActive(true);
     return r;
@@ -53,8 +100,16 @@ int VideoPipeline::activate()
 
 void VideoPipeline::deactivate()
 {
-    delete socketNotifier;
-    socketNotifier = NULL;
+    delete captureNotifier;
+    captureNotifier = NULL;
+    delete fromLogicNotifier;
+    fromLogicNotifier = NULL;
+    delete to_logic;
+    to_logic = NULL;
+    delete from_logic;
+    from_logic = NULL;
+    delete yuv2rgb;
+    yuv2rgb = NULL;
     capture.close();
     emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
     emit setActive(false);
@@ -95,9 +150,9 @@ static void torgb(const unsigned char *p, unsigned int size, unsigned char *rgb_
         }
 }
 
-void VideoPipeline::frameAvailable(int)
+void VideoPipeline::frameAvailableSoft(int)
 {
-    /* TODO: Grab a single frame and send to Dyplo */
+    /* Grab a single frame, convert and display */
     const void* data;
     unsigned int size;
     int r;
@@ -110,10 +165,10 @@ void VideoPipeline::frameAvailable(int)
     }
 
     if (!rgb_buffer)
-        rgb_buffer = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT*3];
+        rgb_buffer = new unsigned char[VIDEO_RGB_SIZE];
 
-    if (size > VIDEO_WIDTH * VIDEO_HEIGHT * 2)
-        size = VIDEO_WIDTH * VIDEO_HEIGHT * 2;
+    if (size > VIDEO_YUV_SIZE)
+        size = VIDEO_YUV_SIZE;
     torgb((const uchar*)data, size, rgb_buffer);
 
     QImage image(rgb_buffer, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888);
@@ -121,5 +176,43 @@ void VideoPipeline::frameAvailable(int)
 
     r = capture.end_grab();
     if (r < 0)
+        deactivate();
+}
+
+void VideoPipeline::frameAvailableHard(int)
+{
+    /* Grab a single frame and send to Dyplo */
+    const void* data;
+    unsigned int size;
+    int r;
+
+    r = capture.begin_grab(&data, &size);
+    if ( r <= 0) {
+        if (r < 0)
             deactivate();
+        return;
+    }
+    if (size > VIDEO_YUV_SIZE)
+        size = VIDEO_YUV_SIZE;
+
+    dyplo::HardwareDMAFifo::Block *block = to_logic->dequeue();
+    block->bytes_used = size;
+    memcpy(block->data, data, size);
+    to_logic->enqueue(block);
+
+    r = capture.end_grab();
+    if (r < 0)
+        deactivate();
+}
+
+void VideoPipeline::frameAvailableDyplo(int)
+{
+    dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
+    if (!block)
+        return;
+
+    emit renderedImage(QImage((const uchar*)block->data, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888));
+
+    block->bytes_used = VIDEO_RGB_SIZE;
+    from_logic->enqueue(block);
 }

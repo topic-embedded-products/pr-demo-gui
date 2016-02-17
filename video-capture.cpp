@@ -166,6 +166,7 @@ int VideoCapture::end_grab()
 {
     if (-1 == xioctl(fd, VIDIOC_QBUF, current_buf))
             return -errno;
+    return 0;
 }
 
 

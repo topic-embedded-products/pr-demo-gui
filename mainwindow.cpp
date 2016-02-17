@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     demoColorMap[DemoMandelbrot] = QColor(0,255,0);
 
     connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
+    connect(&dyploContext, SIGNAL(programmedPartial(int,const char*,uint,uint)), this, SLOT(showProgrammingMetrics(int,const char*,uint,uint)));
 }
 
 void MainWindow::programmedDemo(EDemo prDemo, const QList<EPrRegion>& prRegionsUsed)
@@ -118,50 +119,22 @@ QString MainWindow::getOverlayBackgroundColor(const QColor& color)
     return QString("background-color: rgba(%1, %2, %3, 50\%);").arg(red).arg(green).arg(blue);
 }
 
-// OLD implementation, will be removed in the future.
-// Just kept for now as a reference.
-/*void MainWindow::setFilterStatus(EFilters filter, bool enabled)
-{
-    if (enabled)
-    {
-        EPrRegion programRegion;
-        quint32 programTimeMs;
-        bool programmingSucceeded = filterProgrammer.ProgramFilter(filter, programRegion, programTimeMs);
-        if (programmingSucceeded)
-        {
-            showProgrammingMetrics(programRegion, programTimeMs);
-            dyploRouter.RouteFilter(filter);
-
-            Q_ASSERT(filterColorMap.contains(filter));
-            showOverlay(programRegion, filterColorMap[filter]);
-        }
-    }
-    else
-    {
-        EPrRegion disableRegion;
-        dyploRouter.UnrouteFilter(filter);
-        bool disabledNode = filterProgrammer.DisableFilter(filter, disableRegion);
-        if (disabledNode)
-        {
-            hideOverlay(disableRegion);
-        }
-    }
-}*/
 
 void MainWindow::hideProgrammingMetrics()
 {
     ui->partialProgramMetrics->hide();
 }
 
-void MainWindow::showProgrammingMetrics(quint32 programTimeMs)
+void MainWindow::showProgrammingMetrics(int node, const char *name, unsigned int size, unsigned int microseconds)
 {
-    ui->partialProgramMetrics->setText(QString("Partial bitstreams programmed in %1 ms").arg(programTimeMs));
+    unsigned int mbps = (((unsigned long long)size * 1000000) / microseconds) >> 20;
+    ui->partialProgramMetrics->setText(QString("Partial '%1' into %2: %3kB in %4 us (%5 MB/s)").arg(name).arg(node).arg(size>>10).arg(microseconds).arg(mbps));
     ui->partialProgramMetrics->show();
 
     QGraphicsOpacityEffect* eff = new QGraphicsOpacityEffect(this);
     ui->partialProgramMetrics->setGraphicsEffect(eff);
     QPropertyAnimation* a = new QPropertyAnimation(eff, "opacity");
-    a->setDuration(2000);
+    a->setDuration(4000);
     a->setStartValue(1);
     a->setEndValue(0);
     a->setEasingCurve(QEasingCurve::InBack);
@@ -175,10 +148,9 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
     // TODO: program and route Dyplo
     if (checked)
     {
-        bool enableYUVtoRGB = ui->cbYUVToRGB->isChecked();
-        bool enableLaplacian = ui->cbLaplacian->isChecked();
-
-        if (video.activate() != 0)
+        if (video.activate(
+                    &dyploContext,
+                    ui->cbYUVToRGB->isChecked()) != 0)
             updateVideoDemoState(false);
     }
     else

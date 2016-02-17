@@ -33,14 +33,11 @@ private slots:
     void on_buttonMandelbrotDemo_toggled(bool checked);
 
     void updateVideoDemoState(bool active);
+    void showProgrammingMetrics(int node, const char* name, unsigned int size, unsigned int microseconds);
+
 private:
     void programmedDemo(EDemo prDemo, const QList<EPrRegion>& prRegionsUsed);
     void disabledDemo(EDemo prDemo);
-
-    void showProgrammingMetrics(quint32 programTimeMs);
-
-    // OLD implementation. Will be removed in future:
-    //void setFilterStatus(EFilters filter, bool enabled);
 
     QLabel* getPrRegion(EPrRegion prRegion);
 

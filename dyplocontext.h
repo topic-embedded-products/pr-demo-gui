@@ -4,20 +4,29 @@
 #include <QObject>
 #include "dyplo/hardware.hpp"
 
-class DyploContext
+class DyploContext: public QObject
 {
+    Q_OBJECT
 public:
     DyploContext();
     ~DyploContext();
 
-    dyplo::HardwareContext& GetHardwareContext();
-    dyplo::HardwareControl& GetHardwareControl();
+    dyplo::HardwareContext& GetHardwareContext() { return hardwareCtx; }
+    dyplo::HardwareControl& GetHardwareControl() const { return *hwControl; }
+
+    /* Note: For "create" functions, the caller becomes the owner of the
+     * newly created object (factory pattern). Throw exception on failure. */
+    dyplo::HardwareConfig* createConfig(const char* name);
+    dyplo::HardwareDMAFifo* createDMAFifo(int access);
+
+signals:
+    void programmedPartial(int node, const char* name, unsigned int size, unsigned int microseconds);
 
 private:
     DyploContext(DyploContext const&);      // Don't Implement
     void operator=(DyploContext const&);    // Don't implement
 
-    dyplo::HardwareContext* hardwareCtx;
+    dyplo::HardwareContext hardwareCtx;
     dyplo::HardwareControl* hwControl;
 
 };

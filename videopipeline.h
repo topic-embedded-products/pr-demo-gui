@@ -6,6 +6,12 @@
 
 class QImage;
 class QSocketNotifier;
+class DyploContext;
+
+namespace dyplo {
+class HardwareDMAFifo;
+class HardwareConfig;
+}
 
 class VideoPipeline: public QObject
 {
@@ -15,7 +21,7 @@ public:
     VideoPipeline();
     ~VideoPipeline();
 
-    int activate();
+    int activate(DyploContext* dyplo, bool hardwareYUV);
     void deactivate();
 
 signals:
@@ -23,12 +29,19 @@ signals:
     void setActive(bool active);
 
 private slots:
-    void frameAvailable(int socket);
+    void frameAvailableSoft(int socket);
+    void frameAvailableHard(int socket);
+    void frameAvailableDyplo(int socket);
 
 protected:
     VideoCapture capture;
-    QSocketNotifier* socketNotifier;
+    QSocketNotifier* captureNotifier;
+    QSocketNotifier* fromLogicNotifier;
     unsigned char* rgb_buffer;
+
+    dyplo::HardwareDMAFifo *to_logic;
+    dyplo::HardwareDMAFifo *from_logic;
+    dyplo::HardwareConfig *yuv2rgb;
 };
 
 #endif // VIDEOPIPELINE_H
