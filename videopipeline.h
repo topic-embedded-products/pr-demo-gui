@@ -28,6 +28,7 @@ private slots:
 protected:
     VideoCapture capture;
     QSocketNotifier* socketNotifier;
+    unsigned char* rgb_buffer;
 };
 
 #endif // VIDEOPIPELINE_H

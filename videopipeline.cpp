@@ -8,7 +8,8 @@
 #define VIDEO_HEIGHT 320
 
 VideoPipeline::VideoPipeline():
-    socketNotifier(NULL)
+    socketNotifier(NULL),
+    rgb_buffer(NULL)
 {
 
 }
@@ -93,8 +94,6 @@ static void torgb(const unsigned char *p, unsigned int size, unsigned char *rgb_
                 index += 6;
         }
 }
-
-static unsigned char* rgb_buffer = NULL;
 
 void VideoPipeline::frameAvailable(int)
 {
