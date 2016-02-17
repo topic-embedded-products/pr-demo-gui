@@ -111,7 +111,7 @@ void MainWindow::hideProgrammingMetrics()
 void MainWindow::showProgrammingMetrics(int node, const char *name, unsigned int size, unsigned int microseconds)
 {
     unsigned int mbps = (((unsigned long long)size * 1000000) / microseconds) >> 20;
-    ui->partialProgramMetrics->setText(QString("Partial '%1' into %2: %3kB in %4 us (%5 MB/s)").arg(name).arg(node).arg(size>>10).arg(microseconds).arg(mbps));
+    ui->partialProgramMetrics->setText(QString("Partial '%1' into %2: %3kB in %4.%5 ms (%6 MB/s)").arg(name).arg(node).arg(size>>10).arg(microseconds/1000).arg((microseconds/100) % 10).arg(mbps));
     ui->partialProgramMetrics->show();
 
     QGraphicsOpacityEffect* eff = new QGraphicsOpacityEffect(this);
@@ -130,7 +130,7 @@ void MainWindow::showVideoStats(unsigned int frames, unsigned int milliseconds)
 {
     QString message;
     if (frames)
-        message = QString("%1 FPS").arg((frames*1000)/milliseconds);
+        message = QString("%1 FPS").arg(((frames*1000)+500)/milliseconds);
     else
         message = "-";
     ui->lblVideoStats->setText(message);
