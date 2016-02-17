@@ -14,7 +14,7 @@ void FrameRateCounter::frame()
     lastStamp = QDateTime::currentMSecsSinceEpoch();
     qint64 diff = lastStamp - firstStamp;
     if (diff > 1000) {
-        emit frameRate(diff / count);
+        emit frameRate(count, diff);
         firstStamp = lastStamp;
         count = 0;
     }

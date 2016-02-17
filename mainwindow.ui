@@ -1372,6 +1372,22 @@ QPushButton
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QLabel" name="lblVideoStats">
+     <property name="geometry">
+      <rect>
+       <x>520</x>
+       <y>10</y>
+       <width>91</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>-</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
    </widget>
    <widget class="QFrame" name="mandelbrotApp">
     <property name="geometry">

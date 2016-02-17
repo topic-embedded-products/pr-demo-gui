@@ -35,6 +35,7 @@ private slots:
     void updateVideoDemoState(bool active);
     void showProgrammingMetrics(int node, const char* name, unsigned int size, unsigned int microseconds);
 
+    void showVideoStats(unsigned int frames,  unsigned int milliseconds);
 private:
     void programmedDemo(EDemo prDemo, const QList<EPrRegion>& prRegionsUsed);
     void disabledDemo(EDemo prDemo);

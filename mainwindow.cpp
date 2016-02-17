@@ -35,7 +35,9 @@ MainWindow::MainWindow(QWidget *parent) :
     demoColorMap[DemoMandelbrot] = QColor(0,255,0);
 
     connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
+    connect(&video, SIGNAL(setActive(bool)), this, SLOT(updateVideoDemoState(bool)));
     connect(&dyploContext, SIGNAL(programmedPartial(int,const char*,uint,uint)), this, SLOT(showProgrammingMetrics(int,const char*,uint,uint)));
+    connect(&ui->video->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showVideoStats(uint,uint)));
 }
 
 void MainWindow::programmedDemo(EDemo prDemo, const QList<EPrRegion>& prRegionsUsed)
@@ -143,11 +145,22 @@ void MainWindow::showProgrammingMetrics(int node, const char *name, unsigned int
     connect(a, SIGNAL(finished()),eff, SLOT(deleteLater()), Qt::UniqueConnection);
 }
 
+void MainWindow::showVideoStats(unsigned int frames, unsigned int milliseconds)
+{
+    QString message;
+    if (frames)
+        message = QString("%1 FPS").arg((frames*1000)/milliseconds);
+    else
+        message = "-";
+    ui->lblVideoStats->setText(message);
+}
+
 void MainWindow::on_buttonVideodemo_toggled(bool checked)
 {
     // TODO: program and route Dyplo
     if (checked)
     {
+        ui->lblVideoStats->setText("...");
         if (video.activate(
                     &dyploContext,
                     ui->cbYUVToRGB->isChecked()) != 0)
@@ -189,4 +202,5 @@ void MainWindow::updateVideoDemoState(bool active)
     ui->buttonVideodemo->setChecked(active);
     ui->cbYUVToRGB->setEnabled(!active);
     ui->cbLaplacian->setEnabled(!active);
+    ui->lblVideoStats->setVisible(active);
 }
