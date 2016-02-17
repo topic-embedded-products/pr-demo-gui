@@ -1353,7 +1353,7 @@ QPushButton
       <rect>
        <x>40</x>
        <y>60</y>
-       <width>261</width>
+       <width>311</width>
        <height>41</height>
       </rect>
      </property>
@@ -1363,7 +1363,10 @@ QPushButton
       </font>
      </property>
      <property name="text">
-      <string>YUV to RGB conversion</string>
+      <string>YUV to RGB conversion in FPGA</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QCheckBox" name="cbLaplacian">
@@ -1371,7 +1374,7 @@ QPushButton
       <rect>
        <x>40</x>
        <y>105</y>
-       <width>231</width>
+       <width>301</width>
        <height>41</height>
       </rect>
      </property>
