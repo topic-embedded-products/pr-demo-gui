@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "video-capture.h"
+#include "dyploresources.h"
 
 class QImage;
 class QSocketNotifier;
@@ -24,6 +25,7 @@ public:
     int activate(DyploContext* dyplo, bool hardwareYUV);
     void deactivate();
 
+    void enumDyploResources(DyploNodeInfoList& list);
 signals:
     void renderedImage(const QImage &image);
     void setActive(bool active);

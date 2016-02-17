@@ -20,18 +20,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->partialProgramMetrics->hide();
 
-    ui->node1_overlay->hide();
-    ui->node2_overlay->hide();
-    ui->node3_overlay->hide();
-    ui->node4_overlay->hide();
-    ui->node5_overlay->hide();
-    ui->node6_overlay->hide();
-    ui->node7_overlay->hide();
-
     connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
     connect(&video, SIGNAL(setActive(bool)), this, SLOT(updateVideoDemoState(bool)));
     connect(&dyploContext, SIGNAL(programmedPartial(int,const char*,uint,uint)), this, SLOT(showProgrammingMetrics(int,const char*,uint,uint)));
     connect(&ui->video->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showVideoStats(uint,uint)));
+
+    updateFloorplan();
 }
 
 MainWindow::~MainWindow()
@@ -83,6 +77,29 @@ QLabel* MainWindow::getPrRegion(int id)
     }
 
     return prRegionOverlay;
+}
+
+void MainWindow::updateFloorplan()
+{
+    ui->node1_overlay->hide();
+    ui->node2_overlay->hide();
+    ui->node3_overlay->hide();
+    ui->node4_overlay->hide();
+    ui->node5_overlay->hide();
+    ui->node6_overlay->hide();
+    ui->node7_overlay->hide();
+
+    DyploNodeInfoList nodes;
+    nodes.clear();
+    video.enumDyploResources(nodes);
+
+    for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
+        QLabel* l = getPrRegion(it->id);
+        if (l) {
+            showLabelColor(l, Qt::blue);
+            l->setText(it->name);
+        }
+    }
 }
 
 
@@ -139,14 +156,6 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
 void MainWindow::on_buttonAudioDemo_toggled(bool checked)
 {
     // TODO: program and route Dyplo
-    if (checked)
-    {
-        bool enableLowPassFIR = ui->cbLowPassFIR->isChecked();
-        bool enableHighPassFIR = ui->cbHighPassFIR->isChecked();
-        bool enableFFT = ui->cbFFT->isChecked();
-
-    }
-
     ui->cbLowPassFIR->setEnabled(!checked);
     ui->cbHighPassFIR->setEnabled(!checked);
     ui->cbFFT->setEnabled(!checked);
@@ -167,4 +176,5 @@ void MainWindow::updateVideoDemoState(bool active)
     ui->cbYUVToRGB->setEnabled(!active);
     ui->cbLaplacian->setEnabled(!active);
     ui->lblVideoStats->setVisible(active);
+    updateFloorplan();
 }

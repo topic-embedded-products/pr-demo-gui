@@ -38,7 +38,8 @@ HEADERS  += mainwindow.h \
             microphonecapturethread.h \
     video-capture.h \
     frameratecounter.h \
-    videopipeline.h
+    videopipeline.h \
+    dyploresources.h
 
 FORMS    += mainwindow.ui
 

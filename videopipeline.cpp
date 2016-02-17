@@ -12,6 +12,8 @@
 #define VIDEO_YUV_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*2)
 #define VIDEO_RGB_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*3)
 
+static const char BITSTREAM_YUVTORGB[] = "yuvtorgb";
+
 VideoPipeline::VideoPipeline():
     captureNotifier(NULL),
     fromLogicNotifier(NULL),
@@ -56,7 +58,7 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV)
     {
         try
         {
-            yuv2rgb = dyplo->createConfig("yuvtorgb");
+            yuv2rgb = dyplo->createConfig(BITSTREAM_YUVTORGB);
             from_logic = dyplo->createDMAFifo(O_RDONLY);
             to_logic = dyplo->createDMAFifo(O_RDWR);
             int node = yuv2rgb->getNodeIndex();
@@ -113,6 +115,12 @@ void VideoPipeline::deactivate()
     capture.close();
     emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
     emit setActive(false);
+}
+
+void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)
+{
+    if (yuv2rgb)
+        list.push_back(DyploNodeInfo(yuv2rgb->getNodeIndex(), BITSTREAM_YUVTORGB));
 }
 
 static unsigned char clamp(short v)

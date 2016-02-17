@@ -39,6 +39,7 @@ private:
     MicrophoneCaptureThread microphoneCaptureThread;
 
     QLabel *getPrRegion(int id);
+    void updateFloorplan();
 };
 
 #endif // MAINWINDOW_H
