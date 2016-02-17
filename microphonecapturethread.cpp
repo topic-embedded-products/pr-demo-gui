@@ -30,7 +30,12 @@ void MicrophoneCaptureThread::startCapturing(QString audioDeviceName)
 
 void MicrophoneCaptureThread::stopCapturing()
 {
-    iCapturing = false;
+    {
+        QMutexLocker lock(&iMutex);
+        iCapturing = false;
+        iContinueCapturing = true;
+        iCondition.wakeAll();
+    }
     wait();
 }
 
@@ -118,7 +123,7 @@ void MicrophoneCaptureThread::run()
 
             {
                 QMutexLocker lock(&iMutex);
-                if (!iContinueCapturing)
+                if (!iContinueCapturing && iCapturing)
                     iCondition.wait(&iMutex);
                 iContinueCapturing = false;
             }
