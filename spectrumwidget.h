@@ -20,11 +20,6 @@ public slots:
     void audioData(short* buf, unsigned int len);
 
 private:
-    float getMaxValue(float* spectrumValues);
-
-    static const unsigned int SPECTRUM_SIZE;
-
-    int     iSpectrumSize;
     float   iMaxValue;
     bool    iKeepPainting;
 

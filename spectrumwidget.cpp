@@ -8,20 +8,19 @@
 #include <cmath>
 #include <QEvent>
 
-const unsigned int SpectrumWidget::SPECTRUM_SIZE = 100;
+static const unsigned int SPECTRUM_SIZE = 100;
 
 SpectrumWidget::SpectrumWidget(QWidget *parent) :
     QWidget(parent),
-    iSpectrumSize(SPECTRUM_SIZE),
     iMaxValue(0.0f),
     iNewSpectrum(NULL),
     iDrawnCurrentBars(false),
     iCurrentBarHeight(NULL),
     iMicrophoneCapture(),
-    iFourierFilter(MicrophoneCaptureThread::CAPTURE_SIZE, iSpectrumSize)
+    iFourierFilter(MicrophoneCaptureThread::CAPTURE_SIZE, SPECTRUM_SIZE)
 {
-    iCurrentBarHeight = new int[iSpectrumSize];
-    memset(iCurrentBarHeight, 0, iSpectrumSize*sizeof(int));
+    iCurrentBarHeight = new int[SPECTRUM_SIZE];
+    memset(iCurrentBarHeight, 0, SPECTRUM_SIZE*sizeof(int));
 
     // force no complete redraw
     setAttribute(Qt::WA_OpaquePaintEvent);
@@ -42,7 +41,7 @@ void SpectrumWidget::paintEvent(QPaintEvent* )
 
     if (iNewSpectrum != NULL)
     {
-        float widthPerBar = (frameSize().width()/(float)iSpectrumSize) - 1.0;
+        float widthPerBar = (frameSize().width()/(float)SPECTRUM_SIZE) - 1.0;
         Q_ASSERT(widthPerBar > 0.0f);
 
         double intPart;
@@ -56,7 +55,7 @@ void SpectrumWidget::paintEvent(QPaintEvent* )
         int drawOffsetX = 1.0;
         double fractionalPartCounter = 0.0f;
 
-        for (int i = 0; i < iSpectrumSize; ++i)
+        for (unsigned int i = 0; i < SPECTRUM_SIZE; ++i)
         {
             fractionalPartCounter += fractionalPart;
 
@@ -93,6 +92,17 @@ void SpectrumWidget::paintEvent(QPaintEvent* )
     }
 }
 
+static float getMaxValue(float* spectrumValues)
+{
+    float maxValue = 0.0f;
+    for (unsigned int i = 0; i < SPECTRUM_SIZE; i++)
+    {
+        maxValue = std::max<float>(spectrumValues[i], maxValue);
+    }
+
+    return maxValue;
+}
+
 void SpectrumWidget::updateSpectrum(float* spectrumValues)
 {
     iNewSpectrum = spectrumValues;
@@ -115,13 +125,3 @@ void SpectrumWidget::audioData(short* buf, unsigned int)
     updateSpectrum(spectrum);
 }
 
-float SpectrumWidget::getMaxValue(float* spectrumValues)
-{
-    float maxValue = 0.0f;
-    for (int i = 0; i < iSpectrumSize; i++)
-    {
-        maxValue = std::max<float>(spectrumValues[i], maxValue);
-    }
-
-    return maxValue;
-}
