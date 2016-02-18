@@ -14,6 +14,7 @@
 
 static const char BITSTREAM_YUVTORGB[] = "yuvtorgb";
 static const char BITSTREAM_FILTER_RGB1[] = "bettergray";
+static const char BITSTREAM_FILTER_YUV_GRAY[] = "grayscale";
 
 VideoPipeline::VideoPipeline():
     captureNotifier(NULL),
@@ -22,7 +23,8 @@ VideoPipeline::VideoPipeline():
     to_logic(NULL),
     from_logic(NULL),
     yuv2rgb(NULL),
-    filter1(NULL)
+    filter1(NULL),
+    yuvfilter1(NULL)
 {
 
 }
@@ -32,7 +34,7 @@ VideoPipeline::~VideoPipeline()
     deactivate();
 }
 
-int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterRGB)
+int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterRGB, bool filterGray)
 {
     int r;
 
@@ -70,16 +72,25 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterRG
                 tailnode = filter1->getNodeIndex();
                 dyplo->GetHardwareControl().routeAddSingle(headnode, 0, tailnode, 0);
             }
+            if (filterGray) {
+                yuvfilter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_GRAY);
+                int id = yuvfilter1->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(id, 0, headnode, 0);
+                headnode = id;
+            }
+
             from_logic = dyplo->createDMAFifo(O_RDONLY);
             to_logic = dyplo->createDMAFifo(O_RDWR);
             from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_RGB_SIZE, 2, true);
             from_logic->addRouteFrom(tailnode);
             to_logic->addRouteTo(headnode);
             to_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_YUV_SIZE, 2, false);
-            /* Prime reader */
+            if (yuvfilter1)
+                yuvfilter1->enableNode();
             if (filter1)
                 filter1->enableNode();
             yuv2rgb->enableNode();
+            /* Prime reader */
             for (unsigned int i = 0; i < from_logic->count(); ++i)
             {
                 dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
@@ -126,6 +137,8 @@ void VideoPipeline::deactivate()
     yuv2rgb = NULL;
     delete filter1;
     filter1 = NULL;
+    delete yuvfilter1;
+    yuvfilter1 = NULL;
     capture.close();
     emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
     emit setActive(false);
@@ -137,6 +150,8 @@ void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)
         list.push_back(DyploNodeInfo(yuv2rgb->getNodeIndex(), BITSTREAM_YUVTORGB));
     if (filter1)
         list.push_back(DyploNodeInfo(filter1->getNodeIndex(), BITSTREAM_FILTER_RGB1));
+    if (yuvfilter1)
+        list.push_back(DyploNodeInfo(yuvfilter1->getNodeIndex(), BITSTREAM_FILTER_YUV_GRAY));
 }
 
 static unsigned char clamp(short v)

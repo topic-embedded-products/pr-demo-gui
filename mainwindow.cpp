@@ -144,7 +144,8 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
         if (video.activate(
                     &dyploContext,
                     ui->cbYUVToRGB->isChecked(),
-                    ui->cbFilterRGB->isChecked()))
+                    ui->cbFilterRGB->isChecked(),
+                    ui->cbFilterGray->isChecked()))
             updateVideoDemoState(false);
     }
     else
