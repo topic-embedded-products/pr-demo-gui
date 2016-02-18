@@ -1369,7 +1369,7 @@ QPushButton
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QCheckBox" name="cbLaplacian">
+    <widget class="QCheckBox" name="cbFilterRGB">
      <property name="geometry">
       <rect>
        <x>40</x>
@@ -1384,7 +1384,7 @@ QPushButton
       </font>
      </property>
      <property name="text">
-      <string>Laplacian filter</string>
+      <string>Add extra RGB filter</string>
      </property>
      <property name="iconSize">
       <size>

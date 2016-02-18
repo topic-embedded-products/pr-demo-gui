@@ -138,13 +138,13 @@ void MainWindow::showVideoStats(unsigned int frames, unsigned int milliseconds)
 
 void MainWindow::on_buttonVideodemo_toggled(bool checked)
 {
-    // TODO: program and route Dyplo
     if (checked)
     {
         ui->lblVideoStats->setText("...");
         if (video.activate(
                     &dyploContext,
-                    ui->cbYUVToRGB->isChecked()) != 0)
+                    ui->cbYUVToRGB->isChecked(),
+                    ui->cbFilterRGB->isChecked()))
             updateVideoDemoState(false);
     }
     else
@@ -174,7 +174,7 @@ void MainWindow::updateVideoDemoState(bool active)
 {
     ui->buttonVideodemo->setChecked(active);
     ui->cbYUVToRGB->setEnabled(!active);
-    ui->cbLaplacian->setEnabled(!active);
+    ui->cbFilterRGB->setEnabled(!active);
     ui->lblVideoStats->setVisible(active);
     updateFloorplan();
 }
