@@ -814,9 +814,9 @@
     <widget class="VideoWidget" name="video" native="true">
      <property name="geometry">
       <rect>
-       <x>630</x>
+       <x>554</x>
        <y>5</y>
-       <width>564</width>
+       <width>640</width>
        <height>320</height>
       </rect>
      </property>
@@ -1399,7 +1399,7 @@ QPushButton
     <widget class="QLabel" name="lblVideoStats">
      <property name="geometry">
       <rect>
-       <x>520</x>
+       <x>450</x>
        <y>10</y>
        <width>91</width>
        <height>20</height>
@@ -1434,9 +1434,9 @@ QPushButton
     <widget class="SpectrumWidget" name="spectrum" native="true">
      <property name="geometry">
       <rect>
-       <x>630</x>
+       <x>554</x>
        <y>5</y>
-       <width>564</width>
+       <width>640</width>
        <height>260</height>
       </rect>
      </property>
@@ -2035,9 +2035,9 @@ QPushButton
     <widget class="VideoWidget" name="mandelbrot" native="true">
      <property name="geometry">
       <rect>
-       <x>630</x>
+       <x>554</x>
        <y>4</y>
-       <width>564</width>
+       <width>640</width>
        <height>320</height>
       </rect>
      </property>
