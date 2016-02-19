@@ -242,6 +242,7 @@ void MainWindow::updateVideoDemoState(bool active)
     ui->cbYUVToRGB->setEnabled(!active);
     ui->cbFilterContrast->setEnabled(!active);
     ui->cbFilterGray->setEnabled(!active);
+    ui->cbFilterTreshold->setEnabled(!active);
     ui->lblVideoStats->setVisible(active);
     updateFloorplan();
 }
