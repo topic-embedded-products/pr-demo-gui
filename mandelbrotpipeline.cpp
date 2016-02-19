@@ -13,6 +13,36 @@
 
 static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
 
+static const double DefaultCenterX = -0.86122562296399741;
+static const double DefaultCenterY = -0.23139131123653386;
+static const double MinScale = 0.000000000000053607859314274247;
+static const double DefaultScale = 0.005f;
+static const double ZoomInFactor = 0.95f;
+static const double ZoomOutFactor = 1 / ZoomInFactor;
+
+
+static void writefp(dyplo::HardwareConfig &cfg, int offset, double v)
+{
+    long long iv = (long long)(v * ((long long)2 << 45));
+    cfg.seek(offset);
+    cfg.write(&iv, sizeof(iv));
+}
+
+static void writeConfig(dyplo::HardwareConfig &cfg, double x, double y, double z)
+{
+    writefp(cfg, 0x10, x);
+    writefp(cfg, 0x20, y);
+    writefp(cfg, 0x30, z);
+}
+
+static void enableRendering(dyplo::HardwareConfig &cfg, unsigned int enable)
+{
+    cfg.seek(0);
+    cfg.write(&enable, sizeof(enable)); /* Start node */
+}
+
+
+
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     fromLogicNotifier(NULL),
     from_logic(NULL),
@@ -44,6 +74,13 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
         fromLogicNotifier = new QSocketNotifier(from_logic->handle, QSocketNotifier::Read, this);
         connect(fromLogicNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableDyplo(int)));
         fromLogicNotifier->setEnabled(true);
+        node->enableNode();
+        x = DefaultCenterX;
+        y = DefaultCenterY;
+        z = DefaultScale;
+        writeConfig(*node, x, y, z);
+        enableRendering(*node, 1);
+        z *= ZoomInFactor;
     }
     catch (const std::exception& ex)
     {
@@ -57,12 +94,15 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
 
 void MandelbrotPipeline::deactivate()
 {
+    if (node) {
+        enableRendering(*node, 0);
+        delete node;
+        node = NULL;
+    }
     delete fromLogicNotifier;
     fromLogicNotifier = NULL;
     delete from_logic;
     from_logic = NULL;
-    delete node;
-    node = NULL;
     emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
     emit setActive(false);
 }
@@ -75,6 +115,14 @@ void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
 
 void MandelbrotPipeline::frameAvailableDyplo(int)
 {
+    if (z < MinScale) {
+        x = DefaultCenterX;
+        y = DefaultCenterY;
+        z = DefaultScale;
+    }
+    writeConfig(*node, x, y, z);
+    z *= ZoomInFactor;
+
     dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
     if (!block)
         return;

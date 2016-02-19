@@ -38,6 +38,9 @@ protected:
     QSocketNotifier* fromLogicNotifier;
     dyplo::HardwareDMAFifo *from_logic;
     dyplo::HardwareConfig *node;
+    double x;
+    double y;
+    double z;
 };
 
 #endif // MANDELBROTPIPELINE_H
