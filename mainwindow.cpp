@@ -248,9 +248,6 @@ void MainWindow::updateVideoDemoState(bool active)
 
 void MainWindow::updateAudioDemoState(bool active)
 {
-    ui->cbLowPassFIR->setEnabled(!active);
-    ui->cbHighPassFIR->setEnabled(!active);
-    ui->cbFFT->setEnabled(!active);
     if (!active)
         ui->spectrum->updateSpectrum(NULL);
     ui->buttonAudioDemo->setChecked(active);

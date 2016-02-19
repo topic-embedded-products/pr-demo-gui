@@ -1980,7 +1980,7 @@ QPushButton
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>190</y>
+       <y>50</y>
        <width>131</width>
        <height>61</height>
       </rect>
@@ -2015,60 +2015,6 @@ QPushButton
      </property>
      <property name="checkable">
       <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="cbLowPassFIR">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>60</y>
-       <width>251</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>Low-pass filter (FIR)</string>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="cbHighPassFIR">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>105</y>
-       <width>251</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>High-pass filter (FIR)</string>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="cbFFT">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>150</y>
-       <width>71</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>FFT</string>
      </property>
     </widget>
    </widget>
