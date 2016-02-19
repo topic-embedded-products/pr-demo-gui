@@ -42,12 +42,22 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+static int bright(int c)
+{
+    if (c >= 128)
+        return 255;
+    return c + 128;
+}
+
 static QString getOverlayBackgroundColor(const QColor& color)
 {
     int red, green, blue = 0;
     color.getRgb(&red, &green, &blue);
 
-    return QString("background-color: rgba(%1, %2, %3, 50\%);").arg(red).arg(green).arg(blue);
+    return QString("background-color: rgba(%1,%2,%3,50\%);\n"
+                   "color: rgb(%4,%5,%6);")
+            .arg(red).arg(green).arg(blue)
+            .arg(bright(red)).arg(bright(green)).arg(bright(blue));
 }
 
 static void showLabelColor(QLabel* label, const QColor& color)

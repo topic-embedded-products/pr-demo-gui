@@ -680,10 +680,11 @@
      </property>
      <property name="styleSheet">
       <string notr="true">background-color: rgba(12, 242, 46, 50%);
+color: rgb(192, 242, 192);
 </string>
      </property>
      <property name="text">
-      <string/>
+      <string>Node 2</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
