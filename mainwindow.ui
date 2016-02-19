@@ -652,10 +652,10 @@
     <widget class="QLabel" name="node1_overlay">
      <property name="geometry">
       <rect>
-       <x>202</x>
+       <x>200</x>
        <y>103</y>
-       <width>109</width>
-       <height>201</height>
+       <width>111</width>
+       <height>205</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -672,9 +672,9 @@
     <widget class="QLabel" name="node2_overlay">
      <property name="geometry">
       <rect>
-       <x>468</x>
+       <x>464</x>
        <y>103</y>
-       <width>137</width>
+       <width>140</width>
        <height>201</height>
       </rect>
      </property>
@@ -693,9 +693,9 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node3_overlay">
      <property name="geometry">
       <rect>
-       <x>468</x>
+       <x>465</x>
        <y>307</y>
-       <width>137</width>
+       <width>139</width>
        <height>202</height>
       </rect>
      </property>
@@ -713,10 +713,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node4_overlay">
      <property name="geometry">
       <rect>
-       <x>468</x>
-       <y>512</y>
-       <width>137</width>
-       <height>202</height>
+       <x>464</x>
+       <y>510</y>
+       <width>140</width>
+       <height>204</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -736,10 +736,10 @@ color: rgb(192, 242, 192);
      </property>
      <property name="geometry">
       <rect>
-       <x>87</x>
-       <y>512</y>
-       <width>140</width>
-       <height>200</height>
+       <x>85</x>
+       <y>511</y>
+       <width>129</width>
+       <height>201</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -756,10 +756,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node6_overlay">
      <property name="geometry">
       <rect>
-       <x>87</x>
-       <y>717</y>
-       <width>138</width>
-       <height>202</height>
+       <x>85</x>
+       <y>714</y>
+       <width>226</width>
+       <height>205</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -776,10 +776,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node7_overlay">
      <property name="geometry">
       <rect>
-       <x>359</x>
-       <y>717</y>
-       <width>151</width>
-       <height>202</height>
+       <x>356</x>
+       <y>714</y>
+       <width>154</width>
+       <height>205</height>
       </rect>
      </property>
      <property name="styleSheet">
