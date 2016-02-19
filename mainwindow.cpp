@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->cbFilterGray, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
     connect(ui->cbFilterContrast, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
+    connect(ui->cbFilterTreshold, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
 
     connect(&audio, SIGNAL(capturedAudio(short*,uint)), ui->spectrum, SLOT(audioData(short*,uint)));
     connect(&audio, SIGNAL(setActive(bool)), this, SLOT(updateAudioDemoState(bool)));
@@ -204,7 +205,8 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
                     &dyploContext,
                     ui->cbYUVToRGB->isChecked(),
                     ui->cbFilterContrast->isChecked(),
-                    ui->cbFilterGray->isChecked()))
+                    ui->cbFilterGray->isChecked(),
+                    ui->cbFilterTreshold->isChecked()))
             updateVideoDemoState(false);
     }
     else
@@ -264,7 +266,7 @@ void MainWindow::updateMandelbrotDemoState(bool active)
 void MainWindow::on_cbYUVToRGB_clicked(bool checked)
 {
     if (!checked) {
-        if (ui->cbFilterGray->isChecked() || ui->cbFilterContrast->isChecked())
+        if (ui->cbFilterGray->isChecked() || ui->cbFilterContrast->isChecked() || ui->cbFilterTreshold->isChecked())
             ui->cbYUVToRGB->setChecked(true);
     }
 }

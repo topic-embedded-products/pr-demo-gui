@@ -22,7 +22,7 @@ public:
     VideoPipeline();
     ~VideoPipeline();
 
-    int activate(DyploContext* dyplo, bool hardwareYUV, bool filterContrast, bool filterGray);
+    int activate(DyploContext* dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd);
     void deactivate();
 
     void enumDyploResources(DyploNodeInfoList& list);
@@ -45,6 +45,7 @@ protected:
     dyplo::HardwareDMAFifo *from_logic;
     dyplo::HardwareConfig *yuv2rgb;
     dyplo::HardwareConfig *filter1;
+    dyplo::HardwareConfig *filterTreshold;
     dyplo::HardwareConfig *yuvfilter1;
 };
 

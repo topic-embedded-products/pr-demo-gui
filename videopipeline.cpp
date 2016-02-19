@@ -15,6 +15,7 @@
 static const char BITSTREAM_YUVTORGB[] = "yuvtorgb";
 static const char BITSTREAM_FILTER_YUV_GRAY[] = "grayscale";
 static const char BITSTREAM_FILTER_YUV_CONTRAST[] = "contrast";
+static const char BITSTREAM_FILTER_YUV_TRESHOLD[] = "treshold";
 
 VideoPipeline::VideoPipeline():
     captureNotifier(NULL),
@@ -24,6 +25,7 @@ VideoPipeline::VideoPipeline():
     from_logic(NULL),
     yuv2rgb(NULL),
     filter1(NULL),
+    filterTreshold(NULL),
     yuvfilter1(NULL)
 {
 
@@ -34,7 +36,7 @@ VideoPipeline::~VideoPipeline()
     deactivate();
 }
 
-int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterContrast, bool filterGray)
+int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd)
 {
     int r;
 
@@ -67,6 +69,12 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
             yuv2rgb = dyplo->createConfig(BITSTREAM_YUVTORGB);
             headnode = yuv2rgb->getNodeIndex();
             tailnode = headnode;
+            if (filterThd) {
+                filterTreshold = dyplo->createConfig(BITSTREAM_FILTER_YUV_TRESHOLD);
+                int id = filterTreshold->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(id, 0, headnode, 0);
+                headnode = id;
+            }
             if (filterGray) {
                 yuvfilter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_GRAY);
                 int id = yuvfilter1->getNodeIndex();
@@ -86,6 +94,8 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
             from_logic->addRouteFrom(tailnode);
             to_logic->addRouteTo(headnode);
             to_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_YUV_SIZE, 2, false);
+            if (filterTreshold)
+                filterTreshold->enableNode();
             if (yuvfilter1)
                 yuvfilter1->enableNode();
             if (filter1)
@@ -138,6 +148,8 @@ void VideoPipeline::deactivate()
     yuv2rgb = NULL;
     delete filter1;
     filter1 = NULL;
+    delete filterTreshold;
+    filterTreshold = NULL;
     delete yuvfilter1;
     yuvfilter1 = NULL;
     capture.close();
@@ -153,6 +165,8 @@ void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)
         list.push_back(DyploNodeInfo(filter1->getNodeIndex(), BITSTREAM_FILTER_YUV_CONTRAST));
     if (yuvfilter1)
         list.push_back(DyploNodeInfo(yuvfilter1->getNodeIndex(), BITSTREAM_FILTER_YUV_GRAY));
+    if (filterTreshold)
+        list.push_back(DyploNodeInfo(filterTreshold->getNodeIndex(), BITSTREAM_FILTER_YUV_TRESHOLD));
 }
 
 static unsigned char clamp(short v)
