@@ -25,7 +25,8 @@ SOURCES +=  main.cpp\
     video-capture.cpp \
     frameratecounter.cpp \
     videopipeline.cpp \
-    audiopipeline.cpp
+    audiopipeline.cpp \
+    externalresources.cpp
 
 
 
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     frameratecounter.h \
     videopipeline.h \
     dyploresources.h \
-    audiopipeline.h
+    audiopipeline.h \
+    externalresources.h
 
 FORMS    += mainwindow.ui
 

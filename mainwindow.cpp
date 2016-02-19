@@ -98,7 +98,6 @@ void MainWindow::updateFloorplan()
     DyploNodeInfoList nodes;
     nodes.clear();
     video.enumDyploResources(nodes);
-
     for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
         QLabel* l = getPrRegion(it->id);
         if (l) {
@@ -106,6 +105,29 @@ void MainWindow::updateFloorplan()
             l->setText(it->name);
         }
     }
+
+    nodes.clear();
+    externals.enumDyploResources(nodes);
+    for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
+        QLabel* l = getPrRegion(it->id);
+        if (l) {
+            showLabelColor(l, Qt::green);
+            l->setText(it->name);
+        }
+    }
+}
+
+void MainWindow::externalResourceEnable(int id, bool active)
+{
+    if (active)
+    {
+        externals.aquire(&dyploContext, id);
+    }
+    else
+    {
+        externals.release(id);
+    }
+    updateFloorplan();
 }
 
 
@@ -178,15 +200,6 @@ void MainWindow::on_buttonAudioDemo_toggled(bool checked)
         audio.stop();
     }
 
-}
-
-void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
-{
-    // TODO: program and route Dyplo
-    if (checked)
-    {
-
-    }
 }
 
 void MainWindow::updateVideoDemoState(bool active)
