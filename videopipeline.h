@@ -22,7 +22,7 @@ public:
     VideoPipeline();
     ~VideoPipeline();
 
-    int activate(DyploContext* dyplo, bool hardwareYUV, bool filterRGB, bool filterGray);
+    int activate(DyploContext* dyplo, bool hardwareYUV, bool filterContrast, bool filterGray);
     void deactivate();
 
     void enumDyploResources(DyploNodeInfoList& list);

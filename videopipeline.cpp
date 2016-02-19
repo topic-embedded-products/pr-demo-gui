@@ -13,8 +13,8 @@
 #define VIDEO_RGB_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*3)
 
 static const char BITSTREAM_YUVTORGB[] = "yuvtorgb";
-static const char BITSTREAM_FILTER_RGB1[] = "bettergray";
 static const char BITSTREAM_FILTER_YUV_GRAY[] = "grayscale";
+static const char BITSTREAM_FILTER_YUV_CONTRAST[] = "contrast";
 
 VideoPipeline::VideoPipeline():
     captureNotifier(NULL),
@@ -34,7 +34,7 @@ VideoPipeline::~VideoPipeline()
     deactivate();
 }
 
-int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterRGB, bool filterGray)
+int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterContrast, bool filterGray)
 {
     int r;
 
@@ -67,14 +67,15 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterRG
             yuv2rgb = dyplo->createConfig(BITSTREAM_YUVTORGB);
             headnode = yuv2rgb->getNodeIndex();
             tailnode = headnode;
-            if (filterRGB) {
-                filter1 = dyplo->createConfig(BITSTREAM_FILTER_RGB1);
-                tailnode = filter1->getNodeIndex();
-                dyplo->GetHardwareControl().routeAddSingle(headnode, 0, tailnode, 0);
-            }
             if (filterGray) {
                 yuvfilter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_GRAY);
                 int id = yuvfilter1->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(id, 0, headnode, 0);
+                headnode = id;
+            }
+            if (filterContrast) {
+                filter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_CONTRAST);
+                int id = filter1->getNodeIndex();
                 dyplo->GetHardwareControl().routeAddSingle(id, 0, headnode, 0);
                 headnode = id;
             }
@@ -149,7 +150,7 @@ void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)
     if (yuv2rgb)
         list.push_back(DyploNodeInfo(yuv2rgb->getNodeIndex(), BITSTREAM_YUVTORGB));
     if (filter1)
-        list.push_back(DyploNodeInfo(filter1->getNodeIndex(), BITSTREAM_FILTER_RGB1));
+        list.push_back(DyploNodeInfo(filter1->getNodeIndex(), BITSTREAM_FILTER_YUV_CONTRAST));
     if (yuvfilter1)
         list.push_back(DyploNodeInfo(yuvfilter1->getNodeIndex(), BITSTREAM_FILTER_YUV_GRAY));
 }

@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&ui->video->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showVideoStats(uint,uint)));
 
     connect(ui->cbFilterGray, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
-    connect(ui->cbFilterRGB, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
+    connect(ui->cbFilterContrast, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
 
     connect(&audio, SIGNAL(capturedAudio(short*,uint)), ui->spectrum, SLOT(audioData(short*,uint)));
     connect(&audio, SIGNAL(setActive(bool)), this, SLOT(updateAudioDemoState(bool)));
@@ -203,7 +203,7 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
         if (video.activate(
                     &dyploContext,
                     ui->cbYUVToRGB->isChecked(),
-                    ui->cbFilterRGB->isChecked(),
+                    ui->cbFilterContrast->isChecked(),
                     ui->cbFilterGray->isChecked()))
             updateVideoDemoState(false);
     }
@@ -238,7 +238,7 @@ void MainWindow::updateVideoDemoState(bool active)
 {
     ui->buttonVideodemo->setChecked(active);
     ui->cbYUVToRGB->setEnabled(!active);
-    ui->cbFilterRGB->setEnabled(!active);
+    ui->cbFilterContrast->setEnabled(!active);
     ui->cbFilterGray->setEnabled(!active);
     ui->lblVideoStats->setVisible(active);
     updateFloorplan();
@@ -264,8 +264,7 @@ void MainWindow::updateMandelbrotDemoState(bool active)
 void MainWindow::on_cbYUVToRGB_clicked(bool checked)
 {
     if (!checked) {
-        if (ui->cbFilterGray->isChecked() || ui->cbFilterRGB->isChecked())
+        if (ui->cbFilterGray->isChecked() || ui->cbFilterContrast->isChecked())
             ui->cbYUVToRGB->setChecked(true);
     }
 }
-
