@@ -25,6 +25,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&dyploContext, SIGNAL(programmedPartial(int,const char*,uint,uint)), this, SLOT(showProgrammingMetrics(int,const char*,uint,uint)));
     connect(&ui->video->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showVideoStats(uint,uint)));
 
+    connect(ui->cbFilterGray, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
+    connect(ui->cbFilterRGB, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
+
+    connect(&audio, SIGNAL(capturedAudio(short*,uint)), ui->spectrum, SLOT(audioData(short*,uint)));
+    connect(&audio, SIGNAL(setActive(bool)), this, SLOT(updateAudioDemoState(bool)));
+
     updateFloorplan();
 }
 
@@ -136,6 +142,12 @@ void MainWindow::showVideoStats(unsigned int frames, unsigned int milliseconds)
     ui->lblVideoStats->setText(message);
 }
 
+void MainWindow::mustHaveAccellYUVtoRGB(bool checked)
+{
+    if (checked)
+        ui->cbYUVToRGB->setChecked(true);
+}
+
 void MainWindow::on_buttonVideodemo_toggled(bool checked)
 {
     if (checked)
@@ -157,9 +169,15 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
 void MainWindow::on_buttonAudioDemo_toggled(bool checked)
 {
     // TODO: program and route Dyplo
-    ui->cbLowPassFIR->setEnabled(!checked);
-    ui->cbHighPassFIR->setEnabled(!checked);
-    ui->cbFFT->setEnabled(!checked);
+    if (checked)
+    {
+        audio.start();
+    }
+    else
+    {
+        audio.stop();
+    }
+
 }
 
 void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
@@ -176,6 +194,24 @@ void MainWindow::updateVideoDemoState(bool active)
     ui->buttonVideodemo->setChecked(active);
     ui->cbYUVToRGB->setEnabled(!active);
     ui->cbFilterRGB->setEnabled(!active);
+    ui->cbFilterGray->setEnabled(!active);
     ui->lblVideoStats->setVisible(active);
     updateFloorplan();
+}
+
+void MainWindow::updateAudioDemoState(bool active)
+{
+    ui->cbLowPassFIR->setEnabled(!active);
+    ui->cbHighPassFIR->setEnabled(!active);
+    ui->cbFFT->setEnabled(!active);
+    if (!active)
+         ui->spectrum->updateSpectrum(NULL);
+}
+
+void MainWindow::on_cbYUVToRGB_clicked(bool checked)
+{
+    if (!checked) {
+        if (ui->cbFilterGray->isChecked() || ui->cbFilterRGB->isChecked())
+            ui->cbYUVToRGB->setChecked(true);
+    }
 }

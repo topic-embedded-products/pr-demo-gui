@@ -24,7 +24,8 @@ SOURCES +=  main.cpp\
             microphonecapturethread.cpp \
     video-capture.cpp \
     frameratecounter.cpp \
-    videopipeline.cpp
+    videopipeline.cpp \
+    audiopipeline.cpp
 
 
 
@@ -39,7 +40,8 @@ HEADERS  += mainwindow.h \
     video-capture.h \
     frameratecounter.h \
     videopipeline.h \
-    dyploresources.h
+    dyploresources.h \
+    audiopipeline.h
 
 FORMS    += mainwindow.ui
 

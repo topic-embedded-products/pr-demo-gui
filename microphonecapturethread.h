@@ -17,24 +17,23 @@ public:
     // by default, capture 4096 bytes (2048 x 16bits)
     static const unsigned int CAPTURE_SIZE;
 
-public slots:
     void startCapturing(QString audioDeviceName);
-    void stopCapturing();
     void continueCapturing();
 
 signals:
     void capturedAudio(short* buf, unsigned int len);
 
 protected:
+    void stopCapturing();
     virtual void run();
+    void captureloop(void* capture_handle);
 
 private:
     QString iAudioDeviceName;
-    bool iCapturing;
-    bool iContinueCapturing;
-
     QMutex iMutex;
     QWaitCondition iCondition;
+    bool iCapturing;
+    bool iContinueCapturing;
 };
 
 #endif // MICROPHONECAPTURE_H

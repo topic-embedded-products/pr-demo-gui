@@ -1,4 +1,5 @@
 #include "spectrumwidget.h"
+#include "microphonecapturethread.h"
 
 #include <QPainter>
 #include <QDebug>
@@ -15,19 +16,14 @@ SpectrumWidget::SpectrumWidget(QWidget *parent) :
     iMaxValue(0.0f),
     iNewSpectrum(NULL),
     iDrawnCurrentBars(false),
-    iCurrentBarHeight(NULL),
-    iMicrophoneCapture(),
+    iCurrentBarHeight(new int[SPECTRUM_SIZE]),
     iFourierFilter(MicrophoneCaptureThread::CAPTURE_SIZE, SPECTRUM_SIZE)
 {
-    iCurrentBarHeight = new int[SPECTRUM_SIZE];
     memset(iCurrentBarHeight, 0, SPECTRUM_SIZE*sizeof(int));
 
     // force no complete redraw
     setAttribute(Qt::WA_OpaquePaintEvent);
 
-    connect(&iMicrophoneCapture, SIGNAL(capturedAudio(short*,uint)), this, SLOT(audioData(short*,uint)));
-    QString audioDeviceName("default");
-    iMicrophoneCapture.startCapturing(audioDeviceName);
 }
 
 SpectrumWidget::~SpectrumWidget()
@@ -90,6 +86,11 @@ void SpectrumWidget::paintEvent(QPaintEvent* )
             iCurrentBarHeight[i]  = barHeight;
         }
     }
+    else
+    {
+        painter.fillRect(rect(), Qt::black);
+        memset(iCurrentBarHeight, 0, SPECTRUM_SIZE*sizeof(int));
+    }
 }
 
 static float getMaxValue(float* spectrumValues)
@@ -106,22 +107,18 @@ static float getMaxValue(float* spectrumValues)
 void SpectrumWidget::updateSpectrum(float* spectrumValues)
 {
     iNewSpectrum = spectrumValues;
-
-    iMaxValue = std::max<float>(iMaxValue, getMaxValue(spectrumValues));
-
-    // deduct a small percentage of the maximum (correction for loud noises).
-    iMaxValue =  iMaxValue * 0.9995;
-
+    if (spectrumValues)
+    {
+        iMaxValue = std::max<float>(iMaxValue, getMaxValue(spectrumValues));
+        // deduct a small percentage of the maximum (correction for loud noises).
+        iMaxValue =  iMaxValue * 0.9995;
+    }
     update();
 }
 
 void SpectrumWidget::audioData(short* buf, unsigned int)
 {
     float* spectrum = iFourierFilter.getSpectrum(buf);
-
-    // 'buf' has been used to generate the spectrum, continue capturing
-    iMicrophoneCapture.continueCapturing();
-
     updateSpectrum(spectrum);
 }
 

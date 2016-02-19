@@ -10,9 +10,7 @@ const unsigned int MicrophoneCaptureThread::CAPTURE_SIZE = 2048;
 MicrophoneCaptureThread::MicrophoneCaptureThread(QObject* parent) :
     QThread(parent),
     iCapturing(false),
-    iContinueCapturing(false),
-    iMutex(),
-    iCondition()
+    iContinueCapturing(false)
 {
 }
 
@@ -49,9 +47,7 @@ void MicrophoneCaptureThread::continueCapturing()
 void MicrophoneCaptureThread::run()
 {
     int err;
-    short buf[CAPTURE_SIZE];
     snd_pcm_t* capture_handle;
-    snd_pcm_hw_params_t* hw_params;
 
     if ((err = snd_pcm_open (&capture_handle, iAudioDeviceName.toStdString().c_str(), SND_PCM_STREAM_CAPTURE, 0)) < 0) {
         fprintf (stderr, "cannot open audio device %s (%s)\n",
@@ -59,6 +55,18 @@ void MicrophoneCaptureThread::run()
              snd_strerror(err));
         return;
     }
+
+    captureloop(capture_handle);
+
+    snd_pcm_close(capture_handle);
+}
+
+void MicrophoneCaptureThread::captureloop(void *_capture_handle)
+{
+    int err;
+    snd_pcm_t* capture_handle = (snd_pcm_t*)_capture_handle;
+    snd_pcm_hw_params_t* hw_params;
+    short buf[CAPTURE_SIZE];
 
     if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0) {
         fprintf (stderr, "cannot allocate hardware parameter structure (%s)\n",
@@ -116,6 +124,7 @@ void MicrophoneCaptureThread::run()
         if ((err = snd_pcm_readi(capture_handle, buf, CAPTURE_SIZE)) != CAPTURE_SIZE) {
             fprintf (stderr, "read from audio interface failed (%s)\n",
                  snd_strerror (err));
+            return;
         }
         else
         {
@@ -129,6 +138,4 @@ void MicrophoneCaptureThread::run()
             }
         }
     }
-
-    snd_pcm_close(capture_handle);
 }

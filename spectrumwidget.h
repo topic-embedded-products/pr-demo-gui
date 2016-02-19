@@ -2,7 +2,6 @@
 #define SPECTRUMWIDGET_H
 
 #include <QWidget>
-#include "microphonecapturethread.h"
 #include "fourierfilter.h"
 
 class SpectrumWidget : public QWidget
@@ -27,7 +26,6 @@ private:
     bool    iDrawnCurrentBars;
     int*    iCurrentBarHeight;
 
-    MicrophoneCaptureThread iMicrophoneCapture;
     FourierFilter iFourierFilter;
 };
 
