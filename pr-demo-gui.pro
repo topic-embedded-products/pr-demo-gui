@@ -26,7 +26,9 @@ SOURCES +=  main.cpp\
     frameratecounter.cpp \
     videopipeline.cpp \
     audiopipeline.cpp \
-    externalresources.cpp
+    externalresources.cpp \
+    mandelbrotpipeline.cpp \
+    colormap.cpp
 
 
 
@@ -43,7 +45,9 @@ HEADERS  += mainwindow.h \
     videopipeline.h \
     dyploresources.h \
     audiopipeline.h \
-    externalresources.h
+    externalresources.h \
+    mandelbrotpipeline.h \
+    colormap.h
 
 FORMS    += mainwindow.ui
 

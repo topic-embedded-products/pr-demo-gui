@@ -31,6 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&audio, SIGNAL(capturedAudio(short*,uint)), ui->spectrum, SLOT(audioData(short*,uint)));
     connect(&audio, SIGNAL(setActive(bool)), this, SLOT(updateAudioDemoState(bool)));
 
+    connect(&mandelbrot, SIGNAL(renderedImage(QImage)), ui->mandelbrot, SLOT(updatePixmap(QImage)));
+    connect(&mandelbrot, SIGNAL(setActive(bool)), this, SLOT(updateMandelbrotDemoState(bool)));
+
     updateFloorplan();
 }
 
@@ -106,12 +109,24 @@ void MainWindow::updateFloorplan()
         }
     }
 
+    /* TODO: Audio */
+
+    nodes.clear();
+    mandelbrot.enumDyploResources(nodes);
+    for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
+        QLabel* l = getPrRegion(it->id);
+        if (l) {
+            showLabelColor(l, Qt::green);
+            l->setText(it->name);
+        }
+    }
+
     nodes.clear();
     externals.enumDyploResources(nodes);
     for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
         QLabel* l = getPrRegion(it->id);
         if (l) {
-            showLabelColor(l, Qt::green);
+            showLabelColor(l, Qt::gray);
             l->setText(it->name);
         }
     }
@@ -190,7 +205,6 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
 
 void MainWindow::on_buttonAudioDemo_toggled(bool checked)
 {
-    // TODO: program and route Dyplo
     if (checked)
     {
         audio.start();
@@ -200,6 +214,14 @@ void MainWindow::on_buttonAudioDemo_toggled(bool checked)
         audio.stop();
     }
 
+}
+
+void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
+{
+    if (checked)
+        mandelbrot.activate(&dyploContext);
+    else
+        mandelbrot.deactivate();
 }
 
 void MainWindow::updateVideoDemoState(bool active)
@@ -218,7 +240,15 @@ void MainWindow::updateAudioDemoState(bool active)
     ui->cbHighPassFIR->setEnabled(!active);
     ui->cbFFT->setEnabled(!active);
     if (!active)
-         ui->spectrum->updateSpectrum(NULL);
+        ui->spectrum->updateSpectrum(NULL);
+    ui->buttonAudioDemo->setChecked(active);
+    updateFloorplan();
+}
+
+void MainWindow::updateMandelbrotDemoState(bool active)
+{
+    ui->buttonMandelbrotDemo->setChecked(active);
+    updateFloorplan();
 }
 
 void MainWindow::on_cbYUVToRGB_clicked(bool checked)
@@ -228,3 +258,4 @@ void MainWindow::on_cbYUVToRGB_clicked(bool checked)
             ui->cbYUVToRGB->setChecked(true);
     }
 }
+

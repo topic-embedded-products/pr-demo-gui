@@ -7,6 +7,7 @@
 #include "audiopipeline.h"
 #include "videopipeline.h"
 #include "externalresources.h"
+#include "mandelbrotpipeline.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,15 +31,19 @@ private slots:
 
     void updateVideoDemoState(bool active);
     void updateAudioDemoState(bool active);
+    void updateMandelbrotDemoState(bool active);
     void hideProgrammingMetrics();
     void showProgrammingMetrics(int node, const char* name, unsigned int size, unsigned int microseconds);
     void showVideoStats(unsigned int frames,  unsigned int milliseconds);
     void mustHaveAccellYUVtoRGB(bool checked);
 
+    void on_buttonMandelbrotDemo_toggled(bool checked);
+
 private:
     Ui::MainWindow*   ui;
     AudioPipeline audio;
     VideoPipeline video;
+    MandelbrotPipeline mandelbrot;
     ExternalResources externals;
 
     QLabel *getPrRegion(int id);
