@@ -26,49 +26,34 @@
  * paper mail at the following address: Postbus 440, 5680 AK Best, The Netherlands.
  */
 #include "cpuinfo.h"
-#include <iostream>
-#include <stdio.h>
+#include <QDebug>
 
 CpuInfo::CpuInfo()
 {
-    FILE* file = fopen("/proc/stat", "r");
-    if (file)
-    {
-        unsigned long long totalUser, totalUserLow, totalSys;
-        fscanf(file, "cpu %Ld %Ld %Ld %Ld", &totalUser, &totalUserLow,
-           &totalSys, &lastTotalIdle);
-        fclose(file);
-        lastTotalActive = totalUser + totalUserLow + totalSys;
-    }
+    struct tms lastTms;
+    lastTicks = times(&lastTms);
+    prev_utime = lastTms.tms_utime;
+    prev_stime = lastTms.tms_stime;
 }
 
 int CpuInfo::getCurrentValue()
 {
-    int percent;
-    FILE* file;
-    unsigned long long totalUser, totalUserLow, totalSys, totalIdle, totalActive;
+    struct tms nowTms;
+    time_t ticks = times(&nowTms);
 
-    file = fopen("/proc/stat", "r");
-    if (!file)
-        return -1;
-    fscanf(file, "cpu %Ld %Ld %Ld %Ld", &totalUser, &totalUserLow,
-           &totalSys, &totalIdle);
-    fclose(file);
+    if (ticks == (time_t)-1)
+        return -1; /* error? */
 
-    totalActive = totalUser + totalUserLow + totalSys;
-    if (totalActive < lastTotalActive)
-    {
-        //Overflow detection. Just skip this value.
-        percent = -1;
-    }
-    else
-    {
-        unsigned long long active = totalActive - lastTotalActive;
-        percent = (int)((active * 100) / (active + (totalIdle - lastTotalIdle)));
-    }
+    time_t used_ticks = (nowTms.tms_utime - prev_utime) + (nowTms.tms_stime - prev_stime);
+    time_t total_ticks = ticks - lastTicks;
 
-    lastTotalActive = totalActive;
-    lastTotalIdle = totalIdle;
+    lastTicks = ticks;
 
-    return percent;
+    if (total_ticks <= 0)
+        return -1; /* No time elapsed? */
+
+    prev_utime = nowTms.tms_utime;
+    prev_stime = nowTms.tms_stime;
+
+    return ((100 * used_ticks) + 50) / total_ticks; /* Round up */
 }

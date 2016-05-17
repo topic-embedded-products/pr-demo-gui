@@ -44,12 +44,12 @@ private slots:
 
 private:
     Ui::MainWindow*   ui;
+    CpuInfo cpuInfo;
+    QTimer cpuStatsTimer;
     AudioPipeline audio;
     VideoPipeline video;
     MandelbrotPipeline mandelbrot;
     ExternalResources externals;
-    CpuInfo cpuInfo;
-    QTimer cpuStatsTimer;
 
     QLabel *getPrRegion(int id);
     void updateFloorplan();

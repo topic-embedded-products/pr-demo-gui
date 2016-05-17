@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->partialProgramMetrics->hide();
 
     connect(&cpuStatsTimer, SIGNAL(timeout()), this, SLOT(updateCpuStats()));
-    cpuStatsTimer.start(1000);
+    cpuStatsTimer.start(2000);
 
     connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
     connect(&video, SIGNAL(setActive(bool)), this, SLOT(updateVideoDemoState(bool)));

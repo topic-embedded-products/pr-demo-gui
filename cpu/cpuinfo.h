@@ -29,6 +29,8 @@
 #define CPUINFO_H
 
 #include <QObject>
+#include <sys/times.h>
+
 class CpuInfo : public QObject
 {
     Q_OBJECT
@@ -37,7 +39,9 @@ public:
     CpuInfo();
     int getCurrentValue();
 private:
-    unsigned long long lastTotalActive, lastTotalIdle;
+    time_t lastTicks;
+    time_t prev_utime;
+    time_t prev_stime;
 };
 
 #endif // CPUINFO_H
