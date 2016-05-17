@@ -4,7 +4,6 @@
 #include "microphonecapturethread.h"
 #include "dyplocontext.h"
 
-#include <QTimer>
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
 #include <cstdlib>
@@ -19,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->partialProgramMetrics->hide();
+
+    connect(&cpuStatsTimer, SIGNAL(timeout()), this, SLOT(updateCpuStats()));
+    cpuStatsTimer.start(1000);
 
     connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
     connect(&video, SIGNAL(setActive(bool)), this, SLOT(updateVideoDemoState(bool)));
@@ -234,6 +236,15 @@ void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
         mandelbrot.activate(&dyploContext);
     else
         mandelbrot.deactivate();
+}
+
+void MainWindow::updateCpuStats()
+{
+    int usage = cpuInfo.getCurrentValue();
+    if (usage < 0)
+        ui->lblCPU->setText("---");
+    else
+        ui->lblCPU->setText(QString("%1%").arg(usage));
 }
 
 void MainWindow::updateVideoDemoState(bool active)

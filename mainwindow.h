@@ -8,6 +8,7 @@
 #include "videopipeline.h"
 #include "externalresources.h"
 #include "mandelbrotpipeline.h"
+#include "cpu/cpuinfo.h"
 
 namespace Ui {
 class MainWindow;
@@ -39,12 +40,16 @@ private slots:
 
     void on_buttonMandelbrotDemo_toggled(bool checked);
 
+    void updateCpuStats();
+
 private:
     Ui::MainWindow*   ui;
     AudioPipeline audio;
     VideoPipeline video;
     MandelbrotPipeline mandelbrot;
     ExternalResources externals;
+    CpuInfo cpuInfo;
+    QTimer cpuStatsTimer;
 
     QLabel *getPrRegion(int id);
     void updateFloorplan();

@@ -28,7 +28,8 @@ SOURCES +=  main.cpp\
     audiopipeline.cpp \
     externalresources.cpp \
     mandelbrotpipeline.cpp \
-    colormap.cpp
+    colormap.cpp \
+    cpu/cpuinfo.cpp
 
 
 
@@ -47,7 +48,8 @@ HEADERS  += mainwindow.h \
     audiopipeline.h \
     externalresources.h \
     mandelbrotpipeline.h \
-    colormap.h
+    colormap.h \
+    cpu/cpuinfo.h
 
 FORMS    += mainwindow.ui
 
