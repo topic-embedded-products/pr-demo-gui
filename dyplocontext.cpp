@@ -8,12 +8,19 @@ DyploContext::DyploContext()
     try
     {
         hwControl = new dyplo::HardwareControl(hardwareCtx);
-        // All bitstreams are partial streams.
-        hardwareCtx.setProgramMode(true);
     }
     catch (const std::exception& ex)
     {
         qCritical() << "ERROR: Cannot initialize Dyplo:\n" << QString(ex.what());
+    }
+    try
+    {
+        // For PCAP compatibility
+        hardwareCtx.setProgramMode(true);
+    }
+    catch (const std::exception& ex)
+    {
+        // Ignore exception, it's only old PCAP support
     }
 }
 
