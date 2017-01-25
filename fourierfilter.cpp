@@ -33,6 +33,14 @@ FourierFilter::~FourierFilter()
     delete[] iResultBuffer;
 }
 
+/* GCC 6 is picky about complex and fftw's complex implementation. This
+ * works around the issue by just open-coding it. */
+static inline float fftw_cabsf(fftwf_complex v)
+{
+    return hypotf(v[0], v[1]);
+    // return hypotf(crealf(v), cimagf(v));
+}
+
 float* FourierFilter::getSpectrum(short* data)
 {
     // convert short to float
@@ -47,7 +55,7 @@ float* FourierFilter::getSpectrum(short* data)
     {
         // Special case: No change
         for (int i = 0; i < iFourierBlockSize; ++i)
-            iResultBuffer[i] = cabsf(iFourierOutput[i]);
+            iResultBuffer[i] = fftw_cabsf(iFourierOutput[i]);
     }
     else
     {
@@ -59,15 +67,15 @@ float* FourierFilter::getSpectrum(short* data)
             unsigned int step = block/iDecline;
             if (step <= 1) break; // Done with the multi-factor ones
             where -= step;
-            float sum = cabsf(iFourierOutput[where]);
+            float sum = fftw_cabsf(iFourierOutput[where]);
             for (unsigned int i = where+1; i<block; ++i)
-                sum += cabsf(iFourierOutput[i]);
+                sum += fftw_cabsf(iFourierOutput[i]);
             --index;
             iResultBuffer[index] = sum;
             block = where;
         }
         for (unsigned int i = 0; i < where; ++i)
-            iResultBuffer[i] = cabsf(iFourierOutput[i]);
+            iResultBuffer[i] = fftw_cabsf(iFourierOutput[i]);
     }
     return iResultBuffer;
 }

@@ -1,7 +1,6 @@
 #ifndef FOURIERFILTER_H
 #define FOURIERFILTER_H
 
-#include <complex.h>
 #include "fftw3.h"
 
 class FourierFilter
