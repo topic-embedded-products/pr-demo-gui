@@ -13,15 +13,6 @@ DyploContext::DyploContext()
     {
         qCritical() << "ERROR: Cannot initialize Dyplo:\n" << QString(ex.what());
     }
-    try
-    {
-        // For PCAP compatibility
-        hardwareCtx.setProgramMode(true);
-    }
-    catch (const std::exception& ex)
-    {
-        // Ignore exception, it's only old PCAP support
-    }
 }
 
 DyploContext::~DyploContext()
@@ -55,7 +46,6 @@ dyplo::HardwareConfig *DyploContext::createConfig(const char *name)
                 QElapsedTimer myTimer; /* TODO: More accurate */
                 myTimer.start();
                 {
-                    //hwContext.program(filename.c_str());
                     dyplo::HardwareProgrammer programmer(hardwareCtx, *hwControl);
                     size = programmer.fromFile(filename.c_str());
                 }
