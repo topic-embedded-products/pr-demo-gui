@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QLabel>
-#include "audiopipeline.h"
 #include "videopipeline.h"
 #include "externalresources.h"
 #include "mandelbrotpipeline.h"
@@ -27,11 +26,9 @@ public:
 
 private slots:
     void on_buttonVideodemo_toggled(bool checked);
-    void on_buttonAudioDemo_toggled(bool checked);
     void on_cbYUVToRGB_clicked(bool checked);
 
     void updateVideoDemoState(bool active);
-    void updateAudioDemoState(bool active);
     void updateMandelbrotDemoState(bool active);
     void hideProgrammingMetrics();
     void showProgrammingMetrics(int node, const char* name, unsigned int size, unsigned int microseconds);
@@ -42,11 +39,12 @@ private slots:
 
     void updateCpuStats();
 
+    void on_node5_overlay_linkActivated(const QString &link);
+
 private:
     Ui::MainWindow*   ui;
     CpuInfo cpuInfo;
     QTimer cpuStatsTimer;
-    AudioPipeline audio;
     VideoPipeline video;
     MandelbrotPipeline mandelbrot;
     ExternalResources externals;

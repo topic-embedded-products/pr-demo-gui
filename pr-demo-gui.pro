@@ -12,40 +12,30 @@ TARGET = pr-demo-gui
 TEMPLATE = app
 
 CONFIG += link_pkgconfig
-PKGCONFIG += fftw3f dyplo alsa
+PKGCONFIG += dyplo
 
 SOURCES +=  main.cpp\
             mainwindow.cpp \
             mousemonitor.cpp \
             videowidget.cpp \
             dyplocontext.cpp \
-            fourierfilter.cpp \
-            spectrumwidget.cpp \
-            microphonecapturethread.cpp \
     video-capture.cpp \
     frameratecounter.cpp \
     videopipeline.cpp \
-    audiopipeline.cpp \
     externalresources.cpp \
     mandelbrotpipeline.cpp \
     colormap.cpp \
     cpu/cpuinfo.cpp
-
-
 
 HEADERS  += mainwindow.h \
             mousemonitor.h \
             videowidget.h \
             dyplocontext.h \
             types.h \
-            fourierfilter.h \
-            spectrumwidget.h \
-            microphonecapturethread.h \
     video-capture.h \
     frameratecounter.h \
     videopipeline.h \
     dyploresources.h \
-    audiopipeline.h \
     externalresources.h \
     mandelbrotpipeline.h \
     colormap.h \

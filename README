@@ -1,5 +1,2 @@
 To compile on standalone PC:
-
-sudo apt-get install fftw3-dev libasound2-dev
-
-then open in Qt and build
+Just open in Qt Creator and build.

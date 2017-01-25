@@ -8,7 +8,7 @@
 #include "dyplocontext.h"
 
 #define VIDEO_WIDTH  640
-#define VIDEO_HEIGHT 320
+#define VIDEO_HEIGHT 480
 #define VIDEO_YUV_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*2)
 #define VIDEO_RGB_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*3)
 
