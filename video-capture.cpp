@@ -14,6 +14,8 @@
 
 #include <linux/videodev2.h>
 
+#include <qdebug.h>
+
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 static int xioctl(int fh, int request, void *arg)
@@ -44,6 +46,17 @@ int VideoCapture::open(const char *filename)
 {
     fd = ::open(filename, O_RDWR | O_NONBLOCK, 0);
     return fd;
+}
+
+static int set_framerate(int fd, int fps)
+{
+    struct v4l2_streamparm parm;
+
+    CLEAR(parm);
+    parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    parm.parm.capture.timeperframe.numerator = 1;
+    parm.parm.capture.timeperframe.denominator = fps;
+    return xioctl(fd, VIDIOC_S_PARM, &parm);
 }
 
 int VideoCapture::setup(int width, int height)
@@ -109,6 +122,26 @@ int VideoCapture::setup(int width, int height)
     min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
     if (fmt.fmt.pix.sizeimage < min)
             fmt.fmt.pix.sizeimage = min;
+#if 0
+    /* Obtain possible settings for framerate... */
+    struct v4l2_frmivalenum frmival;
+    memset(&frmival,0,sizeof(frmival));
+    frmival.pixel_format = fmt.fmt.pix.pixelformat;
+    frmival.width = fmt.fmt.pix.width;
+    frmival.height = fmt.fmt.pix.height;
+    while (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0)
+    {
+        if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE)
+            qDebug() << "Discrete:"
+                     << frmival.discrete.denominator << "/" << frmival.discrete.numerator;
+        else
+            qDebug() << "Stepwise:"
+                        << frmival.stepwise.min.denominator << "/" << frmival.stepwise.min.numerator << ".."
+                        << frmival.stepwise.max.denominator << "/" << frmival.stepwise.max.numerator;
+        frmival.index++;
+    }
+#endif
+    set_framerate(fd, 30); /* Ignore error returns */
 
     return init_mmap();
 }
