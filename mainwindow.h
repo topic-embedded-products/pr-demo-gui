@@ -37,8 +37,6 @@ private slots:
 
     void updateCpuStats();
 
-    void on_node5_overlay_linkActivated(const QString &link);
-
 private:
     Ui::MainWindow*   ui;
     CpuInfo cpuInfo;

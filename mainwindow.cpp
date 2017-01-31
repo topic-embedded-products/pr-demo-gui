@@ -235,8 +235,3 @@ void MainWindow::updateMandelbrotDemoState(bool active)
     ui->buttonMandelbrotDemo->setChecked(active);
     updateFloorplan();
 }
-
-void MainWindow::on_node5_overlay_linkActivated(const QString &link)
-{
-    qDebug() << "on_node5_overlay_linkActivated" << link;
-}
