@@ -1364,7 +1364,7 @@ QPushButton
       </font>
      </property>
      <property name="text">
-      <string>YUV to RGB conversion in FPGA</string>
+      <string>YUV to RGB conversion, all in FPGA</string>
      </property>
      <property name="checked">
       <bool>true</bool>

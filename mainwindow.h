@@ -26,14 +26,12 @@ public:
 
 private slots:
     void on_buttonVideodemo_toggled(bool checked);
-    void on_cbYUVToRGB_clicked(bool checked);
 
     void updateVideoDemoState(bool active);
     void updateMandelbrotDemoState(bool active);
     void hideProgrammingMetrics();
     void showProgrammingMetrics(int node, const char* name, unsigned int size, unsigned int microseconds);
     void showVideoStats(unsigned int frames,  unsigned int milliseconds);
-    void mustHaveAccellYUVtoRGB(bool checked);
 
     void on_buttonMandelbrotDemo_toggled(bool checked);
 

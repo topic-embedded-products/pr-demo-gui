@@ -25,10 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&dyploContext, SIGNAL(programmedPartial(int,const char*,uint,uint)), this, SLOT(showProgrammingMetrics(int,const char*,uint,uint)));
     connect(&ui->video->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showVideoStats(uint,uint)));
 
-    connect(ui->cbFilterGray, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
-    connect(ui->cbFilterContrast, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
-    connect(ui->cbFilterTreshold, SIGNAL(toggled(bool)), this, SLOT(mustHaveAccellYUVtoRGB(bool)));
-
     connect(&mandelbrot, SIGNAL(renderedImage(QImage)), ui->mandelbrot, SLOT(updatePixmap(QImage)));
     connect(&mandelbrot, SIGNAL(setActive(bool)), this, SLOT(updateMandelbrotDemoState(bool)));
 
@@ -187,12 +183,6 @@ void MainWindow::showVideoStats(unsigned int frames, unsigned int milliseconds)
     ui->lblVideoStats->setText(message);
 }
 
-void MainWindow::mustHaveAccellYUVtoRGB(bool checked)
-{
-    if (checked)
-        ui->cbYUVToRGB->setChecked(true);
-}
-
 void MainWindow::on_buttonVideodemo_toggled(bool checked)
 {
     if (checked)
@@ -244,14 +234,6 @@ void MainWindow::updateMandelbrotDemoState(bool active)
 {
     ui->buttonMandelbrotDemo->setChecked(active);
     updateFloorplan();
-}
-
-void MainWindow::on_cbYUVToRGB_clicked(bool checked)
-{
-    if (!checked) {
-        if (ui->cbFilterGray->isChecked() || ui->cbFilterContrast->isChecked() || ui->cbFilterTreshold->isChecked())
-            ui->cbYUVToRGB->setChecked(true);
-    }
 }
 
 void MainWindow::on_node5_overlay_linkActivated(const QString &link)

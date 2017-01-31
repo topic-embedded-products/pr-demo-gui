@@ -17,6 +17,10 @@ static const char BITSTREAM_FILTER_YUV_GRAY[] = "grayscale";
 static const char BITSTREAM_FILTER_YUV_CONTRAST[] = "contrast";
 static const char BITSTREAM_FILTER_YUV_TRESHOLD[] = "treshold";
 
+#define SOFTWARE_FLAG_CONTRAST 1
+#define SOFTWARE_FLAG_GRAY 2
+#define SOFTWARE_FLAG_THD 4
+
 VideoPipeline::VideoPipeline():
     captureNotifier(NULL),
     fromLogicNotifier(NULL),
@@ -26,7 +30,9 @@ VideoPipeline::VideoPipeline():
     yuv2rgb(NULL),
     filter1(NULL),
     filterTreshold(NULL),
-    yuvfilter1(NULL)
+    yuvfilter1(NULL),
+    software_flags(0),
+    yuv_buffer(NULL)
 {
 
 }
@@ -34,6 +40,7 @@ VideoPipeline::VideoPipeline():
 VideoPipeline::~VideoPipeline()
 {
     deactivate();
+    free(yuv_buffer);
 }
 
 int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd)
@@ -125,6 +132,15 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
     }
     else
     {
+        software_flags = 0;
+        if (filterContrast)
+            software_flags |= SOFTWARE_FLAG_CONTRAST;
+        if (filterGray)
+            software_flags |= SOFTWARE_FLAG_GRAY;
+        if (filterThd)
+            software_flags |= SOFTWARE_FLAG_THD;
+        if (software_flags)
+            allocYUVbuffer();
         captureNotifier = new QSocketNotifier(capture.device_handle(), QSocketNotifier::Read, this);
         connect(captureNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableSoft(int)));
         captureNotifier->setEnabled(true);
@@ -169,6 +185,77 @@ void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)
         list.push_back(DyploNodeInfo(filterTreshold->getNodeIndex(), BITSTREAM_FILTER_YUV_TRESHOLD));
 }
 
+static unsigned char thd_process(unsigned char y)
+{
+    if (y < (64 - 32))
+        return 0;
+    if (y < (128 - 32))
+        return 63;
+    if (y < (192 - 32))
+        return 127;
+    if (y < (256 - 32))
+        return 191;
+    return 255;
+}
+
+static unsigned char thd_processc(unsigned char uv)
+{
+    if (uv < 0x60)
+        return 0x00;
+    if (uv > 0xA0)
+        return 0xFF;
+    return 0x80;
+}
+
+static void thd(const unsigned int *input, unsigned int size, unsigned int *output)
+{
+    size >>= 2;
+    while(size)
+    {
+        const unsigned int yuyv = *input;
+        const unsigned char y0 = (unsigned char) (yuyv & 0x000000FF);
+        const unsigned char u = (unsigned char) ((yuyv & 0x0000FF00) >> 8);
+        const unsigned char y1 = (unsigned char) ((yuyv & 0x00FF0000) >> 16);
+        const unsigned char v = (unsigned char) ((yuyv & 0xFF000000) >> 24);
+
+        *output = thd_process(y0) |
+            (((unsigned int)thd_processc(u)) << 8) |
+            (((unsigned int)thd_process(y1)) << 16) |
+            (((unsigned int)thd_processc(v)) << 24);
+
+        ++output;
+        ++input;
+        --size;
+    }
+}
+
+static unsigned char stretch(unsigned char y)
+{
+    if (y <= 64)
+        return 0;
+    if (y >= 192)
+        return 255;
+    return (y - 64) << 1;
+}
+
+void contrast(const unsigned int *input, unsigned int size, unsigned int *output)
+{
+    size >>= 2;
+    while(size)
+    {
+        const unsigned int yuyv = *input;
+        const unsigned char y0 = (unsigned char) (yuyv & 0x000000FF);
+        const unsigned char y1 = (unsigned char) ((yuyv & 0x00FF0000) >> 16);
+
+        unsigned int y = stretch(y0) | (((unsigned int)stretch(y1)) << 16);
+        *output = (*input & 0xFF00FF00) | y;
+
+        ++output;
+        ++input;
+        --size;
+    }
+}
+
 static unsigned char clamp(short v)
 {
         if (v > 255)
@@ -203,6 +290,25 @@ static void torgb(const unsigned char *p, unsigned int size, unsigned char *rgb_
                 index += 6;
         }
 }
+static void torgb_gray(const unsigned char *p, unsigned int size, unsigned char *rgb_buffer)
+{
+        unsigned int index = 0;
+        unsigned int s;
+
+        for (s = 0; s < size; s += 4) {
+                unsigned char y0 = p[s];
+                unsigned char y1 = p[s+2];
+
+                rgb_buffer[index+0] = y0;
+                rgb_buffer[index+1] = y0;
+                rgb_buffer[index+2] = y0;
+                rgb_buffer[index+3] = y1;
+                rgb_buffer[index+4] = y1;
+                rgb_buffer[index+5] = y1;
+
+                index += 6;
+        }
+}
 
 void VideoPipeline::frameAvailableSoft(int)
 {
@@ -223,7 +329,18 @@ void VideoPipeline::frameAvailableSoft(int)
 
     if (size > VIDEO_YUV_SIZE)
         size = VIDEO_YUV_SIZE;
-    torgb((const uchar*)data, size, rgb_buffer);
+    if (software_flags & SOFTWARE_FLAG_CONTRAST) {
+        contrast((const unsigned int*)data, size, yuv_buffer);
+        data = yuv_buffer;
+    }
+    if (software_flags & SOFTWARE_FLAG_THD) {
+        thd((const unsigned int*)data, size, yuv_buffer);
+        data = yuv_buffer;
+    }
+    if (software_flags & SOFTWARE_FLAG_GRAY)
+        torgb_gray((const uchar*)data, size, rgb_buffer);
+    else
+        torgb((const uchar*)data, size, rgb_buffer);
 
     QImage image(rgb_buffer, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888);
     emit renderedImage(image);
@@ -269,4 +386,12 @@ void VideoPipeline::frameAvailableDyplo(int)
 
     block->bytes_used = VIDEO_RGB_SIZE;
     from_logic->enqueue(block);
+}
+
+void VideoPipeline::allocYUVbuffer()
+{
+    if (!yuv_buffer)
+    {
+        yuv_buffer = (unsigned int*)malloc(VIDEO_YUV_SIZE);
+    }
 }

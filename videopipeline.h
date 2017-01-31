@@ -36,6 +36,8 @@ private slots:
     void frameAvailableDyplo(int socket);
 
 protected:
+    void allocYUVbuffer();
+
     VideoCapture capture;
     QSocketNotifier* captureNotifier;
     QSocketNotifier* fromLogicNotifier;
@@ -47,6 +49,9 @@ protected:
     dyplo::HardwareConfig *filter1;
     dyplo::HardwareConfig *filterTreshold;
     dyplo::HardwareConfig *yuvfilter1;
+
+    unsigned int software_flags;
+    unsigned int* yuv_buffer;
 };
 
 #endif // VIDEOPIPELINE_H
