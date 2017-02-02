@@ -33,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    mandelbrot.deactivate(); /* Calls back to UI, so we must do this before destroying the UI */
+    video.deactivate();
     delete ui;
 }
 
@@ -156,13 +158,18 @@ void MainWindow::externalResourceEnable(int id, bool active)
 
 void MainWindow::hideProgrammingMetrics()
 {
+    programmingMetrics.clear();
+    ui->partialProgramMetrics->setText("");
     ui->partialProgramMetrics->hide();
 }
 
 void MainWindow::showProgrammingMetrics(int node, const char *name, unsigned int size, unsigned int microseconds)
 {
     unsigned int mbps = (((unsigned long long)size * 1000000) / microseconds) >> 20;
-    ui->partialProgramMetrics->setText(QString("Partial '%1' into %2: %3kB in %4.%5 ms (%6 MB/s)").arg(name).arg(node).arg(size>>10).arg(microseconds/1000).arg((microseconds/100) % 10).arg(mbps));
+    if (!programmingMetrics.isEmpty())
+        programmingMetrics += "\n";
+    programmingMetrics += QString("Partial '%1' into %2:\n%3kB in %4.%5 ms (%6 MB/s)").arg(name).arg(node).arg(size>>10).arg(microseconds/1000).arg((microseconds/100) % 10).arg(mbps);
+    ui->partialProgramMetrics->setText(programmingMetrics);
     ui->partialProgramMetrics->show();
 
     QGraphicsOpacityEffect* eff = new QGraphicsOpacityEffect(this);

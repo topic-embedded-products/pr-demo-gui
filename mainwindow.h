@@ -44,6 +44,7 @@ private:
     VideoPipeline video;
     MandelbrotPipeline mandelbrot;
     ExternalResources externals;
+    QString programmingMetrics;
 
     QLabel *getPrRegion(int id);
     void updateFloorplan();
