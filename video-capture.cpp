@@ -123,27 +123,26 @@ int VideoCapture::setup(int width, int height)
     min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
     if (fmt.fmt.pix.sizeimage < min)
             fmt.fmt.pix.sizeimage = min;
-#if 0
-    /* Obtain possible settings for framerate... */
-    struct v4l2_frmivalenum frmival;
-    memset(&frmival,0,sizeof(frmival));
-    frmival.pixel_format = fmt.fmt.pix.pixelformat;
-    frmival.width = fmt.fmt.pix.width;
-    frmival.height = fmt.fmt.pix.height;
-    while (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0)
-    {
-        if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE)
-            qDebug() << "Discrete:"
-                     << frmival.discrete.denominator << "/" << frmival.discrete.numerator;
-        else
-            qDebug() << "Stepwise:"
-                        << frmival.stepwise.min.denominator << "/" << frmival.stepwise.min.numerator << ".."
-                        << frmival.stepwise.max.denominator << "/" << frmival.stepwise.max.numerator;
-        frmival.index++;
+    if (set_framerate(fd, 30) < 0) {
+        qWarning() << "Failed to set 30 FPS mode. Camera supports these:";
+        /* Obtain possible settings for framerate... */
+        struct v4l2_frmivalenum frmival;
+        memset(&frmival,0,sizeof(frmival));
+        frmival.pixel_format = fmt.fmt.pix.pixelformat;
+        frmival.width = fmt.fmt.pix.width;
+        frmival.height = fmt.fmt.pix.height;
+        while (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0)
+        {
+            if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE)
+                qDebug() << "Discrete:"
+                         << frmival.discrete.denominator << "/" << frmival.discrete.numerator;
+            else
+                qDebug() << "Stepwise:"
+                            << frmival.stepwise.min.denominator << "/" << frmival.stepwise.min.numerator << ".."
+                            << frmival.stepwise.max.denominator << "/" << frmival.stepwise.max.numerator;
+            frmival.index++;
+        }
     }
-#endif
-    if (set_framerate(fd, 30) < 0) /* Ignore error returns */
-        qWarning() << "Failed to set 30 FPS mode";
 
     return init_mmap();
 }
