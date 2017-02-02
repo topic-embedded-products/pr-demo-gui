@@ -54,6 +54,7 @@ static int set_framerate(int fd, int fps)
 
     CLEAR(parm);
     parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    parm.parm.capture.capability = V4L2_CAP_TIMEPERFRAME;
     parm.parm.capture.timeperframe.numerator = 1;
     parm.parm.capture.timeperframe.denominator = fps;
     return xioctl(fd, VIDIOC_S_PARM, &parm);
@@ -141,7 +142,8 @@ int VideoCapture::setup(int width, int height)
         frmival.index++;
     }
 #endif
-    set_framerate(fd, 30); /* Ignore error returns */
+    if (set_framerate(fd, 30) < 0) /* Ignore error returns */
+        qWarning() << "Failed to set 30 FPS mode";
 
     return init_mmap();
 }
