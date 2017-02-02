@@ -66,6 +66,9 @@ QLabel* MainWindow::getPrRegion(int id)
 
     switch (id)
     {
+    case 1:
+        prRegionOverlay = ui->node0_overlay;
+        break;
     case 2:
         prRegionOverlay = ui->node1_overlay;
         break;
@@ -94,6 +97,7 @@ QLabel* MainWindow::getPrRegion(int id)
 
 void MainWindow::updateFloorplan()
 {
+    ui->node0_overlay->hide();
     ui->node1_overlay->hide();
     ui->node2_overlay->hide();
     ui->node3_overlay->hide();
