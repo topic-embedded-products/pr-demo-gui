@@ -9,7 +9,18 @@
 
 #define VIDEO_WIDTH  640
 #define VIDEO_HEIGHT 480
-#define VIDEO_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT)
+/* Scanline + 32-bit header*/
+#define VIDEO_SIZE (VIDEO_HEIGHT * (VIDEO_WIDTH + 4))
+
+
+struct MandelbrotRequest
+{
+    unsigned short line;
+    unsigned short size;
+    long long ax;
+    long long ay;
+    long long incr;
+} __attribute__((packed));
 
 static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
 
@@ -21,31 +32,32 @@ static const double ZoomInFactor = 0.95f;
 static const double ZoomOutFactor = 1 / ZoomInFactor;
 
 
-static void writefp(dyplo::HardwareConfig &cfg, int offset, double v)
+static inline long long to_fixed_point(double v)
 {
-    long long iv = (long long)(v * ((long long)2 << 45));
-    cfg.seek(offset);
-    cfg.write(&iv, sizeof(iv));
+    return (long long)(v * ((long long)2 << 45));
 }
 
-static void writeConfig(dyplo::HardwareConfig &cfg, double x, double y, double z)
+static void writeConfig(dyplo::HardwareFifo *fifo, double x, double y, double z)
 {
-    writefp(cfg, 0x10, x);
-    writefp(cfg, 0x20, y);
-    writefp(cfg, 0x30, z);
+    MandelbrotRequest req[VIDEO_HEIGHT];
+    long long ax = to_fixed_point(x - ((VIDEO_WIDTH/2) * z));
+    long long step = to_fixed_point(z);
+    for (int line = 0; line < VIDEO_HEIGHT; ++line)
+    {
+        req[line].size = VIDEO_WIDTH;
+        req[line].line = line;
+        req[line].ax = ax;
+        req[line].ay = to_fixed_point(((line - (VIDEO_HEIGHT/2)) * z) + y);
+        req[line].incr = step;
+    }
+    fifo->write(req, sizeof(req));
 }
-
-static void enableRendering(dyplo::HardwareConfig &cfg, unsigned int enable)
-{
-    cfg.seek(0);
-    cfg.write(&enable, sizeof(enable)); /* Start node */
-}
-
 
 
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     fromLogicNotifier(NULL),
     from_logic(NULL),
+    to_logic(NULL),
     node(NULL)
 {
 }
@@ -71,15 +83,20 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
             from_logic->enqueue(block);
         }
         from_logic->fcntl_set_flag(O_NONBLOCK);
+
         fromLogicNotifier = new QSocketNotifier(from_logic->handle, QSocketNotifier::Read, this);
         connect(fromLogicNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableDyplo(int)));
         fromLogicNotifier->setEnabled(true);
         node->enableNode();
+
+        to_logic = new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableDMA(O_WRONLY));
+        to_logic->addRouteTo(node->getNodeIndex());
+
         x = DefaultCenterX;
         y = DefaultCenterY;
         z = DefaultScale;
-        writeConfig(*node, x, y, z);
-        enableRendering(*node, 1);
+
+        writeConfig(to_logic, x, y, z);
         z *= ZoomInFactor;
     }
     catch (const std::exception& ex)
@@ -94,8 +111,12 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
 
 void MandelbrotPipeline::deactivate()
 {
+    if (to_logic) {
+        delete to_logic;
+        to_logic = NULL;
+    }
     if (node) {
-        enableRendering(*node, 0);
+        node->deleteRoutes();
         delete node;
         node = NULL;
     }
@@ -120,15 +141,37 @@ void MandelbrotPipeline::frameAvailableDyplo(int)
         y = DefaultCenterY;
         z = DefaultScale;
     }
-    writeConfig(*node, x, y, z);
+    writeConfig(to_logic, x, y, z);
     z *= ZoomInFactor;
 
     dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
     if (!block)
         return;
 
-    QImage image((const uchar*)block->data, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_Indexed8);
+    unsigned int nlines = block->size / (VIDEO_WIDTH + 4);
+
+    if (block->size != VIDEO_SIZE)
+        qWarning() << "Strange size:" << block->size << " Expected:" << VIDEO_SIZE << "Lines:" << nlines;
+
+
+    QImage image(VIDEO_WIDTH, nlines, QImage::Format_Indexed8);
     image.setColorTable(mandelbrot_color_map);
+    image.fill(255);
+
+    const unsigned char* data = (const unsigned char *)block->data;
+    while (--nlines)
+    {
+        unsigned short line = *((unsigned short *)data);
+
+        if (line >= VIDEO_HEIGHT) {
+            qWarning() << "Invalid line:" << line;
+            break;
+        }
+        memcpy(image.scanLine(line), data + 4, VIDEO_WIDTH);
+
+        data += VIDEO_WIDTH + 4;
+    }
+
     emit renderedImage(image);
 
     block->bytes_used = VIDEO_SIZE;

@@ -9,6 +9,7 @@ class QSocketNotifier;
 class DyploContext;
 
 namespace dyplo {
+class HardwareFifo;
 class HardwareDMAFifo;
 class HardwareConfig;
 }
@@ -37,6 +38,7 @@ public slots:
 protected:
     QSocketNotifier* fromLogicNotifier;
     dyplo::HardwareDMAFifo *from_logic;
+    dyplo::HardwareFifo *to_logic;
     dyplo::HardwareConfig *node;
     double x;
     double y;
