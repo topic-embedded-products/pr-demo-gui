@@ -7,11 +7,9 @@
 #include "dyplocontext.h"
 #include "colormap.h"
 
-#define VIDEO_WIDTH  640
-#define VIDEO_HEIGHT 480
 /* Scanline + 32-bit header*/
-#define VIDEO_SIZE (VIDEO_HEIGHT * (VIDEO_WIDTH + 4))
-
+#define SCANLINE_HEADER_SIZE 4
+#define VIDEO_SIZE (video_height * (video_width + SCANLINE_HEADER_SIZE))
 
 struct MandelbrotRequest
 {
@@ -27,44 +25,44 @@ static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
 static const double DefaultCenterX = -0.86122562296399741;
 static const double DefaultCenterY = -0.23139131123653386;
 static const double MinScale = 0.000000000000053607859314274247;
-static const double DefaultScale = 0.005f;
-static const double ZoomInFactor = 0.95f;
+static const double DefaultScale = 0.010;
+static const double ZoomInFactor = 0.950;
 static const double ZoomOutFactor = 1 / ZoomInFactor;
 
 
 static inline long long to_fixed_point(double v)
 {
-    return (long long)(v * ((long long)2 << 45));
-}
-
-static void writeConfig(dyplo::HardwareFifo *fifo, double x, double y, double z)
-{
-    MandelbrotRequest req[VIDEO_HEIGHT];
-    long long ax = to_fixed_point(x - ((VIDEO_WIDTH/2) * z));
-    long long step = to_fixed_point(z);
-    for (int line = 0; line < VIDEO_HEIGHT; ++line)
-    {
-        req[line].size = VIDEO_WIDTH;
-        req[line].line = line;
-        req[line].ax = ax;
-        req[line].ay = to_fixed_point(((line - (VIDEO_HEIGHT/2)) * z) + y);
-        req[line].incr = step;
-    }
-    fifo->write(req, sizeof(req));
+    return (long long)(v * ((long long)1 << 46));
 }
 
 
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
+    video_width(640),
+    video_height(480),
     fromLogicNotifier(NULL),
     from_logic(NULL),
     to_logic(NULL),
     node(NULL)
 {
+    setSize(video_width, video_height);
 }
 
 MandelbrotPipeline::~MandelbrotPipeline()
 {
     deactivate();
+}
+
+bool MandelbrotPipeline::setSize(int width, int height)
+{
+    if (node)
+        return false; /* Cannot change size while running */
+    video_width = width;
+    video_height = height;
+    currentImage.lines_remaining = height;
+    currentImage.image = QImage(width, height, QImage::Format_Indexed8);
+    currentImage.image.setColorTable(mandelbrot_color_map);
+    currentImage.image.fill(255);
+    return true;
 }
 
 int MandelbrotPipeline::activate(DyploContext *dyplo)
@@ -73,7 +71,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
     {
         node = dyplo->createConfig(BITSTREAM_MANDELBROT);
         from_logic = dyplo->createDMAFifo(O_RDONLY);
-        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_SIZE, 2, true);
+        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_SIZE, 4, true);
         from_logic->addRouteFrom(node->getNodeIndex());
         /* Prime reader */
         for (unsigned int i = 0; i < from_logic->count(); ++i)
@@ -96,8 +94,10 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
         y = DefaultCenterY;
         z = DefaultScale;
 
-        writeConfig(to_logic, x, y, z);
+        writeConfig();
         z *= ZoomInFactor;
+
+        currentImage.lines_remaining = video_height;
     }
     catch (const std::exception& ex)
     {
@@ -124,7 +124,7 @@ void MandelbrotPipeline::deactivate()
     fromLogicNotifier = NULL;
     delete from_logic;
     from_logic = NULL;
-    emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
+    //emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
     emit setActive(false);
 }
 
@@ -141,39 +141,55 @@ void MandelbrotPipeline::frameAvailableDyplo(int)
         y = DefaultCenterY;
         z = DefaultScale;
     }
-    writeConfig(to_logic, x, y, z);
+    writeConfig();
     z *= ZoomInFactor;
 
     dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
     if (!block)
         return;
 
-    unsigned int nlines = block->size / (VIDEO_WIDTH + 4);
+    unsigned int nlines = block->bytes_used / (video_width + SCANLINE_HEADER_SIZE);
 
-    if (block->size != VIDEO_SIZE)
-        qWarning() << "Strange size:" << block->size << " Expected:" << VIDEO_SIZE << "Lines:" << nlines;
-
-
-    QImage image(VIDEO_WIDTH, nlines, QImage::Format_Indexed8);
-    image.setColorTable(mandelbrot_color_map);
-    image.fill(255);
+    if (block->bytes_used % (video_width + SCANLINE_HEADER_SIZE))
+        qWarning() << "Strange size:" << block->bytes_used << " Expected:" << VIDEO_SIZE << "Lines:" << nlines;
 
     const unsigned char* data = (const unsigned char *)block->data;
-    while (--nlines)
+    for (unsigned int i = 0; i < nlines; ++i)
     {
-        unsigned short line = *((unsigned short *)data);
+        unsigned short line = ((unsigned short *)data)[0];
+        unsigned short size = ((unsigned short *)data)[1];
 
-        if (line >= VIDEO_HEIGHT) {
-            qWarning() << "Invalid line:" << line;
+        if ((size != video_width) || (line >= video_height)) {
+            unsigned char dummy[256];
+            memcpy(dummy, data, sizeof(dummy));
+            qWarning() << "Invalid line:" << line << "size:" << size;
             break;
         }
-        memcpy(image.scanLine(line), data + 4, VIDEO_WIDTH);
+        memcpy(currentImage.image.scanLine(line), data + SCANLINE_HEADER_SIZE, video_width);
+        if (--currentImage.lines_remaining == 0) {
+            emit renderedImage(currentImage.image);
+            currentImage.lines_remaining = video_height;
+        }
 
-        data += VIDEO_WIDTH + 4;
+        data += video_width + SCANLINE_HEADER_SIZE;
     }
-
-    emit renderedImage(image);
 
     block->bytes_used = VIDEO_SIZE;
     from_logic->enqueue(block);
+}
+
+void MandelbrotPipeline::writeConfig()
+{
+    MandelbrotRequest req[video_height];
+    long long ax = to_fixed_point(x - ((video_width/2) * z));
+    long long step = to_fixed_point(z);
+    for (int line = 0; line < video_height; ++line)
+    {
+        req[line].size = video_width;
+        req[line].line = line;
+        req[line].ax = ax;
+        req[line].ay = to_fixed_point(((line - (video_height/2)) * z) + y);
+        req[line].incr = step;
+    }
+    to_logic->write(req, sizeof(req));
 }
