@@ -45,6 +45,8 @@ public slots:
 protected:
     int video_width;
     int video_height;
+    int video_lines_per_block;
+    unsigned int video_blocksize;
     QSocketNotifier* fromLogicNotifier;
     dyplo::HardwareDMAFifo *from_logic;
     dyplo::HardwareFifo *to_logic;
@@ -53,8 +55,11 @@ protected:
     double y;
     double z;
     MandelbrotImage currentImage;
+    int current_scanline;
 
-    void writeConfig();
+    void writeConfig(int start_scanline, int number_of_lines);
+    void zoomFrame();
+    void requestNext(int lines);
 };
 
 #endif // MANDELBROTPIPELINE_H

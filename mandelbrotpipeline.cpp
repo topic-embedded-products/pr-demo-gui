@@ -9,7 +9,6 @@
 
 /* Scanline + 32-bit header*/
 #define SCANLINE_HEADER_SIZE 4
-#define VIDEO_SIZE (video_height * (video_width + SCANLINE_HEADER_SIZE))
 
 struct MandelbrotRequest
 {
@@ -24,7 +23,7 @@ static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
 
 static const double DefaultCenterX = -0.86122562296399741;
 static const double DefaultCenterY = -0.23139131123653386;
-static const double MinScale = 0.000000000000053607859314274247;
+static const double MinScale = 0.0000000000001;
 static const double DefaultScale = 0.010;
 static const double ZoomInFactor = 0.950;
 static const double ZoomOutFactor = 1 / ZoomInFactor;
@@ -58,6 +57,9 @@ bool MandelbrotPipeline::setSize(int width, int height)
         return false; /* Cannot change size while running */
     video_width = width;
     video_height = height;
+    /* Process half a frame */
+    video_lines_per_block = (video_height / 4);
+    video_blocksize = video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE);
     currentImage.lines_remaining = height;
     currentImage.image = QImage(width, height, QImage::Format_Indexed8);
     currentImage.image.setColorTable(mandelbrot_color_map);
@@ -71,13 +73,13 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
     {
         node = dyplo->createConfig(BITSTREAM_MANDELBROT);
         from_logic = dyplo->createDMAFifo(O_RDONLY);
-        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_SIZE, 4, true);
+        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, video_blocksize, 4, true);
         from_logic->addRouteFrom(node->getNodeIndex());
         /* Prime reader */
         for (unsigned int i = 0; i < from_logic->count(); ++i)
         {
             dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
-            block->bytes_used = VIDEO_SIZE;
+            block->bytes_used = video_blocksize;
             from_logic->enqueue(block);
         }
         from_logic->fcntl_set_flag(O_NONBLOCK);
@@ -93,9 +95,8 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
         x = DefaultCenterX;
         y = DefaultCenterY;
         z = DefaultScale;
-
-        writeConfig();
-        z *= ZoomInFactor;
+        current_scanline = 0;
+        requestNext(video_height);
 
         currentImage.lines_remaining = video_height;
     }
@@ -136,14 +137,6 @@ void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
 
 void MandelbrotPipeline::frameAvailableDyplo(int)
 {
-    if (z < MinScale) {
-        x = DefaultCenterX;
-        y = DefaultCenterY;
-        z = DefaultScale;
-    }
-    writeConfig();
-    z *= ZoomInFactor;
-
     dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
     if (!block)
         return;
@@ -151,7 +144,7 @@ void MandelbrotPipeline::frameAvailableDyplo(int)
     unsigned int nlines = block->bytes_used / (video_width + SCANLINE_HEADER_SIZE);
 
     if (block->bytes_used % (video_width + SCANLINE_HEADER_SIZE))
-        qWarning() << "Strange size:" << block->bytes_used << " Expected:" << VIDEO_SIZE << "Lines:" << nlines;
+        qWarning() << "Strange size:" << block->bytes_used << " Expected:" << video_blocksize << "Lines:" << nlines;
 
     const unsigned char* data = (const unsigned char *)block->data;
     for (unsigned int i = 0; i < nlines; ++i)
@@ -174,22 +167,54 @@ void MandelbrotPipeline::frameAvailableDyplo(int)
         data += video_width + SCANLINE_HEADER_SIZE;
     }
 
-    block->bytes_used = VIDEO_SIZE;
+    requestNext(nlines);
+    block->bytes_used = video_blocksize;
     from_logic->enqueue(block);
 }
 
-void MandelbrotPipeline::writeConfig()
+void MandelbrotPipeline::writeConfig(int start_scanline, int number_of_lines)
 {
-    MandelbrotRequest req[video_height];
+    MandelbrotRequest req[number_of_lines];
     long long ax = to_fixed_point(x - ((video_width/2) * z));
     long long step = to_fixed_point(z);
-    for (int line = 0; line < video_height; ++line)
+    int half_video_height = video_height / 2;
+    for (int line = 0; line < number_of_lines; ++line)
     {
+        int scanline = line + start_scanline;
         req[line].size = video_width;
-        req[line].line = line;
+        req[line].line = scanline;
         req[line].ax = ax;
-        req[line].ay = to_fixed_point(((line - (video_height/2)) * z) + y);
+        req[line].ay = to_fixed_point(((scanline - half_video_height) * z) + y);
         req[line].incr = step;
     }
     to_logic->write(req, sizeof(req));
+}
+
+void MandelbrotPipeline::zoomFrame()
+{
+    z *= ZoomInFactor;
+    if (z < MinScale) {
+        x = DefaultCenterX;
+        y = DefaultCenterY;
+        z = DefaultScale;
+    }
+}
+
+void MandelbrotPipeline::requestNext(int lines)
+{
+    int next_scanline = current_scanline + lines;
+    if (next_scanline > video_height) {
+        int l = video_height - next_scanline;
+        writeConfig(current_scanline, l);
+        zoomFrame();
+        current_scanline = 0;
+        lines -= l;
+        next_scanline = lines;
+    }
+    writeConfig(current_scanline, lines);
+    if (next_scanline >= video_height) {
+        next_scanline = 0;
+        zoomFrame();
+    }
+    current_scanline = next_scanline;
 }
