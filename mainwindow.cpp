@@ -8,6 +8,8 @@
 #include <ctime>
 #include <QDebug>
 
+#define DYPLO_FIRST_PR_NODE_NUM 1
+
 static DyploContext dyploContext;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -66,30 +68,32 @@ QLabel* MainWindow::getPrRegion(int id)
 {
     QLabel* prRegionOverlay = NULL;
 
+    id -= DYPLO_FIRST_PR_NODE_NUM;
+
     switch (id)
     {
-    case 1:
+    case 0:
         prRegionOverlay = ui->node0_overlay;
         break;
-    case 2:
+    case 1:
         prRegionOverlay = ui->node1_overlay;
         break;
-    case 3:
+    case 2:
         prRegionOverlay = ui->node2_overlay;
         break;
-    case 4:
+    case 3:
         prRegionOverlay = ui->node3_overlay;
         break;
-    case 5:
+    case 4:
         prRegionOverlay = ui->node4_overlay;
         break;
-    case 6:
+    case 5:
         prRegionOverlay = ui->node5_overlay;
         break;
-    case 7:
+    case 6:
         prRegionOverlay = ui->node6_overlay;
         break;
-    case 8:
+    case 7:
         prRegionOverlay = ui->node7_overlay;
         break;
     }
