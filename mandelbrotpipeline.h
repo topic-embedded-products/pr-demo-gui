@@ -4,10 +4,12 @@
 #include <QObject>
 #include <QImage>
 #include "dyploresources.h"
+#include <vector>
 
-class QImage;
+/* Forward declarations */
 class QSocketNotifier;
 class DyploContext;
+class MandelbrotPipeline;
 
 namespace dyplo {
 class HardwareFifo;
@@ -18,6 +20,40 @@ class HardwareConfig;
 struct MandelbrotImage {
     QImage image;
     int lines_remaining;
+};
+
+class MandelbrotWorker
+{
+protected:
+    dyplo::HardwareConfig *node;
+    dyplo::HardwareFifo *to_logic;
+public:
+    MandelbrotWorker():
+        node(NULL), to_logic(NULL)
+    {}
+    void activate(DyploContext *dyplo);
+    void deactivate();
+    bool isActive() const { return node != NULL; }
+    int getNodeIndex() const;
+    void request(const void* data, int count);
+};
+
+typedef std::vector<MandelbrotWorker> WorkerList;
+
+class MandelbrotIncoming : public QObject
+{
+    Q_OBJECT
+protected:
+    MandelbrotPipeline *pipeline;
+    QSocketNotifier* fromLogicNotifier;
+    dyplo::HardwareDMAFifo *from_logic;
+    unsigned int video_blocksize;
+public:
+    MandelbrotIncoming(MandelbrotPipeline *parent);
+    void activate(DyploContext *dyplo, int blocksize, int node_index);
+    void deactivate();
+private slots:
+    void dataAvailable(int socket);
 };
 
 class MandelbrotPipeline : public QObject
@@ -33,24 +69,19 @@ public:
 
     void enumDyploResources(DyploNodeInfoList& list);
 
+    /* Called from MandelbrotIncoming */
+    void dataAvailable(const uchar *data, unsigned int bytes_used);
+
 signals:
     void renderedImage(const QImage &image);
     void setActive(bool active);
-
-private slots:
-    void frameAvailableDyplo(int socket);
-
-public slots:
 
 protected:
     int video_width;
     int video_height;
     int video_lines_per_block;
-    unsigned int video_blocksize;
-    QSocketNotifier* fromLogicNotifier;
-    dyplo::HardwareDMAFifo *from_logic;
-    dyplo::HardwareFifo *to_logic;
-    dyplo::HardwareConfig *node;
+    MandelbrotIncoming incoming;
+    MandelbrotWorker outgoing;
     double x;
     double y;
     double z;

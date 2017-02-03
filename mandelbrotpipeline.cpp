@@ -24,24 +24,21 @@ static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
 static const double DefaultCenterX = -0.86122562296399741;
 static const double DefaultCenterY = -0.23139131123653386;
 static const double MinScale = 0.0000000000001;
-static const double DefaultScale = 0.010;
+static const double DefaultScale = 0.005;
 static const double ZoomInFactor = 0.950;
 static const double ZoomOutFactor = 1 / ZoomInFactor;
 
 
 static inline long long to_fixed_point(double v)
 {
-    return (long long)(v * ((long long)1 << 46));
+    return (long long)(v * ((long long)1 << 53));
 }
 
 
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     video_width(640),
     video_height(480),
-    fromLogicNotifier(NULL),
-    from_logic(NULL),
-    to_logic(NULL),
-    node(NULL)
+    incoming(this)
 {
     setSize(video_width, video_height);
 }
@@ -53,13 +50,12 @@ MandelbrotPipeline::~MandelbrotPipeline()
 
 bool MandelbrotPipeline::setSize(int width, int height)
 {
-    if (node)
+    if (outgoing.isActive())
         return false; /* Cannot change size while running */
     video_width = width;
     video_height = height;
     /* Process half a frame */
     video_lines_per_block = (video_height / 4);
-    video_blocksize = video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE);
     currentImage.lines_remaining = height;
     currentImage.image = QImage(width, height, QImage::Format_Indexed8);
     currentImage.image.setColorTable(mandelbrot_color_map);
@@ -71,26 +67,10 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
 {
     try
     {
-        node = dyplo->createConfig(BITSTREAM_MANDELBROT);
-        from_logic = dyplo->createDMAFifo(O_RDONLY);
-        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, video_blocksize, 4, true);
-        from_logic->addRouteFrom(node->getNodeIndex());
-        /* Prime reader */
-        for (unsigned int i = 0; i < from_logic->count(); ++i)
-        {
-            dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
-            block->bytes_used = video_blocksize;
-            from_logic->enqueue(block);
-        }
-        from_logic->fcntl_set_flag(O_NONBLOCK);
-
-        fromLogicNotifier = new QSocketNotifier(from_logic->handle, QSocketNotifier::Read, this);
-        connect(fromLogicNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableDyplo(int)));
-        fromLogicNotifier->setEnabled(true);
-        node->enableNode();
-
-        to_logic = new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableDMA(O_WRONLY));
-        to_logic->addRouteTo(node->getNodeIndex());
+        outgoing.activate(dyplo);
+        incoming.activate(dyplo,
+                    video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
+                    outgoing.getNodeIndex());
 
         x = DefaultCenterX;
         y = DefaultCenterY;
@@ -112,41 +92,25 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
 
 void MandelbrotPipeline::deactivate()
 {
-    if (to_logic) {
-        delete to_logic;
-        to_logic = NULL;
-    }
-    if (node) {
-        node->deleteRoutes();
-        delete node;
-        node = NULL;
-    }
-    delete fromLogicNotifier;
-    fromLogicNotifier = NULL;
-    delete from_logic;
-    from_logic = NULL;
-    //emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
+    outgoing.deactivate();
+    incoming.deactivate();
     emit setActive(false);
 }
 
 void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
 {
-    if (node)
-        list.push_back(DyploNodeInfo(node->getNodeIndex(), BITSTREAM_MANDELBROT));
+    if (outgoing.isActive())
+        list.push_back(DyploNodeInfo(outgoing.getNodeIndex(), BITSTREAM_MANDELBROT));
 }
 
-void MandelbrotPipeline::frameAvailableDyplo(int)
+void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_used)
 {
-    dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
-    if (!block)
-        return;
 
-    unsigned int nlines = block->bytes_used / (video_width + SCANLINE_HEADER_SIZE);
+    unsigned int nlines = bytes_used / (video_width + SCANLINE_HEADER_SIZE);
 
-    if (block->bytes_used % (video_width + SCANLINE_HEADER_SIZE))
-        qWarning() << "Strange size:" << block->bytes_used << " Expected:" << video_blocksize << "Lines:" << nlines;
+    if (bytes_used % (video_width + SCANLINE_HEADER_SIZE))
+        qWarning() << "Strange size:" << bytes_used << " Expected:" << (video_width + SCANLINE_HEADER_SIZE) << "Lines:" << nlines;
 
-    const unsigned char* data = (const unsigned char *)block->data;
     for (unsigned int i = 0; i < nlines; ++i)
     {
         unsigned short line = ((unsigned short *)data)[0];
@@ -168,8 +132,6 @@ void MandelbrotPipeline::frameAvailableDyplo(int)
     }
 
     requestNext(nlines);
-    block->bytes_used = video_blocksize;
-    from_logic->enqueue(block);
 }
 
 void MandelbrotPipeline::writeConfig(int start_scanline, int number_of_lines)
@@ -178,6 +140,9 @@ void MandelbrotPipeline::writeConfig(int start_scanline, int number_of_lines)
     long long ax = to_fixed_point(x - ((video_width/2) * z));
     long long step = to_fixed_point(z);
     int half_video_height = video_height / 2;
+
+    qDebug() << "Req" << start_scanline << "to" << (start_scanline + number_of_lines);
+
     for (int line = 0; line < number_of_lines; ++line)
     {
         int scanline = line + start_scanline;
@@ -187,7 +152,7 @@ void MandelbrotPipeline::writeConfig(int start_scanline, int number_of_lines)
         req[line].ay = to_fixed_point(((scanline - half_video_height) * z) + y);
         req[line].incr = step;
     }
-    to_logic->write(req, sizeof(req));
+    outgoing.request(req, number_of_lines);
 }
 
 void MandelbrotPipeline::zoomFrame()
@@ -217,4 +182,87 @@ void MandelbrotPipeline::requestNext(int lines)
         zoomFrame();
     }
     current_scanline = next_scanline;
+}
+
+
+MandelbrotIncoming::MandelbrotIncoming(MandelbrotPipeline *parent):
+    pipeline(parent),
+    fromLogicNotifier(NULL),
+    from_logic(NULL),
+    video_blocksize(0)
+{
+}
+
+void MandelbrotIncoming::activate(DyploContext *dyplo, int blocksize, int node_index)
+{
+    video_blocksize = blocksize;
+
+    from_logic = dyplo->createDMAFifo(O_RDONLY);
+    from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, blocksize, 4, true);
+    from_logic->addRouteFrom(node_index);
+    /* Prime reader */
+    for (unsigned int i = 0; i < from_logic->count(); ++i)
+    {
+        dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
+        block->bytes_used = blocksize;
+        from_logic->enqueue(block);
+    }
+    from_logic->fcntl_set_flag(O_NONBLOCK);
+
+    fromLogicNotifier = new QSocketNotifier(from_logic->handle, QSocketNotifier::Read, this);
+    connect(fromLogicNotifier, SIGNAL(activated(int)), this, SLOT(dataAvailable(int)));
+    fromLogicNotifier->setEnabled(true);
+}
+
+void MandelbrotIncoming::deactivate()
+{
+    delete fromLogicNotifier;
+    fromLogicNotifier = NULL;
+    delete from_logic;
+    from_logic = NULL;
+}
+
+void MandelbrotIncoming::dataAvailable(int)
+{
+    dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
+    if (!block)
+        return;
+
+    pipeline->dataAvailable((const uchar *)block->data, block->bytes_used);
+
+    block->bytes_used = video_blocksize;
+    from_logic->enqueue(block);
+}
+
+
+void MandelbrotWorker::activate(DyploContext *dyplo)
+{
+    node = dyplo->createConfig(BITSTREAM_MANDELBROT);
+    node->enableNode();
+
+    to_logic = new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableDMA(O_WRONLY));
+    to_logic->addRouteTo(node->getNodeIndex());
+}
+
+void MandelbrotWorker::deactivate()
+{
+    if (to_logic) {
+        delete to_logic;
+        to_logic = NULL;
+    }
+    if (node) {
+        node->deleteRoutes();
+        delete node;
+        node = NULL;
+    }
+}
+
+int MandelbrotWorker::getNodeIndex() const
+{
+    return node->getNodeIndex();
+}
+
+void MandelbrotWorker::request(const void *data, int count)
+{
+    to_logic->write(data, sizeof(MandelbrotRequest) * count);
 }
