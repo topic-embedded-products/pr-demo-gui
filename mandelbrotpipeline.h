@@ -46,6 +46,8 @@ private slots:
 
 typedef std::vector<MandelbrotIncoming *> MandelbrotIncomingList;
 
+typedef std::vector<dyplo::HardwareConfig *> HardwareConfigList;
+
 class MandelbrotPipeline : public QObject
 {
     Q_OBJECT
@@ -72,6 +74,7 @@ protected:
     int video_lines_per_block;
     MandelbrotIncomingList incoming;
     MandelbrotWorkerList outgoing;
+    HardwareConfigList mux;
     double x; /* Center X */
     double y; /* Center Y */
     double z; /* zoom factor, value of one pixel */

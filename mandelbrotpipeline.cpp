@@ -20,6 +20,7 @@ struct MandelbrotRequest
 } __attribute__((packed));
 
 static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
+static const char BITSTREAM_MUX[] = "stream_mux";
 
 static const double DefaultCenterX = -0.86122562296399741;
 static const double DefaultCenterY = -0.23139131123653386;
@@ -55,7 +56,8 @@ public:
 
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     video_width(640),
-    video_height(480)
+    video_height(480),
+    video_lines_per_block(16)
 {
     setSize(video_width, video_height);
 }
@@ -89,6 +91,8 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
 
     try
     {
+        mux.push_back(dyplo->createConfig(BITSTREAM_MUX));
+
         for(;;) /* run until failure */
         {
             MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
@@ -112,8 +116,12 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
     {
         qDebug() << "Mandelbrot pipeline:" << ex.what();
     }
-    if (incoming.empty())
-        return -1; /* Nothing allocated, cannot start */
+    if (incoming.empty() || outgoing.empty())
+    {
+        /* Nothing allocated, cannot start */
+        deactivate();
+        return -1;
+    }
     unsigned int outgoing_size = outgoing.size();
     /* Send out work for one frame or twice the number of workers, whichever is smaller */
     unsigned int lines_to_send = outgoing_size * video_lines_per_block * 2;
@@ -136,6 +144,9 @@ void MandelbrotPipeline::deactivate()
     for (MandelbrotIncomingList::iterator it = incoming.begin(); it != incoming.end(); ++it)
         delete *it;
     incoming.clear();
+    for (HardwareConfigList::iterator it = mux.begin(); it != mux.end(); ++it)
+        delete *it;
+    mux.clear();
     emit setActive(false);
 }
 
@@ -143,6 +154,8 @@ void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
 {
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
         list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MANDELBROT));
+    for (HardwareConfigList::iterator it = mux.begin(); it != mux.end(); ++it)
+        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MUX));
 }
 
 void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_used)
