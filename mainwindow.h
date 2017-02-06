@@ -32,6 +32,7 @@ private slots:
     void hideProgrammingMetrics();
     void showProgrammingMetrics(int node, const char* name, unsigned int size, unsigned int microseconds);
     void showVideoStats(unsigned int frames,  unsigned int milliseconds);
+    void showMandelbrotStats(unsigned int frames,  unsigned int milliseconds);
 
     void on_buttonMandelbrotDemo_toggled(bool checked);
 

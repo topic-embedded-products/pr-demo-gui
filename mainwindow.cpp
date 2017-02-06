@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&mandelbrot, SIGNAL(renderedImage(QImage)), ui->mandelbrot, SLOT(updatePixmap(QImage)));
     connect(&mandelbrot, SIGNAL(setActive(bool)), this, SLOT(updateMandelbrotDemoState(bool)));
+    connect(&ui->mandelbrot->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showMandelbrotStats(uint,uint)));
 
     updateFloorplan();
 }
@@ -198,6 +199,16 @@ void MainWindow::showVideoStats(unsigned int frames, unsigned int milliseconds)
     ui->lblVideoStats->setText(message);
 }
 
+void MainWindow::showMandelbrotStats(unsigned int frames, unsigned int milliseconds)
+{
+    QString message;
+    if (frames)
+        message = QString("%1 ms").arg(milliseconds / frames);
+    else
+        message = "-";
+    ui->lblMandelbrotStats->setText(message);
+}
+
 void MainWindow::on_buttonVideodemo_toggled(bool checked)
 {
     if (checked)
@@ -220,7 +231,10 @@ void MainWindow::on_buttonVideodemo_toggled(bool checked)
 void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
 {
     if (checked)
+    {
+        ui->lblMandelbrotStats->setText("...");
         mandelbrot.activate(&dyploContext);
+    }
     else
         mandelbrot.deactivate();
 }
@@ -248,5 +262,6 @@ void MainWindow::updateVideoDemoState(bool active)
 void MainWindow::updateMandelbrotDemoState(bool active)
 {
     ui->buttonMandelbrotDemo->setChecked(active);
+    ui->lblMandelbrotStats->setVisible(active);
     updateFloorplan();
 }
