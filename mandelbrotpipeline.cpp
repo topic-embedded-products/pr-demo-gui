@@ -28,9 +28,9 @@ static const double DefaultScale = 0.005;
 static const double ZoomInFactor = 0.950;
 
 /* At what position in the "line" is the worker index. */
-#define WORKER_INDEX_SHIFT 11
+#define WORKER_INDEX_SHIFT 12
 /* At what position is the image index */
-#define WORKER_IMAGE_SHIFT 10
+#define WORKER_IMAGE_SHIFT 11
 
 #define LINE_MASK ((1 << WORKER_IMAGE_SHIFT) - 1)
 
@@ -39,6 +39,19 @@ static inline long long to_fixed_point(double v)
     return (long long)(v * ((long long)1 << 53));
 }
 
+class MandelbrotWorker
+{
+protected:
+    dyplo::HardwareConfig *node;
+    dyplo::HardwareFifo *to_logic;
+public:
+    std::vector<MandelbrotRequest> work_to_do;
+
+    MandelbrotWorker(DyploContext *dyplo);
+    ~MandelbrotWorker();
+    int getNodeIndex() const;
+    void commit_work();
+};
 
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     video_width(640),
@@ -58,7 +71,7 @@ bool MandelbrotPipeline::setSize(int width, int height)
         return false; /* Cannot change size while running */
     video_width = width;
     video_height = height;
-    video_lines_per_block = (video_height / 8);
+    video_lines_per_block = 16;
     for (int i = 0; i < 2; ++i)
         rendered_image[i].initialize(width, height);
     return true;
@@ -97,20 +110,20 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
     }
     catch (const std::exception& ex)
     {
-        qDebug() << "Could not setup Mandelbrot pipeline:" << ex.what();
+        qDebug() << "Mandelbrot pipeline:" << ex.what();
     }
     if (incoming.empty())
         return -1; /* Nothing allocated, cannot start */
     unsigned int outgoing_size = outgoing.size();
-    unsigned int outgoing_index = 0;
-    /* Send out work for one frame */
-    for (int line = 0; line < video_height; line += video_lines_per_block)
-    {
-        requestNext(outgoing_index  % outgoing_size, video_lines_per_block);
-        ++outgoing_index;
-        if (outgoing_index >= 2 * outgoing_size) /* No point in working more than 2 blocks ahead */
-            break;
-    }
+    /* Send out work for one frame or twice the number of workers, whichever is smaller */
+    unsigned int lines_to_send = outgoing_size * video_lines_per_block * 2;
+    if (lines_to_send > (unsigned int)video_height)
+        lines_to_send = video_height;
+    qDebug() << "lines_to_send" << lines_to_send << "video_lines_per_block" << video_lines_per_block;
+    for (unsigned int line = 0; line < lines_to_send; ++line)
+        requestNext(line  % outgoing_size);
+    for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
+        (*it)->commit_work();
     emit setActive(true);
     return 0;
 }
@@ -134,7 +147,6 @@ void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
 
 void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_used)
 {
-
     unsigned int nlines = bytes_used / (video_width + SCANLINE_HEADER_SIZE);
 
     if (!nlines)
@@ -153,6 +165,7 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
         unsigned short line = ((unsigned short *)data)[0];
         unsigned short size = ((unsigned short *)data)[1];
         unsigned short image_index = (line >> WORKER_IMAGE_SHIFT) & 1;
+        unsigned short worker_index = (line >> WORKER_INDEX_SHIFT);
 
         line &= LINE_MASK;
 
@@ -170,31 +183,12 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
             currentImage->lines_remaining = video_height;
         }
 
+        requestNext(worker_index);
         data += video_width + SCANLINE_HEADER_SIZE;
     }
 
-    requestNext(worker_index, nlines);
-}
-
-void MandelbrotPipeline::writeConfig(int outgoing_index, int start_scanline, int number_of_lines, unsigned short extra_line_bits)
-{
-    MandelbrotRequest req[number_of_lines];
-    long long ax = to_fixed_point(x - ((video_width/2) * z));
-    long long step = to_fixed_point(z);
-    int half_video_height = video_height / 2;
-
-    qDebug() << "Worker" << outgoing_index << "img" << ((extra_line_bits >> WORKER_IMAGE_SHIFT) & 1) << "Req" << start_scanline << "to" << (start_scanline + number_of_lines) << "bits" << extra_line_bits;
-
-    for (int line = 0; line < number_of_lines; ++line)
-    {
-        int scanline = line + start_scanline;
-        req[line].size = video_width;
-        req[line].line = scanline | extra_line_bits;
-        req[line].ax = ax;
-        req[line].ay = to_fixed_point(((scanline - half_video_height) * z) + y);
-        req[line].incr = step;
-    }
-    outgoing[outgoing_index]->request(req, number_of_lines);
+    for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
+        (*it)->commit_work();
 }
 
 void MandelbrotPipeline::zoomFrame()
@@ -205,27 +199,29 @@ void MandelbrotPipeline::zoomFrame()
         y = DefaultCenterY;
         z = DefaultScale;
     }
+    fixed_left_x = to_fixed_point(x - ((video_width/2) * z));
+    fixed_z = to_fixed_point(z);
 }
 
-void MandelbrotPipeline::requestNext(int outgoing_index, int lines)
+void MandelbrotPipeline::requestNext(unsigned short worker_index)
 {
-    int next_scanline = current_scanline + lines;
-    if (next_scanline > video_height) {
-        int l = next_scanline - video_height;
-        writeConfig(outgoing_index, current_scanline, l, (outgoing_index << WORKER_INDEX_SHIFT) | (current_image << WORKER_IMAGE_SHIFT));
-        zoomFrame();
+    MandelbrotRequest request;
+    const int half_video_height = video_height / 2;
+
+    request.line = current_scanline | (current_image << WORKER_IMAGE_SHIFT) | (worker_index << WORKER_INDEX_SHIFT);
+    request.size = video_width;
+    request.ax = fixed_left_x;
+    request.ay = to_fixed_point(((current_scanline - half_video_height) * z) + y);
+    request.incr = fixed_z;
+
+    outgoing[worker_index]->work_to_do.push_back(request);
+    ++current_scanline;
+    if (current_scanline == video_height)
+    {
         current_scanline = 0;
         current_image ^= 1;
-        lines -= l;
-        next_scanline = lines;
-    }
-    writeConfig(outgoing_index, current_scanline, lines, (outgoing_index << WORKER_INDEX_SHIFT) | (current_image << WORKER_IMAGE_SHIFT));
-    if (next_scanline >= video_height) {
-        next_scanline = 0;
-        current_image ^= 1;
         zoomFrame();
     }
-    current_scanline = next_scanline;
 }
 
 
@@ -276,7 +272,7 @@ MandelbrotWorker::MandelbrotWorker(DyploContext *dyplo):
 {
     try
     {
-        to_logic = new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableDMA(O_WRONLY));
+        to_logic = new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableWriteFifo()); // .openAvailableDMA(O_WRONLY));
     }
     catch (const std::exception&)
     {
@@ -307,9 +303,14 @@ int MandelbrotWorker::getNodeIndex() const
     return node->getNodeIndex();
 }
 
-void MandelbrotWorker::request(const void *data, int count)
+void MandelbrotWorker::commit_work()
 {
-    to_logic->write(data, sizeof(MandelbrotRequest) * count);
+    unsigned int bytes_to_write = work_to_do.size() * sizeof(MandelbrotRequest);
+    if (bytes_to_write)
+    {
+        to_logic->write(&work_to_do[0], bytes_to_write);
+        work_to_do.clear(); /* works with DMA... */
+    }
 }
 
 

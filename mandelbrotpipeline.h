@@ -24,18 +24,9 @@ struct MandelbrotImage {
     void initialize(int width, int height);
 };
 
-class MandelbrotWorker
-{
-protected:
-    dyplo::HardwareConfig *node;
-    dyplo::HardwareFifo *to_logic;
-public:
-    MandelbrotWorker(DyploContext *dyplo);
-    ~MandelbrotWorker();
-    int getNodeIndex() const;
-    void request(const void* data, int count);
-};
+struct MandelbrotRequest;
 
+class MandelbrotWorker;
 typedef std::vector<MandelbrotWorker *> MandelbrotWorkerList;
 
 class MandelbrotIncoming : public QObject
@@ -81,16 +72,17 @@ protected:
     int video_lines_per_block;
     MandelbrotIncomingList incoming;
     MandelbrotWorkerList outgoing;
-    double x;
-    double y;
-    double z;
+    double x; /* Center X */
+    double y; /* Center Y */
+    double z; /* zoom factor, value of one pixel */
+    long long fixed_z; /* z in fixed-point */
+    long long fixed_left_x; /* X starting point in fixed-point */
     MandelbrotImage rendered_image[2];
     int current_scanline;
     int current_image;
 
-    void writeConfig(int outgoing_index, int start_scanline, int number_of_lines, unsigned short extra_line_bits);
     void zoomFrame();
-    void requestNext(int outgoing_index, int lines);
+    void requestNext(unsigned short worker_index);
 };
 
 #endif // MANDELBROTPIPELINE_H
