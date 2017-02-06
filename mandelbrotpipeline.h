@@ -30,17 +30,13 @@ protected:
     dyplo::HardwareConfig *node;
     dyplo::HardwareFifo *to_logic;
 public:
-    MandelbrotWorker():
-        node(NULL), to_logic(NULL)
-    {}
-    void activate(DyploContext *dyplo);
-    void deactivate();
-    bool isActive() const { return node != NULL; }
+    MandelbrotWorker(DyploContext *dyplo);
+    ~MandelbrotWorker();
     int getNodeIndex() const;
     void request(const void* data, int count);
 };
 
-typedef std::vector<MandelbrotWorker> WorkerList;
+typedef std::vector<MandelbrotWorker *> MandelbrotWorkerList;
 
 class MandelbrotIncoming : public QObject
 {
@@ -51,12 +47,13 @@ protected:
     dyplo::HardwareDMAFifo *from_logic;
     unsigned int video_blocksize;
 public:
-    MandelbrotIncoming(MandelbrotPipeline *parent);
-    void activate(DyploContext *dyplo, int blocksize, int node_index);
-    void deactivate();
+    MandelbrotIncoming(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index);
+    ~MandelbrotIncoming();
 private slots:
     void dataAvailable(int socket);
 };
+
+typedef std::vector<MandelbrotIncoming *> MandelbrotIncomingList;
 
 class MandelbrotPipeline : public QObject
 {
@@ -82,17 +79,18 @@ protected:
     int video_width;
     int video_height;
     int video_lines_per_block;
-    MandelbrotIncoming incoming;
-    MandelbrotWorker outgoing;
+    MandelbrotIncomingList incoming;
+    MandelbrotWorkerList outgoing;
     double x;
     double y;
     double z;
-    MandelbrotImage currentImage;
+    MandelbrotImage rendered_image[2];
     int current_scanline;
+    int current_image;
 
-    void writeConfig(int start_scanline, int number_of_lines);
+    void writeConfig(int outgoing_index, int start_scanline, int number_of_lines, unsigned short extra_line_bits);
     void zoomFrame();
-    void requestNext(int lines);
+    void requestNext(int outgoing_index, int lines);
 };
 
 #endif // MANDELBROTPIPELINE_H

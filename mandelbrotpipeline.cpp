@@ -27,6 +27,12 @@ static const double MinScale = 0.0000000000001;
 static const double DefaultScale = 0.005;
 static const double ZoomInFactor = 0.950;
 
+/* At what position in the "line" is the worker index. */
+#define WORKER_INDEX_SHIFT 11
+/* At what position is the image index */
+#define WORKER_IMAGE_SHIFT 10
+
+#define LINE_MASK ((1 << WORKER_IMAGE_SHIFT) - 1)
 
 static inline long long to_fixed_point(double v)
 {
@@ -36,8 +42,7 @@ static inline long long to_fixed_point(double v)
 
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     video_width(640),
-    video_height(480),
-    incoming(this)
+    video_height(480)
 {
     setSize(video_width, video_height);
 }
@@ -49,38 +54,62 @@ MandelbrotPipeline::~MandelbrotPipeline()
 
 bool MandelbrotPipeline::setSize(int width, int height)
 {
-    if (outgoing.isActive())
+    if (!outgoing.empty() || !incoming.empty())
         return false; /* Cannot change size while running */
     video_width = width;
     video_height = height;
-    /* Process half a frame */
-    video_lines_per_block = (video_height / 4);
-    currentImage.initialize(width, height);
+    video_lines_per_block = (video_height / 8);
+    for (int i = 0; i < 2; ++i)
+        rendered_image[i].initialize(width, height);
     return true;
 }
 
 int MandelbrotPipeline::activate(DyploContext *dyplo)
 {
+    x = DefaultCenterX;
+    y = DefaultCenterY;
+    z = DefaultScale;
+    current_scanline = 0;
+    current_image = 0;
+    for (int i = 0; i < 2; ++i)
+        rendered_image[i].lines_remaining = video_height;
+
     try
     {
-        outgoing.activate(dyplo);
-        incoming.activate(dyplo,
-                    video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
-                    outgoing.getNodeIndex());
-
-        x = DefaultCenterX;
-        y = DefaultCenterY;
-        z = DefaultScale;
-        current_scanline = 0;
-        requestNext(video_height);
-
-        currentImage.lines_remaining = video_height;
+        for(;;) /* run until failure */
+        {
+            MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
+            try
+            {
+                MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+                        video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
+                        next_outgoing->getNodeIndex());
+                incoming.push_back(next_incoming);
+            }
+            catch  (const std::exception&)
+            {
+                // Failed to allocate, clean up.
+                delete next_outgoing;
+                throw;
+            }
+            outgoing.push_back(next_outgoing);
+        }
     }
     catch (const std::exception& ex)
     {
-        qCritical() << "Could not setup Mandelbrot pipeline:" << ex.what();
-        deactivate(); /* Cleanup */
-        return -1; /* Hmm... */
+        qDebug() << "Could not setup Mandelbrot pipeline:" << ex.what();
+    }
+    if (incoming.empty())
+        return -1; /* Nothing allocated, cannot start */
+    unsigned int outgoing_size = outgoing.size();
+    unsigned int outgoing_index = 0;
+    /* Send out work for one frame */
+    for (int line = 0; line < video_height; line += video_lines_per_block)
+    {
+        requestNext(outgoing_index  % outgoing_size, video_lines_per_block);
+        ++outgoing_index;
+        if (outgoing_index >= 2 * outgoing_size) /* No point in working more than 2 blocks ahead */
+            break;
     }
     emit setActive(true);
     return 0;
@@ -88,15 +117,19 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
 
 void MandelbrotPipeline::deactivate()
 {
-    outgoing.deactivate();
-    incoming.deactivate();
+    for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
+        delete *it;
+    outgoing.clear();
+    for (MandelbrotIncomingList::iterator it = incoming.begin(); it != incoming.end(); ++it)
+        delete *it;
+    incoming.clear();
     emit setActive(false);
 }
 
 void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
 {
-    if (outgoing.isActive())
-        list.push_back(DyploNodeInfo(outgoing.getNodeIndex(), BITSTREAM_MANDELBROT));
+    for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
+        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MANDELBROT));
 }
 
 void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_used)
@@ -104,13 +137,24 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
 
     unsigned int nlines = bytes_used / (video_width + SCANLINE_HEADER_SIZE);
 
+    if (!nlines)
+        return;
+
     if (bytes_used % (video_width + SCANLINE_HEADER_SIZE))
         qWarning() << "Strange size:" << bytes_used << " Expected:" << (video_width + SCANLINE_HEADER_SIZE) << "Lines:" << nlines;
+
+    unsigned short worker_index = ((unsigned short *)data)[0] >> WORKER_INDEX_SHIFT;
+
+    qDebug() << __func__ << worker_index << "img" << ((((unsigned short *)data)[0] >> WORKER_IMAGE_SHIFT) & 1)
+            << "line" << (((unsigned short *)data)[0] & LINE_MASK) << "+" << nlines;
 
     for (unsigned int i = 0; i < nlines; ++i)
     {
         unsigned short line = ((unsigned short *)data)[0];
         unsigned short size = ((unsigned short *)data)[1];
+        unsigned short image_index = (line >> WORKER_IMAGE_SHIFT) & 1;
+
+        line &= LINE_MASK;
 
         if ((size != video_width) || (line >= video_height)) {
             unsigned char dummy[256];
@@ -118,37 +162,39 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
             qWarning() << "Invalid line:" << line << "size:" << size;
             break;
         }
-        memcpy(currentImage.image.scanLine(line), data + SCANLINE_HEADER_SIZE, video_width);
-        if (--currentImage.lines_remaining == 0) {
-            emit renderedImage(currentImage.image);
-            currentImage.lines_remaining = video_height;
+        MandelbrotImage *currentImage = &rendered_image[image_index];
+        memcpy(currentImage->image.scanLine(line), data + SCANLINE_HEADER_SIZE, video_width);
+        if (--currentImage->lines_remaining == 0) {
+            qDebug() << "img" << image_index << "ready";
+            emit renderedImage(currentImage->image);
+            currentImage->lines_remaining = video_height;
         }
 
         data += video_width + SCANLINE_HEADER_SIZE;
     }
 
-    requestNext(nlines);
+    requestNext(worker_index, nlines);
 }
 
-void MandelbrotPipeline::writeConfig(int start_scanline, int number_of_lines)
+void MandelbrotPipeline::writeConfig(int outgoing_index, int start_scanline, int number_of_lines, unsigned short extra_line_bits)
 {
     MandelbrotRequest req[number_of_lines];
     long long ax = to_fixed_point(x - ((video_width/2) * z));
     long long step = to_fixed_point(z);
     int half_video_height = video_height / 2;
 
-    //qDebug() << "Req" << start_scanline << "to" << (start_scanline + number_of_lines);
+    qDebug() << "Worker" << outgoing_index << "img" << ((extra_line_bits >> WORKER_IMAGE_SHIFT) & 1) << "Req" << start_scanline << "to" << (start_scanline + number_of_lines) << "bits" << extra_line_bits;
 
     for (int line = 0; line < number_of_lines; ++line)
     {
         int scanline = line + start_scanline;
         req[line].size = video_width;
-        req[line].line = scanline;
+        req[line].line = scanline | extra_line_bits;
         req[line].ax = ax;
         req[line].ay = to_fixed_point(((scanline - half_video_height) * z) + y);
         req[line].incr = step;
     }
-    outgoing.request(req, number_of_lines);
+    outgoing[outgoing_index]->request(req, number_of_lines);
 }
 
 void MandelbrotPipeline::zoomFrame()
@@ -161,39 +207,34 @@ void MandelbrotPipeline::zoomFrame()
     }
 }
 
-void MandelbrotPipeline::requestNext(int lines)
+void MandelbrotPipeline::requestNext(int outgoing_index, int lines)
 {
     int next_scanline = current_scanline + lines;
     if (next_scanline > video_height) {
-        int l = video_height - next_scanline;
-        writeConfig(current_scanline, l);
+        int l = next_scanline - video_height;
+        writeConfig(outgoing_index, current_scanline, l, (outgoing_index << WORKER_INDEX_SHIFT) | (current_image << WORKER_IMAGE_SHIFT));
         zoomFrame();
         current_scanline = 0;
+        current_image ^= 1;
         lines -= l;
         next_scanline = lines;
     }
-    writeConfig(current_scanline, lines);
+    writeConfig(outgoing_index, current_scanline, lines, (outgoing_index << WORKER_INDEX_SHIFT) | (current_image << WORKER_IMAGE_SHIFT));
     if (next_scanline >= video_height) {
         next_scanline = 0;
+        current_image ^= 1;
         zoomFrame();
     }
     current_scanline = next_scanline;
 }
 
 
-MandelbrotIncoming::MandelbrotIncoming(MandelbrotPipeline *parent):
+MandelbrotIncoming::MandelbrotIncoming(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index):
     pipeline(parent),
     fromLogicNotifier(NULL),
-    from_logic(NULL),
-    video_blocksize(0)
+    from_logic(dyplo->createDMAFifo(O_RDONLY)),
+    video_blocksize(blocksize)
 {
-}
-
-void MandelbrotIncoming::activate(DyploContext *dyplo, int blocksize, int node_index)
-{
-    video_blocksize = blocksize;
-
-    from_logic = dyplo->createDMAFifo(O_RDONLY);
     from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, blocksize, 4, true);
     from_logic->addRouteFrom(node_index);
     /* Prime reader */
@@ -210,7 +251,7 @@ void MandelbrotIncoming::activate(DyploContext *dyplo, int blocksize, int node_i
     fromLogicNotifier->setEnabled(true);
 }
 
-void MandelbrotIncoming::deactivate()
+MandelbrotIncoming::~MandelbrotIncoming()
 {
     delete fromLogicNotifier;
     fromLogicNotifier = NULL;
@@ -230,17 +271,25 @@ void MandelbrotIncoming::dataAvailable(int)
     from_logic->enqueue(block);
 }
 
-
-void MandelbrotWorker::activate(DyploContext *dyplo)
+MandelbrotWorker::MandelbrotWorker(DyploContext *dyplo):
+    node(dyplo->createConfig(BITSTREAM_MANDELBROT))
 {
-    node = dyplo->createConfig(BITSTREAM_MANDELBROT);
-    node->enableNode();
+    try
+    {
+        to_logic = new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableDMA(O_WRONLY));
+    }
+    catch (const std::exception&)
+    {
+        /* destructor will not be called on exception, so we have to clean up here */
+        delete node;
+        throw;
+    }
 
-    to_logic = new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableDMA(O_WRONLY));
+    node->enableNode();
     to_logic->addRouteTo(node->getNodeIndex());
 }
 
-void MandelbrotWorker::deactivate()
+MandelbrotWorker::~MandelbrotWorker()
 {
     if (to_logic) {
         delete to_logic;
