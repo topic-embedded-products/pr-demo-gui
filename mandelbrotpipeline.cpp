@@ -26,7 +26,6 @@ static const double DefaultCenterY = -0.23139131123653386;
 static const double MinScale = 0.0000000000001;
 static const double DefaultScale = 0.005;
 static const double ZoomInFactor = 0.950;
-static const double ZoomOutFactor = 1 / ZoomInFactor;
 
 
 static inline long long to_fixed_point(double v)
@@ -56,10 +55,7 @@ bool MandelbrotPipeline::setSize(int width, int height)
     video_height = height;
     /* Process half a frame */
     video_lines_per_block = (video_height / 4);
-    currentImage.lines_remaining = height;
-    currentImage.image = QImage(width, height, QImage::Format_Indexed8);
-    currentImage.image.setColorTable(mandelbrot_color_map);
-    currentImage.image.fill(255);
+    currentImage.initialize(width, height);
     return true;
 }
 
@@ -141,7 +137,7 @@ void MandelbrotPipeline::writeConfig(int start_scanline, int number_of_lines)
     long long step = to_fixed_point(z);
     int half_video_height = video_height / 2;
 
-    qDebug() << "Req" << start_scanline << "to" << (start_scanline + number_of_lines);
+    //qDebug() << "Req" << start_scanline << "to" << (start_scanline + number_of_lines);
 
     for (int line = 0; line < number_of_lines; ++line)
     {
@@ -265,4 +261,13 @@ int MandelbrotWorker::getNodeIndex() const
 void MandelbrotWorker::request(const void *data, int count)
 {
     to_logic->write(data, sizeof(MandelbrotRequest) * count);
+}
+
+
+void MandelbrotImage::initialize(int width, int height)
+{
+    lines_remaining = height;
+    image = QImage(width, height, QImage::Format_Indexed8);
+    image.setColorTable(mandelbrot_color_map);
+    image.fill(255);
 }

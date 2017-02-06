@@ -20,6 +20,8 @@ class HardwareConfig;
 struct MandelbrotImage {
     QImage image;
     int lines_remaining;
+
+    void initialize(int width, int height);
 };
 
 class MandelbrotWorker
