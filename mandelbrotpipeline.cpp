@@ -92,21 +92,27 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
     try
     {
         /* Create a mux to gather data */
-        dyplo::HardwareConfig *next_mux = dyplo->createConfig(BITSTREAM_MUX);
-        int mux_node = next_mux->getNodeIndex();
-        next_mux->enableNode();
-        mux.push_back(next_mux);
-        /* Create incoming DMA node */
-        MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
-                video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
-                mux_node);
-        incoming.push_back(next_incoming);
-        /* Create output nodes and connect them to the mux */
-        for(unsigned int input = 0; input < 4; ++input)
+        for (int mux_count = 0; mux_count < 2; ++mux_count)
         {
-            MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
-            outgoing.push_back(next_outgoing);
-            dyplo->GetHardwareControl().routeAddSingle(next_outgoing->getNodeIndex(), 0, mux_node, input);
+            dyplo::HardwareConfig *next_mux = dyplo->createConfig(BITSTREAM_MUX);
+            int mux_node = next_mux->getNodeIndex();
+            next_mux->enableNode();
+            mux.push_back(next_mux);
+            qDebug() << __func__ << "MUX:" << mux_node;
+            /* Create incoming DMA node */
+            MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+                    video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
+                    mux_node);
+            incoming.push_back(next_incoming);
+            qDebug() << __func__ << "DMA";
+            /* Create output nodes and connect them to the mux */
+            for(unsigned int input = 0; input < 4; ++input)
+            {
+                MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
+                outgoing.push_back(next_outgoing);
+                dyplo->GetHardwareControl().routeAddSingle(next_outgoing->getNodeIndex(), 0, mux_node, input);
+                qDebug() << __func__ << "Node to mux input" << input;
+            }
         }
     }
     catch (const std::exception& ex)
