@@ -81,9 +81,8 @@ bool MandelbrotPipeline::setSize(int width, int height)
 
 int MandelbrotPipeline::activate(DyploContext *dyplo)
 {
-    x = DefaultCenterX;
-    y = DefaultCenterY;
-    z = DefaultScale;
+    z = 0;
+    zoomFrame();
     current_scanline = 0;
     current_image = 0;
     for (int i = 0; i < 2; ++i)
@@ -189,7 +188,6 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
         MandelbrotImage *currentImage = &rendered_image[image_index];
         memcpy(currentImage->image.scanLine(line), data + SCANLINE_HEADER_SIZE, video_width);
         if (--currentImage->lines_remaining == 0) {
-            qDebug() << "img" << image_index << "ready";
             emit renderedImage(currentImage->image);
             currentImage->lines_remaining = video_height;
         }
