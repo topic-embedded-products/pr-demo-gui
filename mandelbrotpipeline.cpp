@@ -91,25 +91,22 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
 
     try
     {
-        mux.push_back(dyplo->createConfig(BITSTREAM_MUX));
-
-        for(;;) /* run until failure */
+        /* Create a mux to gather data */
+        dyplo::HardwareConfig *next_mux = dyplo->createConfig(BITSTREAM_MUX);
+        int mux_node = next_mux->getNodeIndex();
+        next_mux->enableNode();
+        mux.push_back(next_mux);
+        /* Create incoming DMA node */
+        MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+                video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
+                mux_node);
+        incoming.push_back(next_incoming);
+        /* Create output nodes and connect them to the mux */
+        for(unsigned int input = 0; input < 4; ++input)
         {
             MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
-            try
-            {
-                MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
-                        video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
-                        next_outgoing->getNodeIndex());
-                incoming.push_back(next_incoming);
-            }
-            catch  (const std::exception&)
-            {
-                // Failed to allocate, clean up.
-                delete next_outgoing;
-                throw;
-            }
             outgoing.push_back(next_outgoing);
+            dyplo->GetHardwareControl().routeAddSingle(next_outgoing->getNodeIndex(), 0, mux_node, input);
         }
     }
     catch (const std::exception& ex)
@@ -167,11 +164,6 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
 
     if (bytes_used % (video_width + SCANLINE_HEADER_SIZE))
         qWarning() << "Strange size:" << bytes_used << " Expected:" << (video_width + SCANLINE_HEADER_SIZE) << "Lines:" << nlines;
-
-    unsigned short worker_index = ((unsigned short *)data)[0] >> WORKER_INDEX_SHIFT;
-
-    qDebug() << __func__ << worker_index << "img" << ((((unsigned short *)data)[0] >> WORKER_IMAGE_SHIFT) & 1)
-            << "line" << (((unsigned short *)data)[0] & LINE_MASK) << "+" << nlines;
 
     for (unsigned int i = 0; i < nlines; ++i)
     {
@@ -244,7 +236,7 @@ MandelbrotIncoming::MandelbrotIncoming(MandelbrotPipeline *parent, DyploContext 
     from_logic(dyplo->createDMAFifo(O_RDONLY)),
     video_blocksize(blocksize)
 {
-    from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, blocksize, 4, true);
+    from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, blocksize, 8, true);
     from_logic->addRouteFrom(node_index);
     /* Prime reader */
     for (unsigned int i = 0; i < from_logic->count(); ++i)
@@ -321,7 +313,9 @@ void MandelbrotWorker::commit_work()
     unsigned int bytes_to_write = work_to_do.size() * sizeof(MandelbrotRequest);
     if (bytes_to_write)
     {
-        to_logic->write(&work_to_do[0], bytes_to_write);
+        ssize_t written = to_logic->write(&work_to_do[0], bytes_to_write);
+        if (written != bytes_to_write)
+            qCritical() << __func__ << "written" << written;
         work_to_do.clear(); /* works with DMA... */
     }
 }
