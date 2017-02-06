@@ -71,35 +71,35 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
     {
         try
         {
-            int headnode;
-            int tailnode;
-            yuv2rgb = dyplo->createConfig(BITSTREAM_YUVTORGB);
-            headnode = yuv2rgb->getNodeIndex();
-            tailnode = headnode;
-            if (filterThd) {
-                filterTreshold = dyplo->createConfig(BITSTREAM_FILTER_YUV_TRESHOLD);
-                int id = filterTreshold->getNodeIndex();
-                dyplo->GetHardwareControl().routeAddSingle(id, 0, headnode, 0);
-                headnode = id;
+            /* Create filters in the order they'll be used. This improves backplane usage */
+            to_logic = dyplo->createDMAFifo(O_RDWR);
+            int tailnode = to_logic->getNodeAndFifoIndex();
+
+            if (filterContrast) {
+                filter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_CONTRAST);
+                int id = filter1->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+                tailnode = id;
             }
             if (filterGray) {
                 yuvfilter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_GRAY);
                 int id = yuvfilter1->getNodeIndex();
-                dyplo->GetHardwareControl().routeAddSingle(id, 0, headnode, 0);
-                headnode = id;
+                dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+                tailnode = id;
             }
-            if (filterContrast) {
-                filter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_CONTRAST);
-                int id = filter1->getNodeIndex();
-                dyplo->GetHardwareControl().routeAddSingle(id, 0, headnode, 0);
-                headnode = id;
+            if (filterThd) {
+                filterTreshold = dyplo->createConfig(BITSTREAM_FILTER_YUV_TRESHOLD);
+                int id = filterTreshold->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+                tailnode = id;
             }
-
+            yuv2rgb = dyplo->createConfig(BITSTREAM_YUVTORGB);
+            int headnode = yuv2rgb->getNodeIndex();
+            dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, headnode, 0);
+            tailnode = headnode;
             from_logic = dyplo->createDMAFifo(O_RDONLY);
-            to_logic = dyplo->createDMAFifo(O_RDWR);
             from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_RGB_SIZE, 2, true);
             from_logic->addRouteFrom(tailnode);
-            to_logic->addRouteTo(headnode);
             to_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_YUV_SIZE, 2, false);
             if (filterTreshold)
                 filterTreshold->enableNode();
