@@ -57,12 +57,14 @@ public:
 
     bool setSize(int width, int height);
     int activate(DyploContext* dyplo);
-    void deactivate();
 
     void enumDyploResources(DyploNodeInfoList& list);
 
     /* Called from MandelbrotIncoming */
     void dataAvailable(const uchar *data, unsigned int bytes_used);
+
+public slots:
+    void deactivate();
 
 signals:
     void renderedImage(const QImage &image);

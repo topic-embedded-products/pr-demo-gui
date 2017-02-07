@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QImage>
 #include <QSocketNotifier>
+#include <QTimer>
 #include <dyplo/hardware.hpp>
 #include "dyplocontext.h"
 #include "colormap.h"
@@ -60,7 +61,8 @@ public:
 MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     video_width(640),
     video_height(480),
-    video_lines_per_block(16)
+    video_lines_per_block(16),
+    z(0)
 {
     setSize(video_width, video_height);
 }
@@ -149,8 +151,11 @@ void MandelbrotPipeline::deactivate()
     for (MandelbrotIncomingList::iterator it = incoming.begin(); it != incoming.end(); ++it)
         delete *it;
     incoming.clear();
-    for (HardwareConfigList::iterator it = mux.begin(); it != mux.end(); ++it)
+    for (HardwareConfigList::iterator it = mux.begin(); it != mux.end(); ++it) {
+        (*it)->deleteRoutes();
+        (*it)->disableNode();
         delete *it;
+    }
     mux.clear();
     emit setActive(false);
 }
@@ -186,7 +191,9 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
             unsigned char dummy[256];
             memcpy(dummy, data, sizeof(dummy));
             qWarning() << "Invalid line:" << line << "size:" << size;
-            break;
+            /* Abort - things are broken and there's no point in going any further */
+            QTimer::singleShot(0, this, SLOT(deactivate()));
+            return;
         }
         MandelbrotImage *currentImage = &rendered_image[image_index];
         memcpy(currentImage->image.scanLine(line), data + SCANLINE_HEADER_SIZE, video_width);
