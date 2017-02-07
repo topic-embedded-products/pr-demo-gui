@@ -652,7 +652,7 @@
     <widget class="QLabel" name="node1_overlay">
      <property name="geometry">
       <rect>
-       <x>100</x>
+       <x>120</x>
        <y>230</y>
        <width>91</width>
        <height>41</height>
@@ -672,8 +672,8 @@
     <widget class="QLabel" name="node2_overlay">
      <property name="geometry">
       <rect>
-       <x>290</x>
-       <y>320</y>
+       <x>340</x>
+       <y>610</y>
        <width>71</width>
        <height>81</height>
       </rect>
@@ -693,8 +693,8 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node3_overlay">
      <property name="geometry">
       <rect>
-       <x>290</x>
-       <y>410</y>
+       <x>340</x>
+       <y>520</y>
        <width>71</width>
        <height>81</height>
       </rect>
@@ -713,10 +713,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node4_overlay">
      <property name="geometry">
       <rect>
-       <x>200</x>
-       <y>100</y>
-       <width>111</width>
-       <height>201</height>
+       <x>220</x>
+       <y>125</y>
+       <width>110</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -736,10 +736,10 @@ color: rgb(192, 242, 192);
      </property>
      <property name="geometry">
       <rect>
-       <x>470</x>
-       <y>110</y>
-       <width>129</width>
-       <height>201</height>
+       <x>220</x>
+       <y>317</y>
+       <width>110</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -756,10 +756,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node6_overlay">
      <property name="geometry">
       <rect>
-       <x>465</x>
-       <y>310</y>
-       <width>141</width>
-       <height>191</height>
+       <x>460</x>
+       <y>125</y>
+       <width>120</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -777,9 +777,9 @@ color: rgb(192, 242, 192);
      <property name="geometry">
       <rect>
        <x>460</x>
-       <y>510</y>
-       <width>141</width>
-       <height>205</height>
+       <y>317</y>
+       <width>120</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -796,7 +796,7 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node0_overlay">
      <property name="geometry">
       <rect>
-       <x>100</x>
+       <x>120</x>
        <y>180</y>
        <width>91</width>
        <height>41</height>
@@ -816,10 +816,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node8_overlay">
      <property name="geometry">
       <rect>
-       <x>360</x>
-       <y>720</y>
-       <width>140</width>
-       <height>201</height>
+       <x>460</x>
+       <y>509</y>
+       <width>120</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -837,10 +837,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node9_overlay">
      <property name="geometry">
       <rect>
-       <x>90</x>
-       <y>720</y>
-       <width>211</width>
-       <height>201</height>
+       <x>436</x>
+       <y>703</y>
+       <width>142</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -858,10 +858,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node10_overlay">
      <property name="geometry">
       <rect>
-       <x>80</x>
-       <y>510</y>
-       <width>140</width>
-       <height>201</height>
+       <x>194</x>
+       <y>703</y>
+       <width>120</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -879,10 +879,10 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node11_overlay">
      <property name="geometry">
       <rect>
-       <x>99</x>
-       <y>280</y>
-       <width>91</width>
-       <height>41</height>
+       <x>60</x>
+       <y>703</y>
+       <width>114</width>
+       <height>192</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -900,7 +900,7 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node12_overlay">
      <property name="geometry">
       <rect>
-       <x>99</x>
+       <x>120</x>
        <y>330</y>
        <width>91</width>
        <height>41</height>
@@ -921,7 +921,7 @@ color: rgb(192, 242, 192);
     <widget class="QLabel" name="node13_overlay">
      <property name="geometry">
       <rect>
-       <x>99</x>
+       <x>120</x>
        <y>380</y>
        <width>91</width>
        <height>41</height>
@@ -934,6 +934,27 @@ color: rgb(192, 242, 192);
      </property>
      <property name="text">
       <string>Node 13</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="node14_overlay">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>430</y>
+       <width>91</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgba(12, 242, 46, 50%);
+color: rgb(192, 242, 192);
+</string>
+     </property>
+     <property name="text">
+      <string>Node 14</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

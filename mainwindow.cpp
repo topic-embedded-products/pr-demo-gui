@@ -121,6 +121,9 @@ QLabel* MainWindow::getPrRegion(int id)
     case 13:
         prRegionOverlay = ui->node13_overlay;
         break;
+    case 14:
+        prRegionOverlay = ui->node14_overlay;
+        break;
     }
 
     return prRegionOverlay;
@@ -142,6 +145,7 @@ void MainWindow::updateFloorplan()
     ui->node11_overlay->hide();
     ui->node12_overlay->hide();
     ui->node13_overlay->hide();
+    ui->node14_overlay->hide();
 
     DyploNodeInfoList nodes;
     nodes.clear();
