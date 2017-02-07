@@ -8,7 +8,15 @@
 #include <ctime>
 #include <QDebug>
 
-#define DYPLO_FIRST_PR_NODE_NUM 1
+/* Nodes in logic:
+ * 0 CPU
+ * 1 CPU
+ * 2 MUX
+ * 3 MUX
+ * 4..10 PR
+ * 11..13 DMA
+ * 14 ICAP
+ */
 
 static DyploContext dyploContext;
 
@@ -69,8 +77,6 @@ QLabel* MainWindow::getPrRegion(int id)
 {
     QLabel* prRegionOverlay = NULL;
 
-    id -= DYPLO_FIRST_PR_NODE_NUM;
-
     switch (id)
     {
     case 0:
@@ -97,6 +103,24 @@ QLabel* MainWindow::getPrRegion(int id)
     case 7:
         prRegionOverlay = ui->node7_overlay;
         break;
+    case 8:
+        prRegionOverlay = ui->node8_overlay;
+        break;
+    case 9:
+        prRegionOverlay = ui->node9_overlay;
+        break;
+    case 10:
+        prRegionOverlay = ui->node10_overlay;
+        break;
+    case 11:
+        prRegionOverlay = ui->node11_overlay;
+        break;
+    case 12:
+        prRegionOverlay = ui->node12_overlay;
+        break;
+    case 13:
+        prRegionOverlay = ui->node13_overlay;
+        break;
     }
 
     return prRegionOverlay;
@@ -112,6 +136,12 @@ void MainWindow::updateFloorplan()
     ui->node5_overlay->hide();
     ui->node6_overlay->hide();
     ui->node7_overlay->hide();
+    ui->node8_overlay->hide();
+    ui->node9_overlay->hide();
+    ui->node10_overlay->hide();
+    ui->node11_overlay->hide();
+    ui->node12_overlay->hide();
+    ui->node13_overlay->hide();
 
     DyploNodeInfoList nodes;
     nodes.clear();
@@ -123,8 +153,6 @@ void MainWindow::updateFloorplan()
             l->setText(it->name);
         }
     }
-
-    /* TODO: Audio */
 
     nodes.clear();
     mandelbrot.enumDyploResources(nodes);

@@ -20,7 +20,10 @@ struct MandelbrotRequest
 } __attribute__((packed));
 
 static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
-static const char BITSTREAM_MUX[] = "stream_mux";
+static const char BITSTREAM_MUX_NAME[] = "mux";
+
+static const int FIXED_NODE_MUX_BEGIN = 2;
+static const int FIXED_NODE_MUX_END = 4;
 
 static const double DefaultCenterX = -0.86122562296399741;
 static const double DefaultCenterY = -0.23139131123653386;
@@ -91,17 +94,17 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
     try
     {
         /* Create a mux to gather data */
-        for (int mux_count = 0; mux_count < 2; ++mux_count)
+        for (int mux_index = FIXED_NODE_MUX_BEGIN; mux_index < FIXED_NODE_MUX_END; ++mux_index)
         {
-            dyplo::HardwareConfig *next_mux = dyplo->createConfig(BITSTREAM_MUX);
-            int mux_node = next_mux->getNodeIndex();
+            dyplo::HardwareConfig *next_mux =
+                    new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
             next_mux->enableNode();
             mux.push_back(next_mux);
-            qDebug() << __func__ << "MUX:" << mux_node;
+            qDebug() << __func__ << "MUX:" << mux_index;
             /* Create incoming DMA node */
             MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
                     video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
-                    mux_node);
+                    mux_index);
             incoming.push_back(next_incoming);
             qDebug() << __func__ << "DMA";
             /* Create output nodes and connect them to the mux */
@@ -109,7 +112,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
             {
                 MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
                 outgoing.push_back(next_outgoing);
-                dyplo->GetHardwareControl().routeAddSingle(next_outgoing->getNodeIndex(), 0, mux_node, input);
+                dyplo->GetHardwareControl().routeAddSingle(next_outgoing->getNodeIndex(), 0, mux_index, input);
                 qDebug() << __func__ << "Node to mux input" << input;
             }
         }
@@ -157,7 +160,7 @@ void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
         list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MANDELBROT));
     for (HardwareConfigList::iterator it = mux.begin(); it != mux.end(); ++it)
-        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MUX));
+        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MUX_NAME));
 }
 
 void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_used)
