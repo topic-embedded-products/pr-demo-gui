@@ -150,6 +150,19 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
     return r;
 }
 
+/* Disable, disconnect and delete a node */
+static void dispose_node(dyplo::HardwareConfig **node_p)
+{
+    dyplo::HardwareConfig *node = *node_p;
+    if (node)
+    {
+        *node_p = NULL;
+        node->deleteRoutes();
+        node->disableNode();
+        delete node;
+    }
+}
+
 void VideoPipeline::deactivate()
 {
     delete captureNotifier;
@@ -160,14 +173,10 @@ void VideoPipeline::deactivate()
     to_logic = NULL;
     delete from_logic;
     from_logic = NULL;
-    delete yuv2rgb;
-    yuv2rgb = NULL;
-    delete filter1;
-    filter1 = NULL;
-    delete filterTreshold;
-    filterTreshold = NULL;
-    delete yuvfilter1;
-    yuvfilter1 = NULL;
+    dispose_node(&yuv2rgb);
+    dispose_node(&filter1);
+    dispose_node(&filterTreshold);
+    dispose_node(&yuvfilter1);
     capture.close();
     emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
     emit setActive(false);
