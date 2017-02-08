@@ -265,7 +265,7 @@ void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
     if (checked)
     {
         ui->lblMandelbrotStats->setText("...");
-        mandelbrot.activate(&dyploContext);
+        mandelbrot.activate(&dyploContext, ui->sMandelbrotMaxNodes->value());
     }
     else
         mandelbrot.deactivate();
@@ -295,5 +295,6 @@ void MainWindow::updateMandelbrotDemoState(bool active)
 {
     ui->buttonMandelbrotDemo->setChecked(active);
     ui->lblMandelbrotStats->setVisible(active);
+    ui->sMandelbrotMaxNodes->setEnabled(!active);
     updateFloorplan();
 }

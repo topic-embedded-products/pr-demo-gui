@@ -56,7 +56,7 @@ public:
     virtual ~MandelbrotPipeline();
 
     bool setSize(int width, int height);
-    int activate(DyploContext* dyplo);
+    int activate(DyploContext* dyplo, int max_nodes);
 
     void enumDyploResources(DyploNodeInfoList& list);
 

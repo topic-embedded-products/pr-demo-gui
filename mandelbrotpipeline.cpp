@@ -84,8 +84,10 @@ bool MandelbrotPipeline::setSize(int width, int height)
     return true;
 }
 
-int MandelbrotPipeline::activate(DyploContext *dyplo)
+int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
 {
+    int num_nodes = 0;
+
     z = 0;
     zoomFrame();
     current_scanline = 0;
@@ -98,6 +100,8 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
         /* Create a mux to gather data */
         for (int mux_index = FIXED_NODE_MUX_BEGIN; mux_index < FIXED_NODE_MUX_END; ++mux_index)
         {
+            if (num_nodes >= max_nodes)
+                break;
             dyplo::HardwareConfig *next_mux =
                     new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
             next_mux->enableNode();
@@ -110,12 +114,13 @@ int MandelbrotPipeline::activate(DyploContext *dyplo)
             incoming.push_back(next_incoming);
             qDebug() << __func__ << "DMA";
             /* Create output nodes and connect them to the mux */
-            for(unsigned int input = 0; input < 4; ++input)
+            for (unsigned int input = 0; (input < 4) && (num_nodes < max_nodes); ++input)
             {
                 MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
                 outgoing.push_back(next_outgoing);
                 dyplo->GetHardwareControl().routeAddSingle(next_outgoing->getNodeIndex(), 0, mux_index, input);
                 qDebug() << __func__ << "Node to mux input" << input;
+                ++num_nodes;
             }
         }
     }
@@ -180,17 +185,16 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
 
     for (unsigned int i = 0; i < nlines; ++i)
     {
-        unsigned short line = ((unsigned short *)data)[0];
-        unsigned short size = ((unsigned short *)data)[1];
+        unsigned int first_word = ((unsigned int *)data)[0];
+        unsigned short line = (unsigned short)first_word;
+        unsigned short size = (unsigned short)(first_word >> 16);
         unsigned short image_index = (line >> WORKER_IMAGE_SHIFT) & 1;
         unsigned short worker_index = (line >> WORKER_INDEX_SHIFT);
 
         line &= LINE_MASK;
 
-        if ((size != video_width) || (line >= video_height)) {
-            unsigned char dummy[256];
-            memcpy(dummy, data, sizeof(dummy));
-            qWarning() << "Invalid line:" << line << "size:" << size;
+        if ((size != video_width) || (line >= video_height) || (worker_index >= outgoing.size())) {
+            qWarning() << "Invalid line:" << line << "size:" << size << "worker:" << worker_index;
             /* Abort - things are broken and there's no point in going any further */
             QTimer::singleShot(0, this, SLOT(deactivate()));
             return;
