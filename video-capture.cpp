@@ -123,8 +123,8 @@ int VideoCapture::setup(int width, int height)
     min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
     if (fmt.fmt.pix.sizeimage < min)
             fmt.fmt.pix.sizeimage = min;
-    if (set_framerate(fd, 30) < 0) {
-        qWarning() << "Failed to set 30 FPS mode. Camera supports these:";
+    if (set_framerate(fd, 25) < 0) {
+        qWarning() << "Failed to set 25 FPS mode. Camera supports these:";
         /* Obtain possible settings for framerate... */
         struct v4l2_frmivalenum frmival;
         memset(&frmival,0,sizeof(frmival));
