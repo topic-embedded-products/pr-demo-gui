@@ -194,7 +194,7 @@ void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)
         list.push_back(DyploNodeInfo(filterTreshold->getNodeIndex(), BITSTREAM_FILTER_YUV_TRESHOLD));
 }
 
-static unsigned char thd_process(unsigned char y)
+static inline unsigned char thd_process(unsigned char y)
 {
     if (y < (64 - 32))
         return 0;
@@ -207,7 +207,7 @@ static unsigned char thd_process(unsigned char y)
     return 255;
 }
 
-static unsigned char thd_processc(unsigned char uv)
+static inline unsigned char thd_processc(unsigned char uv)
 {
     if (uv < 0x60)
         return 0x00;
@@ -238,7 +238,7 @@ static void thd(const unsigned int *input, unsigned int size, unsigned int *outp
     }
 }
 
-static unsigned char stretch(unsigned char y)
+static inline unsigned char stretch(unsigned char y)
 {
     if (y <= 64)
         return 0;
@@ -247,7 +247,7 @@ static unsigned char stretch(unsigned char y)
     return (y - 64) << 1;
 }
 
-void contrast(const unsigned int *input, unsigned int size, unsigned int *output)
+static void contrast(const unsigned int *input, unsigned int size, unsigned int *output)
 {
     size >>= 2;
     while(size)
@@ -265,7 +265,7 @@ void contrast(const unsigned int *input, unsigned int size, unsigned int *output
     }
 }
 
-static unsigned char clamp(short v)
+static inline unsigned char clamp(short v)
 {
         if (v > 255)
                 return 255;
@@ -351,8 +351,7 @@ void VideoPipeline::frameAvailableSoft(int)
     else
         torgb((const uchar*)data, size, rgb_buffer);
 
-    QImage image(rgb_buffer, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888);
-    emit renderedImage(image);
+    emit renderedImage(QImage(rgb_buffer, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888));
 
     r = capture.end_grab();
     if (r < 0)
