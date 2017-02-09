@@ -25,6 +25,9 @@ static const char BITSTREAM_MUX_NAME[] = "mux";
 
 static const int FIXED_NODE_MUX_BEGIN = 2;
 static const int FIXED_NODE_MUX_END = 4;
+static const unsigned int FIXED_NODE_MUX_COUNT = FIXED_NODE_MUX_END - FIXED_NODE_MUX_BEGIN;
+
+static const unsigned int MAX_DMA_NODES = 2;
 
 static const double DefaultCenterX = -0.86122562296399741;
 static const double DefaultCenterY = -0.23139131123653386;
@@ -86,7 +89,7 @@ bool MandelbrotPipeline::setSize(int width, int height)
 
 int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
 {
-    int num_nodes = 0;
+    unsigned int connectedNodes = 0;
 
     z = 0;
     zoomFrame();
@@ -95,12 +98,64 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     for (int i = 0; i < 2; ++i)
         rendered_image[i].lines_remaining = video_height;
 
+    /* Allocate the workers first */
     try
     {
+        for (int num_nodes = 0; num_nodes < max_nodes; ++num_nodes)
+        {
+            MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
+            outgoing.push_back(next_outgoing);
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        qDebug() << "Mandelbrot pipeline:" << ex.what();
+    }
+
+    if (outgoing.empty())
+    {
+        /* Nothing allocated, cannot start */
+        deactivate_impl();
+        return -1;
+    }
+
+    video_lines_per_block = (video_height / outgoing.size()) & 0xFFFFFFFE; /* Round to even number */
+    if (video_lines_per_block > 18) /* Cannot queue more than 2*18 commands in hardware */
+        video_lines_per_block = 18;
+    else if (video_lines_per_block < 2)
+        video_lines_per_block = 2;
+
+    /* No muxes needed with up to two workers */
+    if (outgoing.size() <= MAX_DMA_NODES)
+    {
+        try
+        {
+           for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
+           {
+               MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+                       video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
+                       (*it)->getNodeIndex());
+               incoming.push_back(next_incoming);
+           }
+           connectedNodes = outgoing.size();
+        }
+       catch (const std::exception& ex)
+       {
+           qDebug() << "Mandelbrot cannot allocate DMA:" << ex.what();
+           for (MandelbrotIncomingList::iterator it = incoming.begin(); it != incoming.end(); ++it)
+               delete *it;
+           incoming.clear();
+       }
+    }
+
+    if (!connectedNodes)
+    try
+    {
+        unsigned int nodes_per_mux = 4;
         /* Create a mux to gather data */
         for (int mux_index = FIXED_NODE_MUX_BEGIN; mux_index < FIXED_NODE_MUX_END; ++mux_index)
         {
-            if (num_nodes >= max_nodes)
+            if (connectedNodes == outgoing.size())
                 break;
             dyplo::HardwareConfig *next_mux =
                     new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
@@ -112,15 +167,15 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
                     video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
                     mux_index);
             incoming.push_back(next_incoming);
-            qDebug() << __func__ << "DMA";
-            /* Create output nodes and connect them to the mux */
-            for (unsigned int input = 0; (input < 4) && (num_nodes < max_nodes); ++input)
+            /* Connect output nodes  to the mux */
+            for (unsigned int input = 0; input < nodes_per_mux; ++input)
             {
-                MandelbrotWorker *next_outgoing = new MandelbrotWorker(dyplo);
-                outgoing.push_back(next_outgoing);
-                dyplo->GetHardwareControl().routeAddSingle(next_outgoing->getNodeIndex(), 0, mux_index, input);
-                qDebug() << __func__ << "Node to mux input" << input;
-                ++num_nodes;
+                int node_index = outgoing[connectedNodes]->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(node_index, 0, mux_index, input);
+                qDebug() << __func__ << "Node" << node_index << "to mux" << mux_index << "input" << input;
+                ++connectedNodes;
+                if (connectedNodes == outgoing.size())
+                    break;
             }
         }
     }
@@ -128,11 +183,17 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     {
         qDebug() << "Mandelbrot pipeline:" << ex.what();
     }
-    if (incoming.empty() || outgoing.empty())
+    if (!connectedNodes)
     {
         /* Nothing allocated, cannot start */
         deactivate_impl();
         return -1;
+    }
+    /* De-allocate nodes that we could not connect to anything */
+    while (connectedNodes < outgoing.size())
+    {
+        delete outgoing.back();
+        outgoing.pop_back();
     }
     unsigned int outgoing_size = outgoing.size();
     /* Send out work for one frame or twice the number of workers, whichever is smaller */
