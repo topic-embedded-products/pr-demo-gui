@@ -69,7 +69,7 @@ MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
 
 MandelbrotPipeline::~MandelbrotPipeline()
 {
-    deactivate();
+    deactivate_impl();
 }
 
 bool MandelbrotPipeline::setSize(int width, int height)
@@ -131,7 +131,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     if (incoming.empty() || outgoing.empty())
     {
         /* Nothing allocated, cannot start */
-        deactivate();
+        deactivate_impl();
         return -1;
     }
     unsigned int outgoing_size = outgoing.size();
@@ -148,7 +148,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     return 0;
 }
 
-void MandelbrotPipeline::deactivate()
+void MandelbrotPipeline::deactivate_impl()
 {
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
         delete *it;
@@ -162,6 +162,11 @@ void MandelbrotPipeline::deactivate()
         delete *it;
     }
     mux.clear();
+}
+
+void MandelbrotPipeline::deactivate()
+{
+    deactivate_impl();
     emit setActive(false);
 }
 

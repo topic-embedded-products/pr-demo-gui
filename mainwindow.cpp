@@ -27,6 +27,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->partialProgramMetrics->hide();
 
+    ui->node4_overlay->setObjectName("4");
+    ui->node5_overlay->setObjectName("5");
+    ui->node6_overlay->setObjectName("6");
+    ui->node7_overlay->setObjectName("7");
+    ui->node8_overlay->setObjectName("8");
+    ui->node9_overlay->setObjectName("9");
+    ui->node10_overlay->setObjectName("10");
+    ui->node11_overlay->setObjectName("11");
+
     connect(&cpuStatsTimer, SIGNAL(timeout()), this, SLOT(updateCpuStats()));
     cpuStatsTimer.start(2000);
 
@@ -38,6 +47,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&mandelbrot, SIGNAL(renderedImage(QImage)), ui->mandelbrot, SLOT(updatePixmap(QImage)));
     connect(&mandelbrot, SIGNAL(setActive(bool)), this, SLOT(updateMandelbrotDemoState(bool)));
     connect(&ui->mandelbrot->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showMandelbrotStats(uint,uint)));
+
+    connect(ui->node4_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui->node5_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui->node6_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui->node7_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui->node8_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui->node9_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui->node10_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui->node11_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
 
     updateFloorplan();
 }
@@ -67,10 +85,16 @@ static QString getOverlayBackgroundColor(const QColor& color)
             .arg(bright(red)).arg(bright(green)).arg(bright(blue));
 }
 
+static void hideLabel(QLabel* label)
+{
+    label->setStyleSheet("background-color: rgba(0,0,0,0%);\n"
+                         "color: rgba(0,0,0);");
+    label->setText("");
+}
+
 static void showLabelColor(QLabel* label, const QColor& color)
 {
     label->setStyleSheet(getOverlayBackgroundColor(color));
-    label->show();
 }
 
 QLabel* MainWindow::getPrRegion(int id)
@@ -131,21 +155,21 @@ QLabel* MainWindow::getPrRegion(int id)
 
 void MainWindow::updateFloorplan()
 {
-    ui->node0_overlay->hide();
-    ui->node1_overlay->hide();
-    ui->node2_overlay->hide();
-    ui->node3_overlay->hide();
-    ui->node4_overlay->hide();
-    ui->node5_overlay->hide();
-    ui->node6_overlay->hide();
-    ui->node7_overlay->hide();
-    ui->node8_overlay->hide();
-    ui->node9_overlay->hide();
-    ui->node10_overlay->hide();
-    ui->node11_overlay->hide();
-    ui->node12_overlay->hide();
-    ui->node13_overlay->hide();
-    ui->node14_overlay->hide();
+    hideLabel(ui->node0_overlay);
+    hideLabel(ui->node1_overlay);
+    hideLabel(ui->node2_overlay);
+    hideLabel(ui->node3_overlay);
+    hideLabel(ui->node4_overlay);
+    hideLabel(ui->node5_overlay);
+    hideLabel(ui->node6_overlay);
+    hideLabel(ui->node7_overlay);
+    hideLabel(ui->node8_overlay);
+    hideLabel(ui->node9_overlay);
+    hideLabel(ui->node10_overlay);
+    hideLabel(ui->node11_overlay);
+    hideLabel(ui->node12_overlay);
+    hideLabel(ui->node13_overlay);
+    hideLabel(ui->node14_overlay);
 
     DyploNodeInfoList nodes;
     nodes.clear();
@@ -265,7 +289,7 @@ void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
     if (checked)
     {
         ui->lblMandelbrotStats->setText("...");
-        mandelbrot.activate(&dyploContext, ui->sMandelbrotMaxNodes->value());
+        mandelbrot.activate(&dyploContext, 8);
     }
     else
         mandelbrot.deactivate();
@@ -295,6 +319,20 @@ void MainWindow::updateMandelbrotDemoState(bool active)
 {
     ui->buttonMandelbrotDemo->setChecked(active);
     ui->lblMandelbrotStats->setVisible(active);
-    ui->sMandelbrotMaxNodes->setEnabled(!active);
+    updateFloorplan();
+}
+
+void MainWindow::prNodeLinkActivated(const QString &link)
+{
+    int node = link.toInt();
+    if (externals.isAquired(node))
+    {
+        externals.release(node);
+    }
+    else
+    {
+        if (!externals.aquire(&dyploContext, node))
+            return;
+    }
     updateFloorplan();
 }

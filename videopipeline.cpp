@@ -39,7 +39,7 @@ VideoPipeline::VideoPipeline():
 
 VideoPipeline::~VideoPipeline()
 {
-    deactivate();
+    deactivate_impl();
     free(yuv_buffer);
 }
 
@@ -126,7 +126,7 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
         catch (const std::exception& ex)
         {
             qCritical() << ex.what();
-            deactivate(); /* Cleanup */
+            deactivate_impl(); /* Cleanup */
             return -1; /* Hmm... */
         }
     }
@@ -165,6 +165,13 @@ static void dispose_node(dyplo::HardwareConfig **node_p)
 
 void VideoPipeline::deactivate()
 {
+    deactivate_impl();
+    emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
+    emit setActive(false);
+}
+
+void VideoPipeline::deactivate_impl()
+{
     delete captureNotifier;
     captureNotifier = NULL;
     delete fromLogicNotifier;
@@ -178,8 +185,6 @@ void VideoPipeline::deactivate()
     dispose_node(&filterTreshold);
     dispose_node(&yuvfilter1);
     capture.close();
-    emit renderedImage(QImage()); /* Render an empty image to clear the video screen */
-    emit setActive(false);
 }
 
 void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)

@@ -18,6 +18,7 @@ SOURCES +=  main.cpp\
             mainwindow.cpp \
             mousemonitor.cpp \
             videowidget.cpp \
+    qprregionlabel.cpp \
             dyplocontext.cpp \
     video-capture.cpp \
     frameratecounter.cpp \
@@ -32,6 +33,7 @@ HEADERS  += mainwindow.h \
             videowidget.h \
             dyplocontext.h \
             types.h \
+    qprregionlabel.h \
     video-capture.h \
     frameratecounter.h \
     videopipeline.h \

@@ -86,6 +86,7 @@ protected:
     int current_scanline;
     int current_image;
 
+    void deactivate_impl();
     void zoomFrame();
     void requestNext(unsigned short worker_index);
 };

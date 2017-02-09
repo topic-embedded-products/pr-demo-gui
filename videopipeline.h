@@ -36,6 +36,7 @@ private slots:
     void frameAvailableDyplo(int socket);
 
 protected:
+    void deactivate_impl();
     void allocYUVbuffer();
 
     VideoCapture capture;

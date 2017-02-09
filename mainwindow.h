@@ -38,6 +38,8 @@ private slots:
 
     void updateCpuStats();
 
+    void prNodeLinkActivated(const QString &link);
+
 private:
     Ui::MainWindow*   ui;
     CpuInfo cpuInfo;
