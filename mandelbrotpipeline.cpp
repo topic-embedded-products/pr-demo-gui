@@ -119,7 +119,8 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
         return -1;
     }
 
-    video_lines_per_block = (video_height / outgoing.size()) & 0xFFFFFFFE; /* Round to even number */
+    /* Ideally, create enough work do do just under one frame */
+    video_lines_per_block = (video_height / (outgoing.size() + 1)) & 0xFFFFFFFE; /* Round to even number */
     if (video_lines_per_block > 18) /* Cannot queue more than 2*18 commands in hardware */
         video_lines_per_block = 18;
     else if (video_lines_per_block < 2)
