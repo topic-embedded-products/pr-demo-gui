@@ -9,6 +9,7 @@
 
 #define VIDEO_WIDTH  640
 #define VIDEO_HEIGHT 480
+#define VIDEO_FRAMERATE 25
 #define VIDEO_YUV_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*2)
 #define VIDEO_RGB_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*3)
 
@@ -40,7 +41,6 @@ VideoPipeline::VideoPipeline():
 VideoPipeline::~VideoPipeline()
 {
     deactivate_impl();
-    free(yuv_buffer);
 }
 
 int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd)
@@ -55,7 +55,7 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
         return r;
     }
 
-    r = capture.setup(VIDEO_WIDTH, VIDEO_HEIGHT);
+    r = capture.setup(VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FRAMERATE);
     if (r < 0) {
         qWarning() << "Failed to configure video capture device";
         return r;
@@ -185,6 +185,8 @@ void VideoPipeline::deactivate_impl()
     dispose_node(&filterTreshold);
     dispose_node(&yuvfilter1);
     capture.close();
+    free(yuv_buffer);
+    yuv_buffer = NULL;
 }
 
 void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)

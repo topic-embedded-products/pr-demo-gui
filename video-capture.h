@@ -7,7 +7,7 @@ public:
 	~VideoCapture();
 
     int open(const char* filename); /* returns -1 on error */
-    int setup(int width, int height);
+    int setup(int width, int height, int fps);
     int start();
     int begin_grab(const void **data, unsigned int *bytesused);
     int end_grab();
