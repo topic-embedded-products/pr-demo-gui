@@ -289,7 +289,8 @@ void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
     if (checked)
     {
         ui->lblMandelbrotStats->setText("...");
-        mandelbrot.activate(&dyploContext, 8);
+        if (mandelbrot.activate(&dyploContext, 8))
+            updateMandelbrotDemoState(false); /* Failed to init, update UI */
     }
     else
         mandelbrot.deactivate();
