@@ -158,11 +158,18 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
         {
             if (connectedNodes == outgoing.size())
                 break;
-            dyplo::HardwareConfig *next_mux =
-                    new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
-            next_mux->enableNode();
-            mux.push_back(next_mux);
-            qDebug() << __func__ << "MUX:" << mux_index;
+            try
+            {
+                dyplo::HardwareConfig *next_mux =
+                        new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
+                next_mux->enableNode();
+                mux.push_back(next_mux);
+            }
+            catch (const std::exception& ex)
+            {
+                qDebug() << __func__ << "Failed to aquire mux" << mux_index;
+                continue; /* Try the next one, maybe we're running multiple demos */
+            }
             /* Create incoming DMA node */
             MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
                     video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
