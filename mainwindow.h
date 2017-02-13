@@ -13,6 +13,8 @@ namespace Ui {
 class MainWindow;
 }
 
+class IIOTempSensor;
+class SupplyCurrentSensor;
 
 class MainWindow : public QMainWindow
 {
@@ -48,6 +50,9 @@ private:
     MandelbrotPipeline mandelbrot;
     ExternalResources externals;
     QString programmingMetrics;
+    IIOTempSensor* tempSensor;
+    SupplyCurrentSensor* currentSensor;
+    int updateStatsRobin;
 
     QLabel *getPrRegion(int id);
     void updateFloorplan();

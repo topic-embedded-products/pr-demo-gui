@@ -26,7 +26,8 @@ SOURCES +=  main.cpp\
     externalresources.cpp \
     mandelbrotpipeline.cpp \
     colormap.cpp \
-    cpu/cpuinfo.cpp
+    cpu/cpuinfo.cpp \
+    sysfile.cpp
 
 HEADERS  += mainwindow.h \
             mousemonitor.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     externalresources.h \
     mandelbrotpipeline.h \
     colormap.h \
-    cpu/cpuinfo.h
+    cpu/cpuinfo.h \
+    sysfile.hpp
 
 FORMS    += mainwindow.ui
 

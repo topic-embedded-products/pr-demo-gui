@@ -2279,8 +2279,8 @@ color: rgb(255, 255, 255);</string>
    <widget class="QWidget" name="widget" native="true">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>20</y>
+      <x>180</x>
+      <y>30</y>
       <width>91</width>
       <height>61</height>
      </rect>
@@ -2307,6 +2307,98 @@ color: rgb(255, 255, 255);</string>
       </item>
       <item>
        <widget class="QLabel" name="lblCPU">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="widgetCurrent" native="true">
+    <property name="geometry">
+     <rect>
+      <x>1190</x>
+      <y>30</y>
+      <width>111</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <widget class="QWidget" name="">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>10</y>
+       <width>101</width>
+       <height>42</height>
+      </rect>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>FPGA</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="lblCurrentFpga">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>CPU</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="lblCurrentCpu">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="widgetTemperature" native="true">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>30</y>
+      <width>111</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <widget class="QWidget" name="layoutWidget_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>91</width>
+       <height>42</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Temperature</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblTemperature">
         <property name="text">
          <string>-</string>
         </property>

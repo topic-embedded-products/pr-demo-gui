@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "dyplocontext.h"
+#include "sysfile.hpp"
 
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
@@ -22,7 +23,8 @@ static DyploContext dyploContext;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    updateStatsRobin(0)
 {
     ui->setupUi(this);
     ui->partialProgramMetrics->hide();
@@ -36,8 +38,22 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->node10_overlay->setObjectName("10");
     ui->node11_overlay->setObjectName("11");
 
+    try {
+        tempSensor = new IIOTempSensor();
+    } catch (const std::exception&) {
+        tempSensor = NULL;
+        ui->widgetTemperature->hide();
+    }
+    try {
+        currentSensor = new SupplyCurrentSensor();
+        ui->lblCurrentCpu->setNum(currentSensor->read_cpu_supply_current_mA());
+    } catch (const std::exception&) {
+        currentSensor = NULL;
+        ui->widgetCurrent->hide();
+    }
+
     connect(&cpuStatsTimer, SIGNAL(timeout()), this, SLOT(updateCpuStats()));
-    cpuStatsTimer.start(2000);
+    cpuStatsTimer.start(1000);
 
     connect(&video, SIGNAL(renderedImage(QImage)), ui->video, SLOT(updatePixmap(QImage)));
     connect(&video, SIGNAL(setActive(bool)), this, SLOT(updateVideoDemoState(bool)));
@@ -298,11 +314,41 @@ void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
 
 void MainWindow::updateCpuStats()
 {
-    int usage = cpuInfo.getCurrentValue();
-    if (usage < 0)
-        ui->lblCPU->setText("---");
-    else
-        ui->lblCPU->setText(QString("%1%").arg(usage));
+    switch (updateStatsRobin)
+    {
+    case 0:
+        {
+            int usage = cpuInfo.getCurrentValue();
+                if (usage < 0)
+                    ui->lblCPU->setText("---");
+                else
+                    ui->lblCPU->setText(QString("%1%").arg(usage));
+        }
+        break;
+    case 1:
+        if (tempSensor)
+        {
+            try {
+                int t = tempSensor->getTempMilliDegrees() / 1000;
+                ui->lblTemperature->setText(QString("%1 \xB0" "C").arg(t));
+            } catch (const std::exception& ex) {
+                qDebug() << "Failed reading temperature:" << ex.what();
+            }
+        }
+        if (currentSensor)
+        {
+            try {
+                ui->lblCurrentCpu->setText(QString("%1 mW").arg(
+                        currentSensor->read_cpu_supply_current_mA()));
+                ui->lblCurrentFpga->setText(QString("%1 mW").arg(
+                        currentSensor->read_fpga_supply_current_mA()));
+            } catch (const std::exception& ex) {
+                qDebug() << "Failed reading current:" << ex.what();
+            }
+        }
+        break;
+    }
+    updateStatsRobin = (updateStatsRobin + 1) % 2;
 }
 
 void MainWindow::updateVideoDemoState(bool active)
