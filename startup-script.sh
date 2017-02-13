@@ -2,6 +2,8 @@
 DEMO=/usr/bin/pr-demo-gui
 . /etc/default/rcS
 FB=fb0
+# Turn off the backlight to save power
+echo 1 > /sys/class/backlight/backlight/bl_power
 # Workaround for USB event device disappearing and re-appearing. Just wait
 # and in the meanwhile fill the cache with things we'll need.
 nice readahead /usr/bin/pr-demo-gui /usr/lib/libdyplo.so.0 /usr/lib/libQtGuiE.so.4 /usr/lib/libQtCoreE.so.4 /lib/libpthread.so.0 /usr/lib/libstdc++.so.6 /lib/libm.so.6 /lib/libgcc_s.so.1 /usr/lib/libQtNetworkE.so.4 /usr/lib/libglib-2.0.so.0 /usr/lib/libpng16.so.16 /lib/libz.so.1 /usr/lib/libfreetype.so.6 /lib/libdl.so.2 /lib/librt.so.1 /usr/lib/libpcre.so.1 /usr/lib/fonts/*.ttf /usr/share/bitstreams/*/*.bin & 
