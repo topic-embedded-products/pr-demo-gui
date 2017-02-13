@@ -389,10 +389,6 @@ void VideoPipeline::frameAvailableHard(int)
         memcpy(block->data, data, size);
         to_logic->enqueue(block);
     }
-    else
-    {
-        qDebug() << __func__ << "Skip frame!";
-    }
 
     r = capture.end_grab();
     if (r < 0)
