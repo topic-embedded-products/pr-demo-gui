@@ -101,6 +101,7 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
             from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_RGB_SIZE, 2, true);
             from_logic->addRouteFrom(tailnode);
             to_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_YUV_SIZE, 2, false);
+            to_logic->fcntl_set_flag(O_NONBLOCK);
             if (filterTreshold)
                 filterTreshold->enableNode();
             if (yuvfilter1)
@@ -382,9 +383,16 @@ void VideoPipeline::frameAvailableHard(int)
         size = VIDEO_YUV_SIZE;
 
     dyplo::HardwareDMAFifo::Block *block = to_logic->dequeue();
-    block->bytes_used = size;
-    memcpy(block->data, data, size);
-    to_logic->enqueue(block);
+    if (block)
+    {
+        block->bytes_used = size;
+        memcpy(block->data, data, size);
+        to_logic->enqueue(block);
+    }
+    else
+    {
+        qDebug() << __func__ << "Skip frame!";
+    }
 
     r = capture.end_grab();
     if (r < 0)
