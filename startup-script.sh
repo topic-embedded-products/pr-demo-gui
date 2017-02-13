@@ -2,6 +2,12 @@
 DEMO=/usr/bin/pr-demo-gui
 . /etc/default/rcS
 FB=fb0
+# Workaround for USB event device disappearing and re-appearing. Just wait
+# and in the meanwhile fill the cache with things we'll need.
+nice readahead /usr/bin/pr-demo-gui /usr/lib/libdyplo.so.0 /usr/lib/libQtGuiE.so.4 /usr/lib/libQtCoreE.so.4 /lib/libpthread.so.0 /usr/lib/libstdc++.so.6 /lib/libm.so.6 /lib/libgcc_s.so.1 /usr/lib/libQtNetworkE.so.4 /usr/lib/libglib-2.0.so.0 /usr/lib/libpng16.so.16 /lib/libz.so.1 /usr/lib/libfreetype.so.6 /lib/libdl.so.2 /lib/librt.so.1 /usr/lib/libpcre.so.1 /usr/lib/fonts/*.ttf /usr/share/bitstreams/*/*.bin & 
+sleep 4
+# Another hack: Set the Dyplo/backplance clock to 150MHz
+devmem 0xf8000180 32 0x00100800
 while ! grep -q '^connected' /sys/class/drm/card0-HDMI-A-1/status
 do
 	# No external framebuffer yet, wait
