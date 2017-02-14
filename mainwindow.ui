@@ -447,30 +447,20 @@
    <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QLabel" name="logo_topic">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>-10</y>
-      <width>161</width>
-      <height>101</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap resource="resources.qrc">:/image/topic</pixmap>
-    </property>
-   </widget>
-   <widget class="QFrame" name="floorplanFrame">
+   <widget class="QFrame" name="fFloorplanFPGA">
     <property name="geometry">
      <rect>
       <x>1220</x>
-      <y>110</y>
-      <width>691</width>
-      <height>950</height>
+      <y>100</y>
+      <width>690</width>
+      <height>978</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>690</width>
+      <height>950</height>
+     </size>
     </property>
     <property name="palette">
      <palette>
@@ -961,7 +951,7 @@ color: rgb(192, 242, 192);
      </property>
     </widget>
    </widget>
-   <widget class="QFrame" name="videoFrameApp">
+   <widget class="QFrame" name="fVideoApp">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -987,6 +977,12 @@ color: rgb(192, 242, 192);
        <width>640</width>
        <height>480</height>
       </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>640</width>
+       <height>480</height>
+      </size>
      </property>
      <property name="palette">
       <palette>
@@ -1407,7 +1403,7 @@ color: rgb(192, 242, 192);
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="lblVideoDemo">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1513,57 +1509,6 @@ QPushButton
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QCheckBox" name="cbYUVToRGB">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>160</y>
-       <width>311</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>YUV to RGB conversion, all in FPGA</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="cbFilterContrast">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>80</y>
-       <width>301</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>Add contrast filter</string>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>16</width>
-       <height>16</height>
-      </size>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
     <widget class="QLabel" name="lblVideoStats">
      <property name="geometry">
       <rect>
@@ -1580,62 +1525,101 @@ QPushButton
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QCheckBox" name="cbFilterGray">
+    <widget class="QWidget" name="">
      <property name="geometry">
       <rect>
        <x>40</x>
        <y>40</y>
-       <width>301</width>
-       <height>41</height>
+       <width>312</width>
+       <height>161</height>
       </rect>
      </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>Add grayscale filter</string>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>16</width>
-       <height>16</height>
-      </size>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="cbFilterTreshold">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>120</y>
-       <width>301</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>OpenSymbol</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>Add tresholding filter</string>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>16</width>
-       <height>16</height>
-      </size>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="QCheckBox" name="cbFilterGray">
+        <property name="font">
+         <font>
+          <family>OpenSymbol</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>Add grayscale filter</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>16</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbFilterContrast">
+        <property name="font">
+         <font>
+          <family>OpenSymbol</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>Add contrast filter</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>16</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbFilterTreshold">
+        <property name="font">
+         <font>
+          <family>OpenSymbol</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>Add tresholding filter</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>16</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbYUVToRGB">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="font">
+         <font>
+          <family>OpenSymbol</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>YUV to RGB conversion, all in FPGA</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </widget>
-   <widget class="QFrame" name="audioApp">
+   <widget class="QFrame" name="fMandelbrotApp">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -1658,6 +1642,12 @@ QPushButton
        <width>640</width>
        <height>480</height>
       </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>640</width>
+       <height>480</height>
+      </size>
      </property>
      <property name="palette">
       <palette>
@@ -2078,7 +2068,7 @@ QPushButton
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="lblMandelbrotDemo">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -2236,179 +2226,249 @@ color: rgb(255, 255, 255);</string>
      </property>
     </widget>
    </widget>
-   <widget class="QLabel" name="label_11">
+   <widget class="QWidget" name="wTopPanel" native="true">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>30</y>
-      <width>731</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>OpenSymbol</family>
-      <pointsize>26</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(233, 80, 34);</string>
-    </property>
-    <property name="text">
-     <string>PARTIAL RECONFIGURATION DEMO</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_12">
-    <property name="geometry">
-     <rect>
-      <x>1330</x>
+      <x>0</x>
       <y>0</y>
-      <width>601</width>
-      <height>101</height>
+      <width>1920</width>
+      <height>100</height>
      </rect>
     </property>
-    <property name="styleSheet">
-     <string notr="true">image: url(:/image/ecosystem);</string>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>80</height>
+     </size>
     </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QWidget" name="widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>30</y>
-      <width>91</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <widget class="QWidget" name="layoutWidget">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>75</width>
-       <height>42</height>
-      </rect>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>CPU usage</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblCPU">
-        <property name="text">
-         <string>-</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </widget>
-   <widget class="QWidget" name="widgetCurrent" native="true">
-    <property name="geometry">
-     <rect>
-      <x>1190</x>
-      <y>30</y>
-      <width>111</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <widget class="QWidget" name="">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>10</y>
-       <width>101</width>
-       <height>42</height>
-      </rect>
-     </property>
-     <layout class="QFormLayout" name="formLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>FPGA</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="lblCurrentFpga">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>CPU</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="lblCurrentCpu">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </widget>
-   <widget class="QWidget" name="widgetTemperature" native="true">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>30</y>
-      <width>111</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <widget class="QWidget" name="layoutWidget_3">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>91</width>
-       <height>42</height>
-      </rect>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Temperature</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblTemperature">
-        <property name="text">
-         <string>-</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="logo_topic">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="resources.qrc">:/image/topic</pixmap>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="wMetrics" native="true">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QWidget" name="widgetCpuUsage" native="true">
+            <layout class="QFormLayout" name="formLayout_2">
+             <property name="labelAlignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>CPU usage</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="lblCPU">
+               <property name="text">
+                <string>... %</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widgetTemperature" native="true">
+            <layout class="QFormLayout" name="formLayout_3">
+             <property name="labelAlignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Temperature</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="lblTemperature">
+               <property name="text">
+                <string>... C</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widgetCurrent" native="true">
+            <layout class="QFormLayout" name="formLayout">
+             <property name="labelAlignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="formAlignment">
+              <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>6</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>FPGA</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="lblCurrentFpga">
+               <property name="text">
+                <string>9999 mW</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>CPU</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="lblCurrentCpu">
+               <property name="text">
+                <string>---- mW</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>267</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_11">
+       <property name="font">
+        <font>
+         <family>OpenSymbol</family>
+         <pointsize>26</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: rgb(233, 80, 34);</string>
+       </property>
+       <property name="text">
+        <string>PARTIAL RECONFIGURATION DEMO</string>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>267</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblPuzzlePieces">
+       <property name="minimumSize">
+        <size>
+         <width>480</width>
+         <height>80</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">image: url(:/image/ecosystem);</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
  </widget>
