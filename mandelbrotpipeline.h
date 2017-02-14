@@ -58,10 +58,18 @@ public:
     bool setSize(int width, int height);
     int activate(DyploContext* dyplo, int max_nodes);
 
+    /* Go to this location on the next frame. */
+    void setCoordinates(double _next_x, double _next_y);
+    void resetZoom();
+
     void enumDyploResources(DyploNodeInfoList& list);
 
     /* Called from MandelbrotIncoming */
     void dataAvailable(const uchar *data, unsigned int bytes_used);
+
+    double getX() const { return x; }
+    double getY() const { return y; }
+    double getZ() const { return z; }
 
 public slots:
     void deactivate();
@@ -82,9 +90,14 @@ protected:
     double z; /* zoom factor, value of one pixel */
     long long fixed_z; /* z in fixed-point */
     long long fixed_left_x; /* X starting point in fixed-point */
+    double next_x;
+    double next_y;
+    double next_z;
     MandelbrotImage rendered_image[2];
     int current_scanline;
     int current_image;
+    bool next_xy_valid;
+    bool next_z_reset;
 
     void deactivate_impl();
     void zoomFrame();

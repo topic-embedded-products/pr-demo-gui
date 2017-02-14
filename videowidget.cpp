@@ -21,6 +21,11 @@ void VideoWidget::paintEvent(QPaintEvent * /* event */)
     painter.fillRect(0, ph, w, h - ph, Qt::black);
 }
 
+void VideoWidget::mousePressEvent(QMouseEvent *event)
+{
+    emit clicked(event);
+}
+
 void VideoWidget::updatePixmap(const QImage& image)
 {
     framerateCounter.frame();

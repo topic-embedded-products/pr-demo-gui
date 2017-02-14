@@ -38,9 +38,17 @@ private slots:
 
     void on_buttonMandelbrotDemo_toggled(bool checked);
 
+    void mandelbrotClicked(QMouseEvent *event);
+
     void updateCpuStats();
 
     void prNodeLinkActivated(const QString &link);
+
+    void on_btnPresetA_clicked();
+
+    void on_btnPresetB_clicked();
+
+    void on_btnPresetC_clicked();
 
 private:
     Ui::MainWindow*   ui;

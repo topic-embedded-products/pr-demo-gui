@@ -14,9 +14,13 @@ public:
 
 protected:
     virtual void paintEvent(QPaintEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
 
 public slots:
     void updatePixmap(const QImage &image);
+
+signals:
+    void clicked(QMouseEvent *event);
 
 public:
     FrameRateCounter framerateCounter;

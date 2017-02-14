@@ -4,6 +4,7 @@
 #include "sysfile.hpp"
 
 #include <QGraphicsOpacityEffect>
+#include <QMouseEvent>
 #include <QPropertyAnimation>
 #include <cstdlib>
 #include <ctime>
@@ -73,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->node10_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
     connect(ui->node11_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
 
+    connect(ui->mandelbrot, SIGNAL(clicked(QMouseEvent*)), this, SLOT(mandelbrotClicked(QMouseEvent*)));
     updateFloorplan();
 }
 
@@ -312,6 +314,20 @@ void MainWindow::on_buttonMandelbrotDemo_toggled(bool checked)
         mandelbrot.deactivate();
 }
 
+void MainWindow::mandelbrotClicked(QMouseEvent *event)
+{
+    double x = mandelbrot.getX();
+    double y = mandelbrot.getY();
+    double z = mandelbrot.getZ();
+
+    int w2 = ui->mandelbrot->width() / 2;
+    int h2 = ui->mandelbrot->height() / 2;
+
+    mandelbrot.setCoordinates(
+                x + z * (event->x() - w2),
+                y + z * (event->y() - h2));
+}
+
 void MainWindow::updateCpuStats()
 {
     switch (updateStatsRobin)
@@ -382,4 +398,22 @@ void MainWindow::prNodeLinkActivated(const QString &link)
             return;
     }
     updateFloorplan();
+}
+
+void MainWindow::on_btnPresetA_clicked()
+{
+    mandelbrot.setCoordinates(-0.86122562296399741, -0.23139131123653386);
+    mandelbrot.resetZoom();
+}
+
+void MainWindow::on_btnPresetB_clicked()
+{
+    mandelbrot.setCoordinates(-1.1623415998834443208, -0.29236893389210100169);
+    mandelbrot.resetZoom();
+}
+
+void MainWindow::on_btnPresetC_clicked()
+{
+    mandelbrot.setCoordinates(-1.017809644426762361, 0.28358540656703479232);
+    mandelbrot.resetZoom();
 }

@@ -29,8 +29,6 @@ static const unsigned int FIXED_NODE_MUX_COUNT = FIXED_NODE_MUX_END - FIXED_NODE
 
 static const unsigned int MAX_DMA_NODES = 2;
 
-static const double DefaultCenterX = -0.86122562296399741;
-static const double DefaultCenterY = -0.23139131123653386;
 static const double MinScale = 0.0000000000001;
 static const double DefaultScale = 0.005;
 static const double ZoomInFactor = 0.950;
@@ -65,7 +63,11 @@ MandelbrotPipeline::MandelbrotPipeline(QObject *parent) : QObject(parent),
     video_width(640),
     video_height(480),
     video_lines_per_block(16),
-    z(0)
+    z(0),
+    next_x(-0.86122562296399741),
+    next_y(-0.23139131123653386),
+    next_xy_valid(false),
+    next_z_reset(false)
 {
     setSize(video_width, video_height);
 }
@@ -217,6 +219,19 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     return 0;
 }
 
+void MandelbrotPipeline::setCoordinates(double _next_x, double _next_y)
+{
+    next_x = _next_x;
+    next_y = _next_y;
+    next_xy_valid = true;
+    // qDebug() << "Mandelbrot:" << QString::number(_next_x, 'g', 20) << "," << QString::number(_next_y, 'g', 20);
+}
+
+void MandelbrotPipeline::resetZoom()
+{
+    next_z_reset = true;
+}
+
 void MandelbrotPipeline::deactivate_impl()
 {
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
@@ -290,11 +305,26 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
 
 void MandelbrotPipeline::zoomFrame()
 {
-    z *= ZoomInFactor;
-    if (z < MinScale) {
-        x = DefaultCenterX;
-        y = DefaultCenterY;
+    if (next_xy_valid)
+    {
+        /* "Latch" new coordinates */
+        x = next_x;
+        y = next_y;
+        next_xy_valid = false;
+    }
+    else
+    {
+        z *= ZoomInFactor;
+        if (z < MinScale) {
+            x = next_x;
+            y = next_y;
+            z = DefaultScale;
+        }
+    }
+    if (next_z_reset)
+    {
         z = DefaultScale;
+        next_z_reset = false;
     }
     fixed_left_x = to_fixed_point(x - ((video_width/2) * z));
     fixed_z = to_fixed_point(z);
