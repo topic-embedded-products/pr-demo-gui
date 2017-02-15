@@ -15,9 +15,9 @@
  * 1 CPU
  * 2 MUX
  * 3 MUX
- * 4..10 PR
- * 11..13 DMA
- * 14 ICAP
+ * 4..11 PR
+ * 12..14 DMA
+ * 15 ICAP
  */
 
 static DyploContext dyploContext;

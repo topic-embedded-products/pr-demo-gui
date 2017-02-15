@@ -1491,6 +1491,13 @@ color: rgb(192, 242, 192);
         color: rgb(255,255,255);
 }
 
+QPushButton:pressed
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(64,64,255);
+}
+
 QPushButton
 {
         border: 1;
@@ -1525,7 +1532,7 @@ QPushButton
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>40</x>
@@ -2156,6 +2163,13 @@ QPushButton
         color: rgb(255,255,255);
 }
 
+QPushButton:pressed
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(32,170,85);
+}
+
 QPushButton
 {
         border: 1;
@@ -2251,6 +2265,14 @@ color: rgb(255, 255, 255);</string>
         color: rgb(255,255,255);
 }
 
+QPushButton:pressed
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(0,170,85);
+        color: rgb(255,255,255);
+}
+
 QPushButton
 {
         border: 1;
@@ -2292,6 +2314,14 @@ QPushButton
         color: rgb(255,255,255);
 }
 
+QPushButton:pressed
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(0,170,85);
+        color: rgb(255,255,255);
+}
+
 QPushButton
 {
         border: 1;
@@ -2326,6 +2356,14 @@ QPushButton
      </property>
      <property name="styleSheet">
       <string notr="true">QPushButton:checked
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(0,170,85);
+        color: rgb(255,255,255);
+}
+
+QPushButton:pressed
 {
         border: 1;
         border-style: solid;
