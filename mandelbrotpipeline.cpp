@@ -1,5 +1,6 @@
 #include "mandelbrotpipeline.h"
 
+#include <errno.h>
 #include <QDebug>
 #include <QImage>
 #include <QSocketNotifier>
@@ -111,14 +112,14 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     }
     catch (const std::exception& ex)
     {
-        qDebug() << "Mandelbrot pipeline:" << ex.what();
+        // No action, this is normal...
     }
 
     if (outgoing.empty())
     {
         /* Nothing allocated, cannot start */
         deactivate_impl();
-        return -1;
+        return -ENODEV;
     }
 
     /* Ideally, create enough work do do just under one frame */
@@ -144,7 +145,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
         }
        catch (const std::exception& ex)
        {
-           qDebug() << "Mandelbrot cannot allocate DMA:" << ex.what();
+           qDebug() << "Mandelbrot cannot allocate DMA" << outgoing.size() << ":" << ex.what();
            for (MandelbrotIncomingList::iterator it = incoming.begin(); it != incoming.end(); ++it)
                delete *it;
            incoming.clear();
@@ -182,7 +183,6 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
             {
                 int node_index = outgoing[connectedNodes]->getNodeIndex();
                 dyplo->GetHardwareControl().routeAddSingle(node_index, 0, mux_index, input);
-                qDebug() << __func__ << "Node" << node_index << "to mux" << mux_index << "input" << input;
                 ++connectedNodes;
                 if (connectedNodes == outgoing.size())
                     break;
@@ -197,7 +197,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     {
         /* Nothing allocated, cannot start */
         deactivate_impl();
-        return -1;
+        return -ENODEV;
     }
     /* De-allocate nodes that we could not connect to anything */
     while (connectedNodes < outgoing.size())
@@ -210,7 +210,6 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     unsigned int lines_to_send = outgoing_size * video_lines_per_block * 2;
     if (lines_to_send > (unsigned int)video_height)
         lines_to_send = video_height;
-    qDebug() << "lines_to_send" << lines_to_send << "video_lines_per_block" << video_lines_per_block;
     for (unsigned int line = 0; line < lines_to_send; ++line)
         requestNext(line  % outgoing_size);
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
@@ -441,7 +440,6 @@ void MandelbrotWorker::commit_work()
         work_to_do.clear(); /* works with DMA... */
     }
 }
-
 
 void MandelbrotImage::initialize(int width, int height)
 {
