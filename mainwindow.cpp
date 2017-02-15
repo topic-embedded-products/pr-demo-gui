@@ -43,14 +43,18 @@ MainWindow::MainWindow(QWidget *parent) :
         tempSensor = new IIOTempSensor();
     } catch (const std::exception&) {
         tempSensor = NULL;
-        ui->widgetTemperature->hide();
+        ui->lblTemperature->setText("n.a.");
+        ui->lblTemperature->setEnabled(false);
     }
     try {
         currentSensor = new SupplyCurrentSensor();
         ui->lblCurrentCpu->setNum(currentSensor->read_cpu_supply_current_mA());
     } catch (const std::exception&) {
         currentSensor = NULL;
-        ui->widgetCurrent->hide();
+        ui->lblCurrentCpu->setText("n.a.");
+        ui->lblCurrentCpu->setEnabled(false);
+        ui->lblCurrentFpga->setText("n.a.");
+        ui->lblCurrentFpga->setEnabled(false);
     }
 
     connect(&cpuStatsTimer, SIGNAL(timeout()), this, SLOT(updateCpuStats()));
