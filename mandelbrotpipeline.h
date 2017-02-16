@@ -48,6 +48,8 @@ typedef std::vector<MandelbrotIncoming *> MandelbrotIncomingList;
 
 typedef std::vector<dyplo::HardwareConfig *> HardwareConfigList;
 
+#define MANDELBROT_RENDER_IMAGES    4
+
 class MandelbrotPipeline : public QObject
 {
     Q_OBJECT
@@ -93,7 +95,7 @@ protected:
     double next_x;
     double next_y;
     double next_z;
-    MandelbrotImage rendered_image[2];
+    MandelbrotImage rendered_image[MANDELBROT_RENDER_IMAGES];
     int current_scanline;
     int current_image;
     bool next_xy_valid;

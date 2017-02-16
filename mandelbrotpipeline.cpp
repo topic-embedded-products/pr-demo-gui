@@ -34,10 +34,11 @@ static const double MinScale = 0.0000000000001;
 static const double DefaultScale = 0.005;
 static const double ZoomInFactor = 0.950;
 
-/* At what position in the "line" is the worker index. */
-#define WORKER_INDEX_SHIFT 12
-/* At what position is the image index */
+/* At what position in the "line" is the worker index. Bits 13..15 allows for 8 workers */
+#define WORKER_INDEX_SHIFT 13
+/* At what position is the image index. Two bits allows for 4 images */
 #define WORKER_IMAGE_SHIFT 11
+#define WORKER_IMAGE_MASK   0x3
 
 #define LINE_MASK ((1 << WORKER_IMAGE_SHIFT) - 1)
 
@@ -85,7 +86,7 @@ bool MandelbrotPipeline::setSize(int width, int height)
     video_width = width;
     video_height = height;
     video_lines_per_block = 16;
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < MANDELBROT_RENDER_IMAGES; ++i)
         rendered_image[i].initialize(width, height);
     return true;
 }
@@ -98,7 +99,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     zoomFrame();
     current_scanline = 0;
     current_image = 0;
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < MANDELBROT_RENDER_IMAGES; ++i)
         rendered_image[i].lines_remaining = video_height;
 
     /* Allocate the workers first */
@@ -276,7 +277,7 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
         unsigned int first_word = ((unsigned int *)data)[0];
         unsigned short line = (unsigned short)first_word;
         unsigned short size = (unsigned short)(first_word >> 16);
-        unsigned short image_index = (line >> WORKER_IMAGE_SHIFT) & 1;
+        unsigned short image_index = (line >> WORKER_IMAGE_SHIFT) & WORKER_IMAGE_MASK;
         unsigned short worker_index = (line >> WORKER_INDEX_SHIFT);
 
         line &= LINE_MASK;
@@ -345,7 +346,7 @@ void MandelbrotPipeline::requestNext(unsigned short worker_index)
     if (current_scanline == video_height)
     {
         current_scanline = 0;
-        current_image ^= 1;
+        current_image = (current_image + 1) & WORKER_IMAGE_MASK;
         zoomFrame();
     }
 }
