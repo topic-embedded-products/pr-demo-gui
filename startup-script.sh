@@ -32,6 +32,8 @@ do
 		# workaround for monitor not working at startup.
 		echo -n > /dev/dri/controlD64
 		FB=`basename $f`
+		# Make DPI=96 for 1920x1080 screen
+		QWSDIM="mmWidth=508:mmHeight=286:"
 		echo "Found external display at $FB"
 		break
 	fi
@@ -54,7 +56,7 @@ do
 done
 
 export TSLIB_FBDEVICE=/dev/${FB}
-export QWS_DISPLAY="LinuxFb:/dev/${FB}:1"
+export QWS_DISPLAY="LinuxFb:${QWSDIM}/dev/${FB}:1"
 if [ -e "${TS}" ]
 then
 	export TSLIB_TSDEVICE="${TS}"
