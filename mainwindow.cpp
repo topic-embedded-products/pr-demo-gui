@@ -10,7 +10,7 @@
 #include <ctime>
 #include <QDebug>
 
-/* Nodes in logic:
+/* Nodes in logic 7030:
  * 0 CPU
  * 1 CPU
  * 2 MUX
@@ -18,6 +18,13 @@
  * 4..11 PR
  * 12..14 DMA
  * 15 ICAP
+ */
+
+/* Nodes in logic 7015:
+ * 0 CPU
+ * 1..4 PR
+ * 5..6 DMA
+ * 7 ICAP
  */
 
 static DyploContext dyploContext;
@@ -122,54 +129,104 @@ static void showLabelColor(QLabel* label, const QColor& color)
 QLabel* MainWindow::getPrRegion(int id)
 {
     QLabel* prRegionOverlay = NULL;
+    /* Nodes in logic 7030:
+     * 0 CPU
+     * 1 CPU
+     * 2 MUX
+     * 3 MUX
+     * 4..11 PR
+     * 12..14 DMA
+     * 15 ICAP
+     */
 
-    switch (id)
+    /* Nodes in logic 7015:
+     * 0 CPU
+     * 1..4 PR
+     * 5..6 DMA
+     * 7 ICAP
+     */
+
+    /* Rather lame check on 7015 system configuration */
+    if (dyploContext.num_dma_nodes < 3)
     {
-    case 0:
-        prRegionOverlay = ui->node0_overlay;
-        break;
-    case 1:
-        prRegionOverlay = ui->node1_overlay;
-        break;
-    case 2:
-        prRegionOverlay = ui->node2_overlay;
-        break;
-    case 3:
-        prRegionOverlay = ui->node3_overlay;
-        break;
-    case 4:
-        prRegionOverlay = ui->node4_overlay;
-        break;
-    case 5:
-        prRegionOverlay = ui->node5_overlay;
-        break;
-    case 6:
-        prRegionOverlay = ui->node6_overlay;
-        break;
-    case 7:
-        prRegionOverlay = ui->node7_overlay;
-        break;
-    case 8:
-        prRegionOverlay = ui->node8_overlay;
-        break;
-    case 9:
-        prRegionOverlay = ui->node9_overlay;
-        break;
-    case 10:
-        prRegionOverlay = ui->node10_overlay;
-        break;
-    case 11:
-        prRegionOverlay = ui->node11_overlay;
-        break;
-    case 12:
-        prRegionOverlay = ui->node12_overlay;
-        break;
-    case 13:
-        prRegionOverlay = ui->node13_overlay;
-        break;
-    case 14:
-        prRegionOverlay = ui->node14_overlay;
-        break;
+        switch (id)
+        {
+        /* CPU node */
+        case 0:
+            prRegionOverlay = ui->node0_overlay;
+            break;
+        /* PR nodes */
+        case 1:
+            prRegionOverlay = ui->node4_overlay;
+            break;
+        case 2:
+            prRegionOverlay = ui->node5_overlay;
+            break;
+        case 3:
+            prRegionOverlay = ui->node6_overlay;
+            break;
+        case 4:
+            prRegionOverlay = ui->node7_overlay;
+            break;
+        /* DMA nodes */
+        case 5:
+            prRegionOverlay = ui->node12_overlay;
+            break;
+        case 6:
+            prRegionOverlay = ui->node13_overlay;
+            break;
+        }
+    }
+    else
+    {
+        switch (id)
+        {
+        case 0:
+            prRegionOverlay = ui->node0_overlay;
+            break;
+        case 1:
+            prRegionOverlay = ui->node1_overlay;
+            break;
+        case 2:
+            prRegionOverlay = ui->node2_overlay;
+            break;
+        case 3:
+            prRegionOverlay = ui->node3_overlay;
+            break;
+        case 4:
+            prRegionOverlay = ui->node4_overlay;
+            break;
+        case 5:
+            prRegionOverlay = ui->node5_overlay;
+            break;
+        case 6:
+            prRegionOverlay = ui->node6_overlay;
+            break;
+        case 7:
+            prRegionOverlay = ui->node7_overlay;
+            break;
+        case 8:
+            prRegionOverlay = ui->node8_overlay;
+            break;
+        case 9:
+            prRegionOverlay = ui->node9_overlay;
+            break;
+        case 10:
+            prRegionOverlay = ui->node10_overlay;
+            break;
+        case 11:
+            prRegionOverlay = ui->node11_overlay;
+            break;
+        case 12:
+            prRegionOverlay = ui->node12_overlay;
+            break;
+        case 13:
+            prRegionOverlay = ui->node13_overlay;
+            break;
+        case 14:
+            prRegionOverlay = ui->node14_overlay;
+            break;
+        }
     }
 
     return prRegionOverlay;
@@ -389,9 +446,40 @@ void MainWindow::updateMandelbrotDemoState(bool active)
     updateFloorplan();
 }
 
+static int gui_id_to_node(int id)
+{
+    /* Rather lame check on 7015 vs 7030 system configuration */
+    if (dyploContext.num_dma_nodes > 2)
+        return id;
+
+    switch (id)
+    {
+    case 0:
+        return 0;
+    /* PR nodes */
+    case 4:
+        return 1;
+    case 5:
+        return 2;
+    case 6:
+        return 3;
+    case 7:
+        return 4;
+    /* DMA nodes */
+    case 12:
+        return 5;
+    case 13:
+        return 6;
+    }
+
+    return -1;
+}
+
 void MainWindow::prNodeLinkActivated(const QString &link)
 {
-    int node = link.toInt();
+    int node = gui_id_to_node(link.toInt());
+    if (node < 0)
+        return;
     if (externals.isAquired(node))
     {
         externals.release(node);

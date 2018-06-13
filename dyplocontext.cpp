@@ -3,11 +3,38 @@
 #include <QElapsedTimer>
 #include <QDebug>
 
-DyploContext::DyploContext()
+
+static unsigned int count_numbered_files(const char* pattern)
+{
+    unsigned int result = 0;
+    char filename[64];
+    for (;;)
+    {
+        sprintf(filename, pattern, result);
+        if (::access(filename, F_OK) != 0)
+            return result;
+        ++result;
+    }
+}
+
+static unsigned int get_dyplo_dma_node_count()
+{
+    return count_numbered_files("/dev/dyplod%d");
+}
+
+DyploContext::DyploContext():
+    num_dma_nodes(get_dyplo_dma_node_count()),
+    fixed_node_mux_begin(0),
+    fixed_node_mux_end(0)
 {
     try
     {
         hwControl = new dyplo::HardwareControl(hardwareCtx);
+        /* Lame detection of layout: num_dma_nodes=2 means we're on the 7015 system */
+        if (num_dma_nodes > 2) {
+            fixed_node_mux_begin = 2;
+            fixed_node_mux_end = 4;
+        }
     }
     catch (const std::exception& ex)
     {

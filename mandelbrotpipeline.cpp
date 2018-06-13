@@ -22,11 +22,8 @@ struct MandelbrotRequest
 } __attribute__((packed));
 
 static const char BITSTREAM_MANDELBROT[] = "mandelbrot";
-static const char BITSTREAM_MUX_NAME[] = "mux";
-
-static const int FIXED_NODE_MUX_BEGIN = 2;
-static const int FIXED_NODE_MUX_END = 4;
-static const unsigned int FIXED_NODE_MUX_COUNT = FIXED_NODE_MUX_END - FIXED_NODE_MUX_BEGIN;
+static const char BITSTREAM_MUX_NAME[] = "stream_mux";
+static const char BITSTREAM_MUX_DESC[] = "MUX";
 
 static const unsigned int MAX_DMA_NODES = 2;
 
@@ -131,7 +128,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
         video_lines_per_block = 2;
 
     /* No muxes needed with up to two workers */
-    if (outgoing.size() <= MAX_DMA_NODES)
+    if (outgoing.size() <= std::min(MAX_DMA_NODES, dyplo->num_dma_nodes))
     {
         try
         {
@@ -158,32 +155,40 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     {
         unsigned int nodes_per_mux = 4;
         /* Create a mux to gather data */
-        for (int mux_index = FIXED_NODE_MUX_BEGIN; mux_index < FIXED_NODE_MUX_END; ++mux_index)
+        for (unsigned int mux_index = dyplo->fixed_node_mux_begin; mux_index <= dyplo->fixed_node_mux_end; ++mux_index)
         {
             if (connectedNodes == outgoing.size())
                 break;
+            unsigned int mux_node_id = mux_index;
             try
             {
-                dyplo::HardwareConfig *next_mux =
-                        new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
+                dyplo::HardwareConfig *next_mux;
+                /* If we run out of fixed nodes, try allocating a mux in PR (required on the 7015) */
+                if (mux_index == dyplo->fixed_node_mux_end)
+                {
+                    next_mux = dyplo->createConfig(BITSTREAM_MUX_NAME);
+                    mux_node_id = next_mux->getNodeIndex();
+                }
+                else
+                    next_mux = new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
                 next_mux->enableNode();
                 mux.push_back(next_mux);
             }
             catch (const std::exception& ex)
             {
-                qDebug() << __func__ << "Failed to aquire mux" << mux_index;
+                qDebug() << __func__ << "Failed to aquire mux" << mux_index << "\n" << ex.what();
                 continue; /* Try the next one, maybe we're running multiple demos */
             }
             /* Create incoming DMA node */
             MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
                     video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
-                    mux_index);
+                    mux_node_id);
             incoming.push_back(next_incoming);
             /* Connect output nodes  to the mux */
             for (unsigned int input = 0; input < nodes_per_mux; ++input)
             {
                 int node_index = outgoing[connectedNodes]->getNodeIndex();
-                dyplo->GetHardwareControl().routeAddSingle(node_index, 0, mux_index, input);
+                dyplo->GetHardwareControl().routeAddSingle(node_index, 0, mux_node_id, input);
                 ++connectedNodes;
                 if (connectedNodes == outgoing.size())
                     break;
@@ -259,7 +264,7 @@ void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
         list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MANDELBROT));
     for (HardwareConfigList::iterator it = mux.begin(); it != mux.end(); ++it)
-        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MUX_NAME));
+        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MUX_DESC));
 }
 
 void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_used)

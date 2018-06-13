@@ -25,6 +25,7 @@
  * You can contact Topic by electronic mail via info@topic.nl or via
  * paper mail at the following address: Postbus 440, 5680 AK Best, The Netherlands.
  */
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <dyplo/exceptions.hpp>
@@ -120,6 +121,8 @@ IIOTempSensor::IIOTempSensor():
                 break;
         }
     }
+    if (filename_raw.empty())
+        throw dyplo::IOException("No suitable temperature IIO device found", ENODEV);
 }
 
 int IIOTempSensor::getTempMilliDegrees()

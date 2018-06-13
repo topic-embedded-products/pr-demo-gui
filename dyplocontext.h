@@ -19,6 +19,11 @@ public:
     dyplo::HardwareConfig* createConfig(const char* name);
     dyplo::HardwareDMAFifo* createDMAFifo(int access);
 
+    /* Hardware layout */
+    unsigned int num_dma_nodes;
+    unsigned int fixed_node_mux_begin;
+    unsigned int fixed_node_mux_end;
+
 signals:
     void programmedPartial(int node, const char* name, unsigned int size, unsigned int microseconds);
 
@@ -28,7 +33,6 @@ private:
 
     dyplo::HardwareContext hardwareCtx;
     dyplo::HardwareControl* hwControl;
-
 };
 
 #endif // DYPLOCONTEXT_H
