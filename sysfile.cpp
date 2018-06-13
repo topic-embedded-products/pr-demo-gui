@@ -85,11 +85,13 @@ IIOTempSensor::IIOTempSensor():
 {
     dyplo::DirectoryListing dir(IIO_DIR);
     struct dirent *entry;
-    while ((entry = dir.next()) != NULL)
+    while (((entry = dir.next()) != NULL) && filename_raw.empty())
     {
+        if (entry->d_name[0] == '.')
+            continue; /* Skip hidden and parent directory */
         switch (entry->d_type)
         {
-            case DT_REG:
+            case DT_DIR:
             case DT_LNK:
             case DT_UNKNOWN:
                 /* subdir */
@@ -111,6 +113,7 @@ IIOTempSensor::IIOTempSensor():
                     param = path;
                     param += "in_temp0_scale";
                     scale = read_sys_file_float(param.c_str());
+
                 }
                 catch (...)
                 {}
