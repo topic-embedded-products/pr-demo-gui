@@ -96,6 +96,11 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+bool MainWindow::haveActivePanel()
+{
+    return ui->fFloorplanFPGA->isVisible() || ui->fMandelbrotApp->isVisible() || ui->fVideoApp->isVisible();
+}
+
 void MainWindow::resizeEvent(QResizeEvent *)
 {
     bool isSmall = size().width() < 1600;
@@ -534,14 +539,29 @@ void MainWindow::on_pbTabFractal_clicked()
 void MainWindow::on_pbTabVideo_clicked(bool checked)
 {
     ui->fVideoApp->setVisible(checked);
+    if (!haveActivePanel())
+    {
+        ui->pbTabFractal->setChecked(true);
+        ui->fMandelbrotApp->setVisible(true);
+    }
 }
 
 void MainWindow::on_pbTabFractal_clicked(bool checked)
 {
     ui->fMandelbrotApp->setVisible(checked);
+    if (!haveActivePanel())
+    {
+        ui->pbTabVideo->setChecked(true);
+        ui->fVideoApp->setVisible(true);
+    }
 }
 
 void MainWindow::on_pbTabFPGA_clicked(bool checked)
 {
     ui->fFloorplanFPGA->setVisible(checked);
+    if (!haveActivePanel())
+    {
+        ui->pbTabVideo->setChecked(true);
+        ui->fVideoApp->setVisible(true);
+    }
 }

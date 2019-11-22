@@ -27,6 +27,7 @@ public:
     ~MainWindow();
 
 protected:
+    bool haveActivePanel();
     void resizeEvent(QResizeEvent *);
 
 private slots:
