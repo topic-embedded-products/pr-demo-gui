@@ -26,6 +26,9 @@ public:
 
     ~MainWindow();
 
+protected:
+    void resizeEvent(QResizeEvent *);
+
 private slots:
     void on_buttonVideodemo_toggled(bool checked);
 
@@ -49,6 +52,16 @@ private slots:
     void on_btnPresetB_clicked();
 
     void on_btnPresetC_clicked();
+
+    void on_pbTabVideo_clicked();
+
+    void on_pbTabFractal_clicked();
+
+    void on_pbTabVideo_clicked(bool checked);
+
+    void on_pbTabFractal_clicked(bool checked);
+
+    void on_pbTabFPGA_clicked(bool checked);
 
 private:
     Ui::MainWindow*   ui;

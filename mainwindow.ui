@@ -471,7 +471,7 @@
         <height>60</height>
        </size>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0,0,0,0">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -649,7 +649,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_11">
+        <widget class="QLabel" name="lblTitle">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>1</horstretch>
@@ -670,10 +670,172 @@
          <property name="text">
           <string>Partial Reconfiguration Demo</string>
          </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
-         <property name="wordWrap">
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbTabVideo">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton:checked
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(0,170,85);
+        color: rgb(255,255,255);
+}
+
+QPushButton:pressed
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(32,170,85);
+        color: rgb(0,0,0);
+}
+
+QPushButton
+{
+        border: 1;
+        border-style: solid;
+        color: rgb(0,170,85);
+}
+
+</string>
+         </property>
+         <property name="text">
+          <string>Video</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbTabFractal">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton:checked
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(0,0,255);
+        color: rgb(255,255,255);
+}
+
+QPushButton:pressed
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(0,0,255);
+        color: rgb(0,0,0);
+}
+
+QPushButton
+{
+        border: 1;
+        border-style: solid;
+        color: rgb(0,0,255);
+}
+
+</string>
+         </property>
+         <property name="text">
+          <string>Fractal</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbTabFPGA">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton:checked
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(192,128,0);
+        color: rgb(255,255,255);
+}
+
+QPushButton:pressed
+{
+        border: 1;
+        border-style: solid;
+        background-color: rgb(255,192,0);
+        color: rgb(0,0,0);
+}
+
+QPushButton
+{
+        border: 1;
+        border-style: solid;
+        color: rgb(192,128,64);
+}
+
+</string>
+         </property>
+         <property name="text">
+          <string>FPGA</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="flat">
           <bool>true</bool>
          </property>
         </widget>
@@ -715,9 +877,9 @@
        <number>4</number>
       </property>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
+       <layout class="QVBoxLayout" name="verticalLayoutDemos">
         <property name="spacing">
-         <number>4</number>
+         <number>0</number>
         </property>
         <item>
          <widget class="QFrame" name="fVideoApp">
@@ -1470,7 +1632,7 @@ QPushButton
             <number>4</number>
            </property>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,0,1">
+            <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,0,0,1">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_9">
                <property name="spacing">
@@ -1620,6 +1782,10 @@ QPushButton
                  </property>
                 </spacer>
                </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
                 <widget class="QPushButton" name="btnPresetA">
                  <property name="minimumSize">
@@ -1767,6 +1933,19 @@ QPushButton
                  </property>
                 </widget>
                </item>
+               <item>
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
               </layout>
              </item>
              <item>
@@ -1777,7 +1956,7 @@ QPushButton
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>20</width>
-                 <height>0</height>
+                 <height>13</height>
                 </size>
                </property>
               </spacer>

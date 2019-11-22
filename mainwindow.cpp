@@ -96,6 +96,19 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::resizeEvent(QResizeEvent *)
+{
+    bool isSmall = size().width() < 1600;
+    ui->pbTabVideo->setVisible(isSmall);
+    ui->pbTabFractal->setVisible(isSmall);
+    ui->pbTabFPGA->setVisible(isSmall);
+    ui->lblPuzzlePieces->setVisible(!isSmall);
+    if (size().width() < 1280)
+        ui->lblTitle->setText("PR Demo");
+    else
+        ui->lblTitle->setText("Partial Reconfiguration Demo");
+}
+
 static int bright(int c)
 {
     if (c >= 128)
@@ -508,4 +521,27 @@ void MainWindow::on_btnPresetC_clicked()
 {
     mandelbrot.setCoordinates(-1.017809644426762361, 0.28358540656703479232);
     mandelbrot.resetZoom();
+}
+
+void MainWindow::on_pbTabVideo_clicked()
+{
+}
+
+void MainWindow::on_pbTabFractal_clicked()
+{
+}
+
+void MainWindow::on_pbTabVideo_clicked(bool checked)
+{
+    ui->fVideoApp->setVisible(checked);
+}
+
+void MainWindow::on_pbTabFractal_clicked(bool checked)
+{
+    ui->fMandelbrotApp->setVisible(checked);
+}
+
+void MainWindow::on_pbTabFPGA_clicked(bool checked)
+{
+    ui->fFloorplanFPGA->setVisible(checked);
 }
