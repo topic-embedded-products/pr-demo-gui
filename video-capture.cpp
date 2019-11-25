@@ -59,12 +59,12 @@ int VideoCapture::open(const char *filename)
        return -errno;
     }
 
-    if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+    if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
         close();
         return -EINVAL;
     }
 
-    if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+    if (!(cap.device_caps & V4L2_CAP_STREAMING)) {
         close();
         return -EINVAL;
     }
