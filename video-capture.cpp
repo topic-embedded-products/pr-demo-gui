@@ -44,7 +44,31 @@ VideoCapture::~VideoCapture()
 
 int VideoCapture::open(const char *filename)
 {
+    close();
     fd = ::open(filename, O_RDWR | O_NONBLOCK, 0);
+    if (fd == -1)
+        return -1;
+
+    /* Verify that the device can actually capture video. Kernel 4.19
+     * reports 2 video devices per camera, but only one can capture */
+    struct v4l2_capability cap;
+
+    if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
+       /* Not a V4L2 device */
+       close();
+       return -errno;
+    }
+
+    if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+        close();
+        return -EINVAL;
+    }
+
+    if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+        close();
+        return -EINVAL;
+    }
+
     return fd;
 }
 
@@ -62,24 +86,10 @@ static int set_framerate(int fd, int fps)
 
 int VideoCapture::setup(int width, int height, int fps)
 {
-    struct v4l2_capability cap;
     struct v4l2_cropcap cropcap;
     struct v4l2_crop crop;
     struct v4l2_format fmt;
     unsigned int min;
-
-    if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
-       /* Not a V4L2 device */
-       return -errno;
-    }
-
-    if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-        return -EINVAL;
-    }
-
-    if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-        return -EINVAL;
-    }
 
     /* Select video input, video standard and tune here. */
 
