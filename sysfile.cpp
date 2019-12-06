@@ -102,19 +102,26 @@ IIOTempSensor::IIOTempSensor():
                 path += "/";
                 try
                 {
-                    filename_raw = path + "in_temp0_raw";
+                    std::string basename(path);
+                    basename += "in_temp0";
+                    filename_raw = basename + "_raw";
                     if (access(filename_raw.c_str(), R_OK) != 0)
                     {
-                        filename_raw.clear();
-                        break;
+                        /* On ultrascale, the names are different */
+                        basename = path + "in_temp0_ps_temp";
+                        filename_raw = basename + "_raw";
+                        if (access(filename_raw.c_str(), R_OK) != 0)
+                        {
+                            filename_raw.clear();
+                            break;
+                        }
                     }
-                    std::string param(path);
-                    param += "in_temp0_offset";
+                    std::string param(basename);
+                    param += "_offset";
                     offset = read_sys_file(param.c_str());
-                    param = path;
-                    param += "in_temp0_scale";
+                    param = basename;
+                    param += "_scale";
                     scale = read_sys_file_float(param.c_str());
-
                 }
                 catch (...)
                 {}
