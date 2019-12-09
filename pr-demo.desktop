@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Partial Reconfiguration Demo
+Exec=/usr/bin/pr-demo-gui
+Categories=AudioVideo;Video;Development
+Icon=/usr/share/icons/hicolor/128x128/apps/pr-demo-icon.png
