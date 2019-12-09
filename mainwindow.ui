@@ -1078,7 +1078,7 @@ QPushButton
                   </font>
                  </property>
                  <property name="text">
-                  <string>YUV to RGB conversion, all in FPGA</string>
+                  <string>YUV to RGB in FPGA</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -1693,7 +1693,7 @@ QPushButton
                   </font>
                  </property>
                  <property name="text">
-                  <string>Mandelbrot algorithm</string>
+                  <string>Mandelbrot</string>
                  </property>
                  <property name="scaledContents">
                   <bool>false</bool>
@@ -2453,12 +2453,6 @@ color: rgb(255, 255, 255);</string>
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-        <property name="widgetResizable">
-         <bool>true</bool>
         </property>
         <widget class="QWidget" name="scrollAreaWidgetContents">
          <property name="geometry">
