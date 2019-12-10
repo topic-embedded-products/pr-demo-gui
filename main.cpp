@@ -8,6 +8,6 @@ int main(int argc, char *argv[])
     MouseMonitor mousemon;
     a.installEventFilter(&mousemon);
     MainWindow w;
-    w.show();
+    w.showMaximized();
     return a.exec();
 }

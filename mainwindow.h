@@ -15,6 +15,8 @@ class MainWindow;
 
 class IIOTempSensor;
 class SupplyCurrentSensor;
+class VideoDockWidget;
+class FractalDockWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -27,7 +29,6 @@ public:
     ~MainWindow();
 
 protected:
-    bool haveActivePanel();
     void resizeEvent(QResizeEvent *);
 
 private slots:
@@ -66,6 +67,8 @@ private slots:
 
 private:
     Ui::MainWindow*   ui;
+    VideoDockWidget* dwVideo;
+    FractalDockWidget* dwFractal;
     CpuInfo cpuInfo;
     QTimer cpuStatsTimer;
     VideoPipeline video;
