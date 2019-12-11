@@ -27,9 +27,7 @@ SOURCES +=  main.cpp\
     mandelbrotpipeline.cpp \
     colormap.cpp \
     cpu/cpuinfo.cpp \
-    sysfile.cpp \
-    videodockwidget.cpp \
-    fractaldockwidget.cpp
+    sysfile.cpp
 
 HEADERS  += mainwindow.h \
             mousemonitor.h \
@@ -45,13 +43,11 @@ HEADERS  += mainwindow.h \
     mandelbrotpipeline.h \
     colormap.h \
     cpu/cpuinfo.h \
-    sysfile.hpp \
-    videodockwidget.h \
-    fractaldockwidget.h
+    sysfile.hpp
 
 FORMS    += mainwindow.ui \
-    videodockwidget.ui \
-    fractaldockwidget.ui
+    videoframe.ui \
+    fractalframe.ui
 
 RESOURCES += \
     resources.qrc

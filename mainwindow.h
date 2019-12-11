@@ -11,12 +11,12 @@
 
 namespace Ui {
 class MainWindow;
+class FractalFrame;
+class VideoFrame;
 }
 
 class IIOTempSensor;
 class SupplyCurrentSensor;
-class VideoDockWidget;
-class FractalDockWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -25,50 +25,36 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-
     ~MainWindow();
+
+    void showIn(const QRect &rec);
 
 protected:
     void resizeEvent(QResizeEvent *);
 
 private slots:
-    void on_buttonVideodemo_toggled(bool checked);
-
     void updateVideoDemoState(bool active);
     void updateMandelbrotDemoState(bool active);
     void hideProgrammingMetrics();
     void showProgrammingMetrics(int node, const char* name, unsigned int size, unsigned int microseconds);
     void showVideoStats(unsigned int frames,  unsigned int milliseconds);
     void showMandelbrotStats(unsigned int frames,  unsigned int milliseconds);
-
-    void on_buttonMandelbrotDemo_toggled(bool checked);
-
-    void mandelbrotClicked(QMouseEvent *event);
-
     void updateCpuStats();
 
+    void buttonVideodemo_toggled(bool checked);
+    void buttonMandelbrotDemo_toggled(bool checked);
+    void mandelbrotClicked(QMouseEvent *event);
     void prNodeLinkActivated(const QString &link);
-
-    void on_btnPresetA_clicked();
-
-    void on_btnPresetB_clicked();
-
-    void on_btnPresetC_clicked();
-
-    void on_pbTabVideo_clicked();
-
-    void on_pbTabFractal_clicked();
-
-    void on_pbTabVideo_clicked(bool checked);
-
-    void on_pbTabFractal_clicked(bool checked);
-
-    void on_pbTabFPGA_clicked(bool checked);
+    void btnPresetA_clicked();
+    void btnPresetB_clicked();
+    void btnPresetC_clicked();
 
 private:
     Ui::MainWindow*   ui;
-    VideoDockWidget* dwVideo;
-    FractalDockWidget* dwFractal;
+    Ui::FractalFrame* ui_fractal;
+    Ui::VideoFrame*   ui_video;
+    QMainWindow*    fractalWindow;
+    QMainWindow*    videoWindow;
     CpuInfo cpuInfo;
     QTimer cpuStatsTimer;
     VideoPipeline video;

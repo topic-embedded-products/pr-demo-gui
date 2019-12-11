@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QDesktopWidget>
 #include "mousemonitor.h"
 
 int main(int argc, char *argv[])
@@ -8,6 +9,7 @@ int main(int argc, char *argv[])
     MouseMonitor mousemon;
     a.installEventFilter(&mousemon);
     MainWindow w;
-    w.showMaximized();
+    QRect rec = QApplication::desktop()->availableGeometry();
+    w.showIn(rec);
     return a.exec();
 }

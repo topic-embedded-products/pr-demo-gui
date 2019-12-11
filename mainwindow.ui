@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1539</width>
-    <height>482</height>
+    <width>761</width>
+    <height>552</height>
    </rect>
   </property>
   <property name="palette">
@@ -708,13 +708,16 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
         <widget class="QWidget" name="scrollAreaWidgetContents">
          <property name="geometry">
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>720</width>
-           <height>990</height>
+           <width>735</width>
+           <height>852</height>
           </rect>
          </property>
          <property name="sizePolicy">
