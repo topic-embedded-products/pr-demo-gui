@@ -393,12 +393,18 @@ color: rgb(255, 255, 255);</string>
    <item>
     <widget class="VideoWidget" name="mandelbrot" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
+      <size>
+       <width>640</width>
+       <height>240</height>
+      </size>
+     </property>
+     <property name="baseSize">
       <size>
        <width>640</width>
        <height>480</height>

@@ -13,10 +13,13 @@ namespace Ui {
 class MainWindow;
 class FractalFrame;
 class VideoFrame;
+class TopPanel;
+class FloorplanFrame;
 }
 
 class IIOTempSensor;
 class SupplyCurrentSensor;
+class QScrollArea;
 
 class MainWindow : public QMainWindow
 {
@@ -53,8 +56,12 @@ private:
     Ui::MainWindow*   ui;
     Ui::FractalFrame* ui_fractal;
     Ui::VideoFrame*   ui_video;
-    QMainWindow*    fractalWindow;
-    QMainWindow*    videoWindow;
+    Ui::FloorplanFrame* ui_floorplan;
+    Ui::TopPanel*     ui_toppanel;
+    QWidget*    fractalWidget;
+    QFrame*    videoWidget;
+    QScrollArea* floorplanWidget;
+    QWidget*    toppanelWidget;
     CpuInfo cpuInfo;
     QTimer cpuStatsTimer;
     VideoPipeline video;

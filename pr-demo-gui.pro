@@ -47,7 +47,9 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     videoframe.ui \
-    fractalframe.ui
+    fractalframe.ui \
+    floorplanframe.ui \
+    topframe.ui
 
 RESOURCES += \
     resources.qrc

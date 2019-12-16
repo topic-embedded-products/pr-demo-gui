@@ -12,6 +12,8 @@
 
 #include "ui_videoframe.h"
 #include "ui_fractalframe.h"
+#include "ui_floorplanframe.h"
+#include "ui_topframe.h"
 
 /* Nodes in logic 7030:
  * 0 CPU
@@ -37,51 +39,51 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     ui_fractal(new Ui::FractalFrame),
     ui_video(new Ui::VideoFrame),
+    ui_floorplan(new Ui::FloorplanFrame),
+    ui_toppanel(new Ui::TopPanel),
     updateStatsRobin(0)
 {
     ui->setupUi(this);
 
-    fractalWindow = new QMainWindow(this);
-    QWidget *ff = new QWidget(fractalWindow);
-    fractalWindow->setCentralWidget(ff);
-    ui_fractal->setupUi(ff);
-    fractalWindow->setWindowTitle("Fractal (Partial Reconfiguration Demo)");
-    fractalWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Window);
+    fractalWidget = new QWidget();
+    ui_fractal->setupUi(fractalWidget);
 
-    videoWindow = new QMainWindow(this);
-    QFrame *f = new QFrame(videoWindow);
-    videoWindow->setCentralWidget(f);
-    ui_video->setupUi(f);
-    videoWindow->setWindowTitle("Video (Partial Reconfiguration Demo)");
-    videoWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Window);
+    videoWidget = new QFrame();
+    ui_video->setupUi(videoWidget);
+
+    toppanelWidget = new QWidget();
+    ui_toppanel->setupUi(toppanelWidget);
+
+    floorplanWidget = new QScrollArea();
+    ui_floorplan->setupUi(floorplanWidget);
 
     ui_fractal->partialProgramMetrics->hide();
 
-    ui->node4_overlay->setObjectName("4");
-    ui->node5_overlay->setObjectName("5");
-    ui->node6_overlay->setObjectName("6");
-    ui->node7_overlay->setObjectName("7");
-    ui->node8_overlay->setObjectName("8");
-    ui->node9_overlay->setObjectName("9");
-    ui->node10_overlay->setObjectName("10");
-    ui->node11_overlay->setObjectName("11");
+    ui_floorplan->node4_overlay->setObjectName("4");
+    ui_floorplan->node5_overlay->setObjectName("5");
+    ui_floorplan->node6_overlay->setObjectName("6");
+    ui_floorplan->node7_overlay->setObjectName("7");
+    ui_floorplan->node8_overlay->setObjectName("8");
+    ui_floorplan->node9_overlay->setObjectName("9");
+    ui_floorplan->node10_overlay->setObjectName("10");
+    ui_floorplan->node11_overlay->setObjectName("11");
 
     try {
         tempSensor = new IIOTempSensor();
     } catch (const std::exception&) {
         tempSensor = NULL;
-        ui->lblTemperature->setText("n.a.");
-        ui->lblTemperature->setEnabled(false);
+        ui_toppanel->lblTemperature->setText("n.a.");
+        ui_toppanel->lblTemperature->setEnabled(false);
     }
     try {
         currentSensor = new SupplyCurrentSensor();
-        ui->lblCurrentCpu->setNum(currentSensor->read_cpu_supply_current_mA());
+        ui_toppanel->lblCurrentCpu->setNum(currentSensor->read_cpu_supply_current_mA());
     } catch (const std::exception&) {
         currentSensor = NULL;
-        ui->lblCurrentCpu->setText("n.a.");
-        ui->lblCurrentCpu->setEnabled(false);
-        ui->lblCurrentFpga->setText("n.a.");
-        ui->lblCurrentFpga->setEnabled(false);
+        ui_toppanel->lblCurrentCpu->setText("n.a.");
+        ui_toppanel->lblCurrentCpu->setEnabled(false);
+        ui_toppanel->lblCurrentFpga->setText("n.a.");
+        ui_toppanel->lblCurrentFpga->setEnabled(false);
     }
 
     connect(&cpuStatsTimer, SIGNAL(timeout()), this, SLOT(updateCpuStats()));
@@ -96,14 +98,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&mandelbrot, SIGNAL(setActive(bool)), this, SLOT(updateMandelbrotDemoState(bool)));
     connect(&ui_fractal->mandelbrot->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showMandelbrotStats(uint,uint)));
 
-    connect(ui->node4_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui->node5_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui->node6_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui->node7_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui->node8_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui->node9_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui->node10_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui->node11_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node4_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node5_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node6_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node7_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node8_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node9_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node10_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+    connect(ui_floorplan->node11_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
 
     connect(ui_fractal->mandelbrot, SIGNAL(clicked(QMouseEvent*)), this, SLOT(mandelbrotClicked(QMouseEvent*)));
 
@@ -123,27 +125,73 @@ MainWindow::~MainWindow()
     delete ui;
     delete ui_fractal;
     delete ui_video;
+    delete ui_toppanel;
+    delete ui_floorplan;
 }
 
 /* Display everything in the given rectangle (desktop area) */
 void MainWindow::showIn(const QRect &rec)
 {
-    setGeometry(rec.right() - width(), rec.top(),
-                width(), rec.height());
+    QVBoxLayout *vla = new QVBoxLayout();
+    vla->setSpacing(4);
+    vla->setContentsMargins(0, 0, 0, 0);
+    vla->addWidget(toppanelWidget);
+    centralWidget()->setLayout(vla);
+    centralWidget()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    videoWindow->setGeometry(rec.left(), rec.top(), videoWindow->width(), videoWindow->height());
-    videoWindow->show();
+    if (rec.width() > 1600 && rec.height() > 900)
+    {
+        /* Enough space to fit it all in a single window */
+        QHBoxLayout *hlb = new QHBoxLayout();
+        hlb->setSpacing(4);
+        hlb->setContentsMargins(4, 4, 4, 4);
+        vla->addLayout(hlb, 1);
 
-    fractalWindow->setGeometry(rec.left(), rec.bottom() - fractalWindow->height(), fractalWindow->width(), fractalWindow->height());
-    fractalWindow->show();
+        QVBoxLayout *vl = new QVBoxLayout();
+        vl->setSpacing(4);
+        vl->setContentsMargins(0, 0, 0, 0);
 
+        vl->addWidget(videoWidget, 1);
+        vl->addWidget(fractalWidget, 1);
+
+        hlb->addLayout(vl, 1);
+        hlb->addWidget(floorplanWidget, 1);
+
+        setGeometry(rec);
+    }
+    else
+    {
+        vla->addWidget(floorplanWidget, 1);
+
+        setGeometry(rec.right() - width(), rec.top(),
+                    width(), rec.height());
+
+        QMainWindow *videoWindow = new QMainWindow(this);
+        videoWindow->setCentralWidget(videoWidget);
+        /* Cannot get "preferred" to work, so set the minimum and thus make the window large enough */
+        ui_video->video->setMinimumHeight(480);
+        videoWidget->setParent(videoWindow);
+        videoWindow->setWindowTitle("Video (Partial Reconfiguration Demo)");
+        videoWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Window);
+        videoWindow->setGeometry(rec.left(), rec.top(), videoWindow->width(), videoWindow->height());
+        videoWindow->show();
+
+        QMainWindow *fractalWindow = new QMainWindow(this);
+        fractalWindow->setCentralWidget(fractalWidget);
+        ui_fractal->mandelbrot->setMinimumHeight(480);
+        fractalWidget->setParent(fractalWindow);
+        fractalWindow->setWindowTitle("Fractal (Partial Reconfiguration Demo)");
+        fractalWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Window);
+        fractalWindow->setGeometry(rec.left(), rec.bottom() - fractalWindow->height(), fractalWindow->width(), fractalWindow->height());
+        fractalWindow->show();
+    }
     show();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
     bool isSmall = size().width() < 1600;
-    ui->lblPuzzlePieces->setVisible(!isSmall);
+    ui_toppanel->lblPuzzlePieces->setVisible(!isSmall);
 }
 
 static int bright(int c)
@@ -203,27 +251,27 @@ QLabel* MainWindow::getPrRegion(int id)
         {
         /* CPU node */
         case 0:
-            prRegionOverlay = ui->node0_overlay;
+            prRegionOverlay = ui_floorplan->node0_overlay;
             break;
         /* PR nodes */
         case 1:
-            prRegionOverlay = ui->node4_overlay;
+            prRegionOverlay = ui_floorplan->node4_overlay;
             break;
         case 2:
-            prRegionOverlay = ui->node5_overlay;
+            prRegionOverlay = ui_floorplan->node5_overlay;
             break;
         case 3:
-            prRegionOverlay = ui->node6_overlay;
+            prRegionOverlay = ui_floorplan->node6_overlay;
             break;
         case 4:
-            prRegionOverlay = ui->node7_overlay;
+            prRegionOverlay = ui_floorplan->node7_overlay;
             break;
         /* DMA nodes */
         case 5:
-            prRegionOverlay = ui->node12_overlay;
+            prRegionOverlay = ui_floorplan->node12_overlay;
             break;
         case 6:
-            prRegionOverlay = ui->node13_overlay;
+            prRegionOverlay = ui_floorplan->node13_overlay;
             break;
         }
     }
@@ -232,49 +280,49 @@ QLabel* MainWindow::getPrRegion(int id)
         switch (id)
         {
         case 0:
-            prRegionOverlay = ui->node0_overlay;
+            prRegionOverlay = ui_floorplan->node0_overlay;
             break;
         case 1:
-            prRegionOverlay = ui->node1_overlay;
+            prRegionOverlay = ui_floorplan->node1_overlay;
             break;
         case 2:
-            prRegionOverlay = ui->node2_overlay;
+            prRegionOverlay = ui_floorplan->node2_overlay;
             break;
         case 3:
-            prRegionOverlay = ui->node3_overlay;
+            prRegionOverlay = ui_floorplan->node3_overlay;
             break;
         case 4:
-            prRegionOverlay = ui->node4_overlay;
+            prRegionOverlay = ui_floorplan->node4_overlay;
             break;
         case 5:
-            prRegionOverlay = ui->node5_overlay;
+            prRegionOverlay = ui_floorplan->node5_overlay;
             break;
         case 6:
-            prRegionOverlay = ui->node6_overlay;
+            prRegionOverlay = ui_floorplan->node6_overlay;
             break;
         case 7:
-            prRegionOverlay = ui->node7_overlay;
+            prRegionOverlay = ui_floorplan->node7_overlay;
             break;
         case 8:
-            prRegionOverlay = ui->node8_overlay;
+            prRegionOverlay = ui_floorplan->node8_overlay;
             break;
         case 9:
-            prRegionOverlay = ui->node9_overlay;
+            prRegionOverlay = ui_floorplan->node9_overlay;
             break;
         case 10:
-            prRegionOverlay = ui->node10_overlay;
+            prRegionOverlay = ui_floorplan->node10_overlay;
             break;
         case 11:
-            prRegionOverlay = ui->node11_overlay;
+            prRegionOverlay = ui_floorplan->node11_overlay;
             break;
         case 12:
-            prRegionOverlay = ui->node12_overlay;
+            prRegionOverlay = ui_floorplan->node12_overlay;
             break;
         case 13:
-            prRegionOverlay = ui->node13_overlay;
+            prRegionOverlay = ui_floorplan->node13_overlay;
             break;
         case 14:
-            prRegionOverlay = ui->node14_overlay;
+            prRegionOverlay = ui_floorplan->node14_overlay;
             break;
         }
     }
@@ -284,21 +332,21 @@ QLabel* MainWindow::getPrRegion(int id)
 
 void MainWindow::updateFloorplan()
 {
-    hideLabel(ui->node0_overlay);
-    hideLabel(ui->node1_overlay);
-    hideLabel(ui->node2_overlay);
-    hideLabel(ui->node3_overlay);
-    hideLabel(ui->node4_overlay);
-    hideLabel(ui->node5_overlay);
-    hideLabel(ui->node6_overlay);
-    hideLabel(ui->node7_overlay);
-    hideLabel(ui->node8_overlay);
-    hideLabel(ui->node9_overlay);
-    hideLabel(ui->node10_overlay);
-    hideLabel(ui->node11_overlay);
-    hideLabel(ui->node12_overlay);
-    hideLabel(ui->node13_overlay);
-    hideLabel(ui->node14_overlay);
+    hideLabel(ui_floorplan->node0_overlay);
+    hideLabel(ui_floorplan->node1_overlay);
+    hideLabel(ui_floorplan->node2_overlay);
+    hideLabel(ui_floorplan->node3_overlay);
+    hideLabel(ui_floorplan->node4_overlay);
+    hideLabel(ui_floorplan->node5_overlay);
+    hideLabel(ui_floorplan->node6_overlay);
+    hideLabel(ui_floorplan->node7_overlay);
+    hideLabel(ui_floorplan->node8_overlay);
+    hideLabel(ui_floorplan->node9_overlay);
+    hideLabel(ui_floorplan->node10_overlay);
+    hideLabel(ui_floorplan->node11_overlay);
+    hideLabel(ui_floorplan->node12_overlay);
+    hideLabel(ui_floorplan->node13_overlay);
+    hideLabel(ui_floorplan->node14_overlay);
 
     DyploNodeInfoList nodes;
     nodes.clear();
@@ -447,9 +495,9 @@ void MainWindow::updateCpuStats()
         {
             int usage = cpuInfo.getCurrentValue();
                 if (usage < 0)
-                    ui->lblCPU->setText("---");
+                    ui_toppanel->lblCPU->setText("---");
                 else
-                    ui->lblCPU->setText(QString("%1%").arg(usage));
+                    ui_toppanel->lblCPU->setText(QString("%1%").arg(usage));
         }
         break;
     case 1:
@@ -457,7 +505,7 @@ void MainWindow::updateCpuStats()
         {
             try {
                 int t = tempSensor->getTempMilliDegrees() / 1000;
-                ui->lblTemperature->setText(QString("%1 \xB0" "C").arg(t));
+                ui_toppanel->lblTemperature->setText(QString("%1 \xB0" "C").arg(t));
             } catch (const std::exception& ex) {
                 qDebug() << "Failed reading temperature:" << ex.what();
             }
@@ -465,9 +513,9 @@ void MainWindow::updateCpuStats()
         if (currentSensor)
         {
             try {
-                ui->lblCurrentCpu->setText(QString("%1 mW").arg(
+                ui_toppanel->lblCurrentCpu->setText(QString("%1 mW").arg(
                         currentSensor->read_cpu_supply_current_mA()));
-                ui->lblCurrentFpga->setText(QString("%1 mW").arg(
+                ui_toppanel->lblCurrentFpga->setText(QString("%1 mW").arg(
                         currentSensor->read_fpga_supply_current_mA()));
             } catch (const std::exception& ex) {
                 qDebug() << "Failed reading current:" << ex.what();

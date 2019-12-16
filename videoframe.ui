@@ -279,7 +279,7 @@ QPushButton
    <item>
     <widget class="VideoWidget" name="video" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -287,13 +287,7 @@ QPushButton
      <property name="minimumSize">
       <size>
        <width>640</width>
-       <height>480</height>
-      </size>
-     </property>
-     <property name="sizeIncrement">
-      <size>
-       <width>0</width>
-       <height>160</height>
+       <height>240</height>
       </size>
      </property>
      <property name="baseSize">
