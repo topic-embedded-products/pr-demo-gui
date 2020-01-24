@@ -64,7 +64,7 @@ public:
     void setCoordinates(double _next_x, double _next_y);
     void resetZoom();
 
-    void enumDyploResources(DyploNodeInfoList& list);
+    void enumDyploResources(DyploNodeResourceList& list);
 
     /* Called from MandelbrotIncoming */
     void dataAvailable(const uchar *data, unsigned int bytes_used);

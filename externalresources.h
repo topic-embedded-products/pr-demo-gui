@@ -20,7 +20,7 @@ public:
     bool aquire(DyploContext* dyplo, int number);
     void release(int number);
     bool isAquired(int number);
-    void enumDyploResources(DyploNodeInfoList& list);
+    void enumDyploResources(DyploNodeResourceList& list);
 signals:
 
 public slots:

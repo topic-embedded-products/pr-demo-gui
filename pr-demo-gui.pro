@@ -27,7 +27,8 @@ SOURCES +=  main.cpp\
     mandelbrotpipeline.cpp \
     colormap.cpp \
     cpu/cpuinfo.cpp \
-    sysfile.cpp
+    sysfile.cpp \
+    dyplonodeinfo.cpp
 
 HEADERS  += mainwindow.h \
             mousemonitor.h \
@@ -43,7 +44,8 @@ HEADERS  += mainwindow.h \
     mandelbrotpipeline.h \
     colormap.h \
     cpu/cpuinfo.h \
-    sysfile.hpp
+    sysfile.hpp \
+    dyplonodeinfo.h
 
 FORMS    += mainwindow.ui \
     videoframe.ui \

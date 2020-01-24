@@ -190,16 +190,16 @@ void VideoPipeline::deactivate_impl()
     yuv_buffer = NULL;
 }
 
-void VideoPipeline::enumDyploResources(DyploNodeInfoList &list)
+void VideoPipeline::enumDyploResources(DyploNodeResourceList &list)
 {
     if (yuv2rgb)
-        list.push_back(DyploNodeInfo(yuv2rgb->getNodeIndex(), BITSTREAM_YUVTORGB));
+        list.push_back(DyploNodeResource(yuv2rgb->getNodeIndex(), BITSTREAM_YUVTORGB));
     if (filter1)
-        list.push_back(DyploNodeInfo(filter1->getNodeIndex(), BITSTREAM_FILTER_YUV_CONTRAST));
+        list.push_back(DyploNodeResource(filter1->getNodeIndex(), BITSTREAM_FILTER_YUV_CONTRAST));
     if (yuvfilter1)
-        list.push_back(DyploNodeInfo(yuvfilter1->getNodeIndex(), BITSTREAM_FILTER_YUV_GRAY));
+        list.push_back(DyploNodeResource(yuvfilter1->getNodeIndex(), BITSTREAM_FILTER_YUV_GRAY));
     if (filterTreshold)
-        list.push_back(DyploNodeInfo(filterTreshold->getNodeIndex(), BITSTREAM_FILTER_YUV_TRESHOLD));
+        list.push_back(DyploNodeResource(filterTreshold->getNodeIndex(), BITSTREAM_FILTER_YUV_TRESHOLD));
 }
 
 static inline unsigned char thd_process(unsigned char y)

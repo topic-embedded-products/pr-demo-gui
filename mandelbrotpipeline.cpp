@@ -259,12 +259,12 @@ void MandelbrotPipeline::deactivate()
     emit setActive(false);
 }
 
-void MandelbrotPipeline::enumDyploResources(DyploNodeInfoList &list)
+void MandelbrotPipeline::enumDyploResources(DyploNodeResourceList &list)
 {
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
-        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MANDELBROT));
+        list.push_back(DyploNodeResource((*it)->getNodeIndex(), BITSTREAM_MANDELBROT));
     for (HardwareConfigList::iterator it = mux.begin(); it != mux.end(); ++it)
-        list.push_back(DyploNodeInfo((*it)->getNodeIndex(), BITSTREAM_MUX_DESC));
+        list.push_back(DyploNodeResource((*it)->getNodeIndex(), BITSTREAM_MUX_DESC));
 }
 
 void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_used)

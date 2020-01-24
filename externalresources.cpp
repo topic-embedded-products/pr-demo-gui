@@ -42,9 +42,9 @@ bool ExternalResources::isAquired(int number)
     return resources[number] != NULL;
 }
 
-void ExternalResources::enumDyploResources(DyploNodeInfoList &list)
+void ExternalResources::enumDyploResources(DyploNodeResourceList &list)
 {
     for (int i = 0; i < resources.size(); ++i)
         if (resources[i])
-            list.push_back(DyploNodeInfo(resources[i]->getNodeIndex(), "X"));
+            list.push_back(DyploNodeResource(resources[i]->getNodeIndex(), "X"));
 }

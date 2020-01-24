@@ -8,6 +8,7 @@
 #include "externalresources.h"
 #include "mandelbrotpipeline.h"
 #include "cpu/cpuinfo.h"
+#include "dyplonodeinfo.h"
 
 namespace Ui {
 class MainWindow;
@@ -70,6 +71,7 @@ private:
     QString programmingMetrics;
     IIOTempSensor* tempSensor;
     SupplyCurrentSensor* currentSensor;
+    QVector<DyploNodeInfo> nodeInfo;
     int updateStatsRobin;
 
     QLabel *getPrRegion(int id);

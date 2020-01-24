@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "dyplocontext.h"
 #include "sysfile.hpp"
+#include "qprregionlabel.h"
 
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
@@ -14,23 +15,6 @@
 #include "ui_fractalframe.h"
 #include "ui_floorplanframe.h"
 #include "ui_topframe.h"
-
-/* Nodes in logic 7030:
- * 0 CPU
- * 1 CPU
- * 2 MUX
- * 3 MUX
- * 4..11 PR
- * 12..14 DMA
- * 15 ICAP
- */
-
-/* Nodes in logic 7015:
- * 0 CPU
- * 1..4 PR
- * 5..6 DMA
- * 7 ICAP
- */
 
 static DyploContext dyploContext;
 
@@ -57,16 +41,41 @@ MainWindow::MainWindow(QWidget *parent) :
     floorplanWidget = new QScrollArea();
     ui_floorplan->setupUi(floorplanWidget);
 
-    ui_fractal->partialProgramMetrics->hide();
+    parseDyploConfig(&nodeInfo);
+    QWidget* nodeParent = ui_floorplan->fFloorplanFPGAContents;
+    for(auto& item : nodeInfo)
+    {
+        QLabel *uiItem;
+        switch (item.type)
+        {
+        case DyploNodeInfo::CPU:
+                uiItem = new QLabel("CPU", nodeParent);
+                uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 20%);\ncolor: rgb(192, 242, 242);\n");
+                break;
+        case DyploNodeInfo::DMA:
+                uiItem = new QLabel("DMA", nodeParent);
+                uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 20%);\ncolor: rgb(192, 242, 242);\n");
+                break;
+        case DyploNodeInfo::FIXED:
+                uiItem = new QLabel(item.function, nodeParent);
+                uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 35%);\ncolor: rgb(192, 242, 192);\n");
+                break;
+        case DyploNodeInfo::PR:
+                uiItem = new QPRRegionLabel(nodeParent);
+                uiItem->setText("(PR)");
+                uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 50%);\ncolor: rgb(192, 242, 192);\n");
+                connect(uiItem, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
+                break;
+        default:
+            continue; /* Skip unknowns */
+        }
+        item.widget = uiItem;
+        uiItem->setObjectName(QString::number(item.id));
+        uiItem->setAlignment(Qt::AlignCenter);
+        uiItem->setGeometry(item.geometry);
+    }
 
-    ui_floorplan->node4_overlay->setObjectName("4");
-    ui_floorplan->node5_overlay->setObjectName("5");
-    ui_floorplan->node6_overlay->setObjectName("6");
-    ui_floorplan->node7_overlay->setObjectName("7");
-    ui_floorplan->node8_overlay->setObjectName("8");
-    ui_floorplan->node9_overlay->setObjectName("9");
-    ui_floorplan->node10_overlay->setObjectName("10");
-    ui_floorplan->node11_overlay->setObjectName("11");
+    ui_fractal->partialProgramMetrics->hide();
 
     try {
         tempSensor = new IIOTempSensor();
@@ -97,15 +106,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&mandelbrot, SIGNAL(renderedImage(QImage)), ui_fractal->mandelbrot, SLOT(updatePixmap(QImage)));
     connect(&mandelbrot, SIGNAL(setActive(bool)), this, SLOT(updateMandelbrotDemoState(bool)));
     connect(&ui_fractal->mandelbrot->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showMandelbrotStats(uint,uint)));
-
-    connect(ui_floorplan->node4_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui_floorplan->node5_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui_floorplan->node6_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui_floorplan->node7_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui_floorplan->node8_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui_floorplan->node9_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui_floorplan->node10_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
-    connect(ui_floorplan->node11_overlay, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
 
     connect(ui_fractal->mandelbrot, SIGNAL(clicked(QMouseEvent*)), this, SLOT(mandelbrotClicked(QMouseEvent*)));
 
@@ -214,6 +214,9 @@ static QString getOverlayBackgroundColor(const QColor& color)
 
 static void hideLabel(QLabel* label)
 {
+    if (!label)
+        return;
+
     label->setStyleSheet("background-color: rgba(0,0,0,0%);\n"
                          "color: rgba(0,0,0);");
     label->setText("");
@@ -226,132 +229,24 @@ static void showLabelColor(QLabel* label, const QColor& color)
 
 QLabel* MainWindow::getPrRegion(int id)
 {
-    QLabel* prRegionOverlay = NULL;
-    /* Nodes in logic 7030:
-     * 0 CPU
-     * 1 CPU
-     * 2 MUX
-     * 3 MUX
-     * 4..11 PR
-     * 12..14 DMA
-     * 15 ICAP
-     */
-
-    /* Nodes in logic 7015:
-     * 0 CPU
-     * 1..4 PR
-     * 5..6 DMA
-     * 7 ICAP
-     */
-
-    /* Rather lame check on 7015 system configuration */
-    if (dyploContext.num_dma_nodes < 3)
+    for (const auto& item: nodeInfo)
     {
-        switch (id)
-        {
-        /* CPU node */
-        case 0:
-            prRegionOverlay = ui_floorplan->node0_overlay;
-            break;
-        /* PR nodes */
-        case 1:
-            prRegionOverlay = ui_floorplan->node4_overlay;
-            break;
-        case 2:
-            prRegionOverlay = ui_floorplan->node5_overlay;
-            break;
-        case 3:
-            prRegionOverlay = ui_floorplan->node6_overlay;
-            break;
-        case 4:
-            prRegionOverlay = ui_floorplan->node7_overlay;
-            break;
-        /* DMA nodes */
-        case 5:
-            prRegionOverlay = ui_floorplan->node12_overlay;
-            break;
-        case 6:
-            prRegionOverlay = ui_floorplan->node13_overlay;
-            break;
-        }
-    }
-    else
-    {
-        switch (id)
-        {
-        case 0:
-            prRegionOverlay = ui_floorplan->node0_overlay;
-            break;
-        case 1:
-            prRegionOverlay = ui_floorplan->node1_overlay;
-            break;
-        case 2:
-            prRegionOverlay = ui_floorplan->node2_overlay;
-            break;
-        case 3:
-            prRegionOverlay = ui_floorplan->node3_overlay;
-            break;
-        case 4:
-            prRegionOverlay = ui_floorplan->node4_overlay;
-            break;
-        case 5:
-            prRegionOverlay = ui_floorplan->node5_overlay;
-            break;
-        case 6:
-            prRegionOverlay = ui_floorplan->node6_overlay;
-            break;
-        case 7:
-            prRegionOverlay = ui_floorplan->node7_overlay;
-            break;
-        case 8:
-            prRegionOverlay = ui_floorplan->node8_overlay;
-            break;
-        case 9:
-            prRegionOverlay = ui_floorplan->node9_overlay;
-            break;
-        case 10:
-            prRegionOverlay = ui_floorplan->node10_overlay;
-            break;
-        case 11:
-            prRegionOverlay = ui_floorplan->node11_overlay;
-            break;
-        case 12:
-            prRegionOverlay = ui_floorplan->node12_overlay;
-            break;
-        case 13:
-            prRegionOverlay = ui_floorplan->node13_overlay;
-            break;
-        case 14:
-            prRegionOverlay = ui_floorplan->node14_overlay;
-            break;
-        }
+        if (item.id == id)
+            return item.widget;
     }
 
-    return prRegionOverlay;
+    return NULL;
 }
 
 void MainWindow::updateFloorplan()
 {
-    hideLabel(ui_floorplan->node0_overlay);
-    hideLabel(ui_floorplan->node1_overlay);
-    hideLabel(ui_floorplan->node2_overlay);
-    hideLabel(ui_floorplan->node3_overlay);
-    hideLabel(ui_floorplan->node4_overlay);
-    hideLabel(ui_floorplan->node5_overlay);
-    hideLabel(ui_floorplan->node6_overlay);
-    hideLabel(ui_floorplan->node7_overlay);
-    hideLabel(ui_floorplan->node8_overlay);
-    hideLabel(ui_floorplan->node9_overlay);
-    hideLabel(ui_floorplan->node10_overlay);
-    hideLabel(ui_floorplan->node11_overlay);
-    hideLabel(ui_floorplan->node12_overlay);
-    hideLabel(ui_floorplan->node13_overlay);
-    hideLabel(ui_floorplan->node14_overlay);
+    for (const auto& item: nodeInfo)
+        hideLabel(item.widget);
 
-    DyploNodeInfoList nodes;
+    DyploNodeResourceList nodes;
     nodes.clear();
     video.enumDyploResources(nodes);
-    for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
+    for (DyploNodeResourceList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
         QLabel* l = getPrRegion(it->id);
         if (l) {
             showLabelColor(l, Qt::blue);
@@ -361,7 +256,7 @@ void MainWindow::updateFloorplan()
 
     nodes.clear();
     mandelbrot.enumDyploResources(nodes);
-    for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
+    for (DyploNodeResourceList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
         QLabel* l = getPrRegion(it->id);
         if (l) {
             showLabelColor(l, Qt::green);
@@ -371,7 +266,7 @@ void MainWindow::updateFloorplan()
 
     nodes.clear();
     externals.enumDyploResources(nodes);
-    for (DyploNodeInfoList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
+    for (DyploNodeResourceList::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
         QLabel* l = getPrRegion(it->id);
         if (l) {
             showLabelColor(l, Qt::gray);
@@ -544,38 +439,9 @@ void MainWindow::updateMandelbrotDemoState(bool active)
     updateFloorplan();
 }
 
-static int gui_id_to_node(int id)
-{
-    /* Rather lame check on 7015 vs 7030 system configuration */
-    if (dyploContext.num_dma_nodes > 2)
-        return id;
-
-    switch (id)
-    {
-    case 0:
-        return 0;
-    /* PR nodes */
-    case 4:
-        return 1;
-    case 5:
-        return 2;
-    case 6:
-        return 3;
-    case 7:
-        return 4;
-    /* DMA nodes */
-    case 12:
-        return 5;
-    case 13:
-        return 6;
-    }
-
-    return -1;
-}
-
 void MainWindow::prNodeLinkActivated(const QString &link)
 {
-    int node = gui_id_to_node(link.toInt());
+    int node = link.toInt();
     if (node < 0)
         return;
     if (externals.isAquired(node))

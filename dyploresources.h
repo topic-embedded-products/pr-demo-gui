@@ -3,18 +3,18 @@
 
 #include <QVector>
 
-struct DyploNodeInfo
+struct DyploNodeResource
 {
     int id; /* Node ID */
     const char* name; /* Descriptive name */
 
-    DyploNodeInfo(int _id, const char* _name = NULL):
+    DyploNodeResource(int _id, const char* _name = NULL):
         id(_id), name(_name)
     {}
 
-    DyploNodeInfo() {} /* For use in vector et al */
+    DyploNodeResource() {} /* For use in vector et al */
 };
 
-typedef QVector<DyploNodeInfo> DyploNodeInfoList;
+typedef QVector<DyploNodeResource> DyploNodeResourceList;
 
 #endif // DYPLORESOURCES_H

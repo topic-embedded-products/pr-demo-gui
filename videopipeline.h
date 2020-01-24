@@ -25,7 +25,7 @@ public:
     int activate(DyploContext* dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd);
     void deactivate();
 
-    void enumDyploResources(DyploNodeInfoList& list);
+    void enumDyploResources(DyploNodeResourceList& list);
 signals:
     void renderedImage(const QImage &image);
     void setActive(bool active);
