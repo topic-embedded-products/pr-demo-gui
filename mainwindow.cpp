@@ -190,7 +190,7 @@ void MainWindow::showIn(const QRect &rec)
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    bool isSmall = size().width() < 1600;
+    bool isSmall = size().width() < 1600 || size().height() < 900;
     ui_toppanel->lblPuzzlePieces->setVisible(!isSmall);
 }
 
