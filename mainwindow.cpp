@@ -41,6 +41,16 @@ MainWindow::MainWindow(QWidget *parent) :
     floorplanWidget = new QScrollArea();
     ui_floorplan->setupUi(floorplanWidget);
 
+    QPixmap floorplanImage("/usr/share/floorplan.png");
+    if (floorplanImage.isNull())
+    {
+        qWarning() << "/usr/share/floorplan.png not found, using default 7030 image";
+    }
+    else
+    {
+        ui_floorplan->floorplan->setPixmap(floorplanImage);
+    }
+
     parseDyploConfig(&nodeInfo);
     QWidget* nodeParent = ui_floorplan->fFloorplanFPGAContents;
     for(auto& item : nodeInfo)
@@ -57,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent) :
                 uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 20%);\ncolor: rgb(192, 242, 242);\n");
                 break;
         case DyploNodeInfo::FIXED:
-                uiItem = new QLabel(item.function, nodeParent);
+                uiItem = new QLabel(QString::fromStdString(item.function), nodeParent);
                 uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 35%);\ncolor: rgb(192, 242, 192);\n");
                 break;
         case DyploNodeInfo::PR:

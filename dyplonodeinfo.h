@@ -3,7 +3,10 @@
 
 #include <QRect>
 #include <QVector>
-#include <QString>
+
+#include <ostream>
+#include <istream>
+#include <string>
 
 class QLabel;
 
@@ -15,17 +18,20 @@ public:
     int id;
     QRect geometry;
     DyploNodeType type;
-    QString function;
+    std::string function;
     QLabel *widget;
 
-    DyploNodeInfo(int i, const QRect &g, DyploNodeType t, const QString& f = ""):
-        id(i), geometry(g), type(t), function(f), widget(NULL)
+    DyploNodeInfo(int i, const QRect &g, DyploNodeType t, const std::string& f = ""):
+        id(i), geometry(g), type(t), function(f), widget(nullptr)
     {}
     DyploNodeInfo():
-        id(-1), type(PR), widget(NULL)
+        id(-1), type(PR), widget(nullptr)
     {}
 };
 
 void parseDyploConfig(QVector<DyploNodeInfo> *result);
+
+std::ostream& operator<<(std::ostream& os, const DyploNodeInfo& n);
+std::istream& operator>>(std::istream& is, DyploNodeInfo& n);
 
 #endif // DYPLONODEINFO_H
