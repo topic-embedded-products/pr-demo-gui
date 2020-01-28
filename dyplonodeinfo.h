@@ -29,7 +29,7 @@ public:
     {}
 };
 
-void parseDyploConfig(QVector<DyploNodeInfo> *result);
+int parseDyploConfig(QVector<DyploNodeInfo> *result);
 
 std::ostream& operator<<(std::ostream& os, const DyploNodeInfo& n);
 std::istream& operator>>(std::istream& is, DyploNodeInfo& n);

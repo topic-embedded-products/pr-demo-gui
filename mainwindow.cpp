@@ -51,7 +51,6 @@ MainWindow::MainWindow(QWidget *parent) :
         ui_floorplan->floorplan->setPixmap(floorplanImage);
     }
 
-    parseDyploConfig(&dyploContext.nodeInfo);
     QWidget* nodeParent = ui_floorplan->fFloorplanFPGAContents;
     for(auto& item : dyploContext.nodeInfo)
     {
