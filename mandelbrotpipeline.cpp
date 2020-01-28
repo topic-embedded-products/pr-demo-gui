@@ -141,13 +141,13 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
            }
            connectedNodes = outgoing.size();
         }
-       catch (const std::exception& ex)
-       {
+        catch (const std::exception& ex)
+        {
            qDebug() << "Mandelbrot cannot allocate DMA" << outgoing.size() << ":" << ex.what();
            for (MandelbrotIncomingList::iterator it = incoming.begin(); it != incoming.end(); ++it)
                delete *it;
            incoming.clear();
-       }
+        }
     }
 
     if (!connectedNodes)
@@ -155,29 +155,22 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     {
         unsigned int nodes_per_mux = 4;
         /* Create a mux to gather data */
-        for (unsigned int mux_index = dyplo->fixed_node_mux_begin; mux_index <= dyplo->fixed_node_mux_end; ++mux_index)
+        for (;;)
         {
             if (connectedNodes == outgoing.size())
                 break;
-            unsigned int mux_node_id = mux_index;
+            int mux_node_id = -1;
             try
             {
-                dyplo::HardwareConfig *next_mux;
-                /* If we run out of fixed nodes, try allocating a mux in PR (required on the 7015) */
-                if (mux_index == dyplo->fixed_node_mux_end)
-                {
-                    next_mux = dyplo->createConfig(BITSTREAM_MUX_NAME);
-                    mux_node_id = next_mux->getNodeIndex();
-                }
-                else
-                    next_mux = new dyplo::HardwareConfig(dyplo->GetHardwareContext(), mux_index);
-                next_mux->enableNode();
+                dyplo::HardwareConfig *next_mux = dyplo->createConfig(BITSTREAM_MUX_NAME);
                 mux.push_back(next_mux);
+                mux_node_id = next_mux->getNodeIndex();
+                next_mux->enableNode();
             }
             catch (const std::exception& ex)
             {
-                qDebug() << __func__ << "Failed to aquire mux" << mux_index << "\n" << ex.what();
-                continue; /* Try the next one, maybe we're running multiple demos */
+                qDebug() << __func__ << "Failed to aquire mux:\n" << ex.what();
+                break; /* Stop setting things up */
             }
             /* Create incoming DMA node */
             MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,

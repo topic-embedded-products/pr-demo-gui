@@ -23,18 +23,11 @@ static unsigned int get_dyplo_dma_node_count()
 }
 
 DyploContext::DyploContext():
-    num_dma_nodes(get_dyplo_dma_node_count()),
-    fixed_node_mux_begin(0),
-    fixed_node_mux_end(0)
+    num_dma_nodes(get_dyplo_dma_node_count())
 {
     try
     {
         hwControl = new dyplo::HardwareControl(hardwareCtx);
-        /* Lame detection of layout: num_dma_nodes=2 means we're on the 7015 system */
-        if (num_dma_nodes > 2) {
-            fixed_node_mux_begin = 2;
-            fixed_node_mux_end = 4;
-        }
     }
     catch (const std::exception& ex)
     {
@@ -51,6 +44,21 @@ dyplo::HardwareConfig *DyploContext::createConfig(const char *name)
 {
     if (!hwControl)
         throw dyplo::IOException(name, ENODEV);
+
+    for (const auto& node: nodeInfo)
+    {
+        if (node.type == DyploNodeInfo::FIXED && node.function == name)
+        {
+            int handle = hardwareCtx.openConfig(node.id, O_RDWR);
+            if (handle != -1)
+            {
+                qDebug() << "Found fixed node id:" << node.id << " for " << name;
+                return new dyplo::HardwareConfig(handle);
+            }
+        }
+    }
+
+    /* Find a matching PR node */
     unsigned int candidates = hardwareCtx.getAvailablePartitions(name);
     if (candidates == 0)
         throw dyplo::IOException(name, ENODEV);

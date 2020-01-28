@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "dyplo/hardware.hpp"
+#include "dyplonodeinfo.h"
 
 class DyploContext: public QObject
 {
@@ -20,9 +21,8 @@ public:
     dyplo::HardwareDMAFifo* createDMAFifo(int access);
 
     /* Hardware layout */
+    QVector<DyploNodeInfo> nodeInfo;
     unsigned int num_dma_nodes;
-    unsigned int fixed_node_mux_begin;
-    unsigned int fixed_node_mux_end;
 
 signals:
     void programmedPartial(int node, const char* name, unsigned int size, unsigned int microseconds);

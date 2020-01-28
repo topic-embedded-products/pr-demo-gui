@@ -71,7 +71,6 @@ private:
     QString programmingMetrics;
     IIOTempSensor* tempSensor;
     SupplyCurrentSensor* currentSensor;
-    QVector<DyploNodeInfo> nodeInfo;
     int updateStatsRobin;
 
     QLabel *getPrRegion(int id);

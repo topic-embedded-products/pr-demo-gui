@@ -51,9 +51,9 @@ MainWindow::MainWindow(QWidget *parent) :
         ui_floorplan->floorplan->setPixmap(floorplanImage);
     }
 
-    parseDyploConfig(&nodeInfo);
+    parseDyploConfig(&dyploContext.nodeInfo);
     QWidget* nodeParent = ui_floorplan->fFloorplanFPGAContents;
-    for(auto& item : nodeInfo)
+    for(auto& item : dyploContext.nodeInfo)
     {
         QLabel *uiItem;
         switch (item.type)
@@ -239,7 +239,7 @@ static void showLabelColor(QLabel* label, const QColor& color)
 
 QLabel* MainWindow::getPrRegion(int id)
 {
-    for (const auto& item: nodeInfo)
+    for (const auto& item: dyploContext.nodeInfo)
     {
         if (item.id == id)
             return item.widget;
@@ -250,7 +250,7 @@ QLabel* MainWindow::getPrRegion(int id)
 
 void MainWindow::updateFloorplan()
 {
-    for (const auto& item: nodeInfo)
+    for (const auto& item: dyploContext.nodeInfo)
         hideLabel(item.widget);
 
     DyploNodeResourceList nodes;

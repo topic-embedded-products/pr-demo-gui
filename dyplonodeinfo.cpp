@@ -25,8 +25,8 @@ static void use7030config(QVector<DyploNodeInfo> *result)
     result->push_back(DyploNodeInfo(0, QRect(110,  90, 91, 41), DyploNodeInfo::CPU));
     result->push_back(DyploNodeInfo(1, QRect(110, 140, 91, 41), DyploNodeInfo::CPU));
 
-    result->push_back(DyploNodeInfo(2, QRect(330, 430, 71, 81), DyploNodeInfo::FIXED, "mux"));
-    result->push_back(DyploNodeInfo(3, QRect(330, 520, 71, 81), DyploNodeInfo::FIXED, "mux"));
+    result->push_back(DyploNodeInfo(2, QRect(330, 430, 71, 81), DyploNodeInfo::FIXED, "stream_mux"));
+    result->push_back(DyploNodeInfo(3, QRect(330, 520, 71, 81), DyploNodeInfo::FIXED, "stream_mux"));
 
     result->push_back(DyploNodeInfo(4, QRect(210, 35, 110, 192), DyploNodeInfo::PR));
     result->push_back(DyploNodeInfo(5, QRect(210, 227, 110, 192), DyploNodeInfo::PR));
