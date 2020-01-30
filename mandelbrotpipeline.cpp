@@ -192,6 +192,21 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     {
         qDebug() << "Mandelbrot pipeline:" << ex.what();
     }
+    /* If mux allocation failed, we may be able to set up things using a DMA channel directly */
+    while (connectedNodes < outgoing.size())
+    {
+        try {
+            int node_index = outgoing[connectedNodes]->getNodeIndex();
+            MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+                    video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
+                    node_index);
+            incoming.push_back(next_incoming);
+            ++connectedNodes;
+        } catch (const std::exception& ex) {
+            qDebug() << __func__ << "Failed to aquire extra DMA:\n" << ex.what();
+            break; /* Stop trying */
+        }
+    }
     if (!connectedNodes)
     {
         /* Nothing allocated, cannot start */
@@ -435,7 +450,7 @@ void MandelbrotWorker::commit_work()
     {
         ssize_t written = to_logic->write(&work_to_do[0], bytes_to_write);
         if (written != bytes_to_write)
-            qCritical() << __func__ << "written" << written;
+            qCritical() << __func__ << "Only written" << written << "of" << bytes_to_write << "(should not happen)";
         work_to_do.clear(); /* works with DMA... */
     }
 }
