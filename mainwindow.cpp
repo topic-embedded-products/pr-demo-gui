@@ -66,8 +66,10 @@ MainWindow::MainWindow(QWidget *parent) :
                 uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 20%);\ncolor: rgb(192, 242, 242);\n");
                 break;
         case DyploNodeInfo::FIXED:
-                uiItem = new QLabel(QString::fromStdString(item.function), nodeParent);
+                uiItem = new QPRRegionLabel(nodeParent);
+                uiItem->setText(QString::fromStdString(item.function));
                 uiItem->setStyleSheet("background-color: rgba(12, 242, 46, 35%);\ncolor: rgb(192, 242, 192);\n");
+                connect(uiItem, SIGNAL(linkActivated(QString)), this, SLOT(prNodeLinkActivated(QString)));
                 break;
         case DyploNodeInfo::PR:
                 uiItem = new QPRRegionLabel(nodeParent);
@@ -215,7 +217,7 @@ static QString getOverlayBackgroundColor(const QColor& color)
     int red, green, blue = 0;
     color.getRgb(&red, &green, &blue);
 
-    return QString("background-color: rgba(%1,%2,%3,50\%);\n"
+    return QString("background-color: rgba(%1,%2,%3,50\\%);\n"
                    "color: rgb(%4,%5,%6);")
             .arg(red).arg(green).arg(blue)
             .arg(bright(red)).arg(bright(green)).arg(bright(blue));
@@ -227,7 +229,7 @@ static void hideLabel(QLabel* label)
         return;
 
     label->setStyleSheet("background-color: rgba(0,0,0,0%);\n"
-                         "color: rgba(0,0,0);");
+                         "color: rgba(0,0,0);\n");
     label->setText("");
 }
 
