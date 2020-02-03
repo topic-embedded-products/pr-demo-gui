@@ -52,6 +52,7 @@ private slots:
     void btnPresetA_clicked();
     void btnPresetB_clicked();
     void btnPresetC_clicked();
+    void pbTopicLogo_clicked();
 
 private:
     Ui::MainWindow*   ui;

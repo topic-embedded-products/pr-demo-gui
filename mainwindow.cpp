@@ -126,6 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui_fractal->btnPresetB, SIGNAL(pressed()), this, SLOT(btnPresetB_clicked()));
     connect(ui_fractal->btnPresetC, SIGNAL(pressed()), this, SLOT(btnPresetC_clicked()));
 
+    connect(ui_toppanel->pbTopicLogo, SIGNAL(clicked()), this, SLOT(pbTopicLogo_clicked()));
     updateFloorplan();
 }
 
@@ -485,3 +486,10 @@ void MainWindow::btnPresetC_clicked()
     mandelbrot.resetZoom();
 }
 
+void MainWindow::pbTopicLogo_clicked()
+{
+    if (isFullScreen())
+        showNormal();
+    else
+        showFullScreen();
+}
