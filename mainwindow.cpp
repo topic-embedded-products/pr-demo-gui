@@ -156,7 +156,7 @@ void MainWindow::showIn(const QRect &rec)
         /* Enough space to fit it all in a single window */
         QHBoxLayout *hlb = new QHBoxLayout();
         hlb->setSpacing(4);
-        hlb->setContentsMargins(4, 4, 4, 4);
+        hlb->setContentsMargins(4, 0, 4, 0);
         vla->addLayout(hlb, 1);
 
         QVBoxLayout *vl = new QVBoxLayout();
@@ -202,8 +202,11 @@ void MainWindow::showIn(const QRect &rec)
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    bool isSmall = size().width() < 1600 || size().height() < 900;
-    ui_toppanel->lblPuzzlePieces->setVisible(!isSmall);
+    bool showHeader = isFullScreen();
+    if (showHeader)
+        showHeader &= !(size().width() < 1600 || size().height() < 900);
+    ui_toppanel->lblPuzzlePieces->setVisible(showHeader);
+    ui_toppanel->lblTitle->setVisible(showHeader);
 }
 
 static int bright(int c)

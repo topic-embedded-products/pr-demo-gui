@@ -235,6 +235,27 @@
     </spacer>
    </item>
    <item>
+    <widget class="QLabel" name="lblTitle">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>16</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(233, 82, 35);</string>
+     </property>
+     <property name="text">
+      <string>Partial Reconfiguration Demo</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="lblPuzzlePieces">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
