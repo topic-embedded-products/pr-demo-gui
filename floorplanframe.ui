@@ -2,16 +2,8 @@
 <ui version="4.0">
  <class>FloorplanFrame</class>
  <widget class="QScrollArea" name="FloorplanFrame">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>707</width>
-    <height>888</height>
-   </rect>
-  </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -27,24 +19,39 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>709</width>
-     <height>872</height>
+     <width>686</width>
+     <height>851</height>
     </rect>
    </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>4</number>
+    </property>
+    <property name="leftMargin">
+     <number>4</number>
+    </property>
+    <property name="topMargin">
+     <number>4</number>
+    </property>
+    <property name="rightMargin">
+     <number>4</number>
+    </property>
+    <property name="bottomMargin">
+     <number>4</number>
+    </property>
     <item>
      <widget class="QFrame" name="fFloorplanFPGAContents">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>671</width>
-        <height>841</height>
-       </size>
       </property>
       <property name="palette">
        <palette>
@@ -113,22 +120,42 @@
       <property name="autoFillBackground">
        <bool>true</bool>
       </property>
-      <widget class="QLabel" name="floorplan">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>671</width>
-         <height>841</height>
-        </rect>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>0</number>
        </property>
-       <property name="text">
-        <string/>
+       <property name="leftMargin">
+        <number>0</number>
        </property>
-       <property name="pixmap">
-        <pixmap resource="resources.qrc">:/image/fpga</pixmap>
+       <property name="topMargin">
+        <number>0</number>
        </property>
-      </widget>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="floorplan">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="resources.qrc">:/image/fpga</pixmap>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
