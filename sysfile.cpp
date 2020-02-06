@@ -80,7 +80,7 @@ void write_sys_file(const char* filename, int value)
         throw dyplo::IOException(filename);
 }
 
-IIOTempSensor::IIOTempSensor():
+IIOTempSensor::IIOTempSensor(const char *inputname):
     offset(0),
     scale(1.0f)
 {
@@ -103,18 +103,12 @@ IIOTempSensor::IIOTempSensor():
                 try
                 {
                     std::string basename(path);
-                    basename += "in_temp0";
+                    basename += inputname; // "in_temp0" or "in_temp0_ps_temp"
                     filename_raw = basename + "_raw";
                     if (access(filename_raw.c_str(), R_OK) != 0)
                     {
-                        /* On ultrascale, the names are different */
-                        basename = path + "in_temp0_ps_temp";
-                        filename_raw = basename + "_raw";
-                        if (access(filename_raw.c_str(), R_OK) != 0)
-                        {
-                            filename_raw.clear();
-                            break;
-                        }
+                        filename_raw.clear();
+                        break;
                     }
                     std::string param(basename);
                     param += "_offset";

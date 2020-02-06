@@ -72,6 +72,8 @@ private:
     QString programmingMetrics;
     IIOTempSensor* tempSensor;
     SupplyCurrentSensor* currentSensor;
+    IIOTempSensor* tempSensorPL;
+    IIOTempSensor* tempSensorRemote;
     int updateStatsRobin;
 
     QLabel *getPrRegion(int id);

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>886</width>
+    <width>1185</width>
     <height>68</height>
    </rect>
   </property>
@@ -168,7 +168,7 @@
             </widget>
            </item>
            <item row="0" column="2">
-            <widget class="QLabel" name="label_2">
+            <widget class="QLabel" name="lblHeadCurrentFpga">
              <property name="text">
               <string>FPGA</string>
              </property>
@@ -191,7 +191,7 @@
             </widget>
            </item>
            <item row="1" column="2">
-            <widget class="QLabel" name="label_8">
+            <widget class="QLabel" name="lblHeadCurrentCpu">
              <property name="text">
               <string>CPU</string>
              </property>

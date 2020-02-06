@@ -37,7 +37,7 @@ protected:
     float scale;
     std::string filename_raw;
 public:
-    IIOTempSensor();
+    IIOTempSensor(const char *inputname);
     int getTempMilliDegrees();
 };
 

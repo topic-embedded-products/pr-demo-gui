@@ -25,6 +25,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui_video(new Ui::VideoFrame),
     ui_floorplan(new Ui::FloorplanFrame),
     ui_toppanel(new Ui::TopPanel),
+    tempSensor(NULL),
+    currentSensor(NULL),
+    tempSensorPL(NULL),
+    tempSensorRemote(NULL),
     updateStatsRobin(0)
 {
     ui->setupUi(this);
@@ -89,23 +93,48 @@ MainWindow::MainWindow(QWidget *parent) :
     ui_fractal->partialProgramMetrics->hide();
 
     try {
-        tempSensor = new IIOTempSensor();
+        tempSensor = new IIOTempSensor("in_temp0"); /* For 7-series */
     } catch (const std::exception&) {
         tempSensor = NULL;
-        ui_toppanel->lblTemperature->setText("n.a.");
-        ui_toppanel->lblTemperature->setEnabled(false);
     }
-    try {
-        currentSensor = new SupplyCurrentSensor();
-        ui_toppanel->lblCurrentCpu->setNum(currentSensor->read_cpu_supply_current_mA());
-    } catch (const std::exception&) {
-        currentSensor = NULL;
-        ui_toppanel->lblCurrentCpu->setText("n.a.");
-        ui_toppanel->lblCurrentCpu->setEnabled(false);
-        ui_toppanel->lblCurrentFpga->setText("n.a.");
-        ui_toppanel->lblCurrentFpga->setEnabled(false);
+    if (tempSensor) {
+        /* For 7-series there's a SupplyCurrentSensor */
+        try {
+            currentSensor = new SupplyCurrentSensor();
+            ui_toppanel->lblCurrentCpu->setNum(currentSensor->read_cpu_supply_current_mA());
+        } catch (const std::exception&) {
+            currentSensor = NULL;
+            ui_toppanel->lblCurrentCpu->setText("n.a.");
+            ui_toppanel->lblCurrentCpu->setEnabled(false);
+            ui_toppanel->lblCurrentFpga->setText("n.a.");
+            ui_toppanel->lblCurrentFpga->setEnabled(false);
+        }
+    } else {
+        try {
+            tempSensor = new IIOTempSensor("in_temp0_ps_temp"); /* For Ultrascale */
+        } catch (const std::exception&) {
+            tempSensor = NULL;
+            ui_toppanel->lblTemperature->setText("n.a.");
+            ui_toppanel->lblTemperature->setEnabled(false);
+        }
+        try {
+            tempSensorPL = new IIOTempSensor("in_temp2_pl_temp");
+            ui_toppanel->lblCurrentFpga->setText("...");
+        } catch (const std::exception&) {
+            tempSensorPL = NULL;
+            ui_toppanel->lblCurrentFpga->setText("n.a.");
+            ui_toppanel->lblCurrentFpga->setEnabled(false);
+        }
+        try {
+            tempSensorRemote = new IIOTempSensor("in_temp1_remote_temp");
+            ui_toppanel->lblHeadCurrentCpu->setText("Remote");
+            ui_toppanel->lblCurrentCpu->setText("...");
+        } catch (const std::exception&) {
+            tempSensorRemote = NULL;
+            ui_toppanel->lblCurrentCpu->setText("n.a.");
+            ui_toppanel->lblCurrentCpu->setEnabled(false);
+        }
     }
-
     connect(&cpuStatsTimer, SIGNAL(timeout()), this, SLOT(updateCpuStats()));
     cpuStatsTimer.start(1000);
 
@@ -417,7 +446,7 @@ void MainWindow::updateCpuStats()
                 int t = tempSensor->getTempMilliDegrees() / 1000;
                 ui_toppanel->lblTemperature->setText(QString("%1 \xB0" "C").arg(t));
             } catch (const std::exception& ex) {
-                qDebug() << "Failed reading temperature:" << ex.what();
+                qDebug() << "Failed reading PS temperature:" << ex.what();
             }
         }
         if (currentSensor)
@@ -429,6 +458,27 @@ void MainWindow::updateCpuStats()
                         currentSensor->read_fpga_supply_current_mA()));
             } catch (const std::exception& ex) {
                 qDebug() << "Failed reading current:" << ex.what();
+            }
+        }
+        else
+        {
+            if (tempSensorPL)
+            {
+                try {
+                    int t = tempSensorPL->getTempMilliDegrees() / 1000;
+                    ui_toppanel->lblCurrentFpga->setText(QString("%1 \xB0" "C").arg(t));
+                } catch (const std::exception& ex) {
+                    qDebug() << "Failed reading PL temperature:" << ex.what();
+                }
+            }
+            if (tempSensorRemote)
+            {
+                try {
+                    int t = tempSensorRemote->getTempMilliDegrees() / 1000;
+                    ui_toppanel->lblCurrentCpu->setText(QString("%1 \xB0" "C").arg(t));
+                } catch (const std::exception& ex) {
+                    qDebug() << "Failed reading remote temperature:" << ex.what();
+                }
             }
         }
         break;
