@@ -1,2 +1,15 @@
 To compile on standalone PC:
+
+Install libdyplo, e.g. build with
+  git clone git://github.com/topic-embedded-products/libdyplo
+  cd libdyplo
+  autoreconf --install
+  ./configure --prefix=$HOME/usr
+  make -j 8
+  make install
+
+Set PKG_CONFIG_PATH to find it
+  export PKG_CONFIG_PATH=$HOME/usr/lib/pkgconfig
+
 Just open in Qt Creator and build.
+  qtcreator pr-demo-gui.pro
