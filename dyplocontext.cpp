@@ -134,18 +134,28 @@ dyplo::HardwareConfig *DyploContext::createConfig(const char *name)
             }
             else
             {
-                hwControl->disableNode(id);
-                std::string filename = hardwareCtx.findPartition(name, id);
-                unsigned int size;
-                QElapsedTimer myTimer; /* TODO: More accurate */
-                myTimer.start();
+                try
                 {
-                    dyplo::HardwareProgrammer programmer(hardwareCtx, *hwControl);
-                    size = programmer.fromFile(filename.c_str());
+                    hwControl->disableNode(id);
+                    std::string filename = hardwareCtx.findPartition(name, id);
+                    unsigned int size;
+                    QElapsedTimer myTimer; /* TODO: More accurate */
+                    myTimer.start();
+                    {
+                        dyplo::HardwareProgrammer programmer(hardwareCtx, *hwControl);
+                        size = programmer.fromFile(filename.c_str());
+                    }
+                    unsigned int elapsed = myTimer.nsecsElapsed() / 1000;
+                    emit programmedPartial(id, name, size, elapsed);
+                    return new dyplo::HardwareConfig(handle);
                 }
-                unsigned int elapsed = myTimer.nsecsElapsed() / 1000;
-                emit programmedPartial(id, name, size, elapsed);
-                return new dyplo::HardwareConfig(handle);
+                catch (const std::exception &ex)
+                {
+                    // If something goes wrong here, we must close the handle
+                    // otherwise it'll be leaked.
+                    ::close(handle);
+                    emit programmedPartial(id, ex.what(), 0, 0);
+                }
             }
         }
         ++id;

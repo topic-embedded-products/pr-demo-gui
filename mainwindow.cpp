@@ -345,7 +345,10 @@ void MainWindow::showProgrammingMetrics(int node, const char *name, unsigned int
     unsigned int mbps = (((unsigned long long)size * 1000000) / microseconds) >> 20;
     if (!programmingMetrics.isEmpty())
         programmingMetrics += "\n";
-    programmingMetrics += QString("Partial '%1' into %2:\n%3kB in %4.%5 ms (%6 MB/s)").arg(name).arg(node).arg(size>>10).arg(microseconds/1000).arg((microseconds/100) % 10).arg(mbps);
+    if (size)
+        programmingMetrics += QString("Node %2: %1").arg(name).arg(node);
+    else
+        programmingMetrics += QString("Partial '%1' into %2:\n%3kB in %4.%5 ms (%6 MB/s)").arg(name).arg(node).arg(size>>10).arg(microseconds/1000).arg((microseconds/100) % 10).arg(mbps);
     ui_fractal->partialProgramMetrics->setText(programmingMetrics);
     ui_fractal->partialProgramMetrics->show();
 
