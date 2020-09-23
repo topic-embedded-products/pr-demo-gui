@@ -13,3 +13,7 @@ Set PKG_CONFIG_PATH to find it
 
 Just open in Qt Creator and build.
   qtcreator pr-demo-gui.pro
+
+
+To cross-compile and debug directly on target, see:
+  http://downloads.topic.nl/dev.html
