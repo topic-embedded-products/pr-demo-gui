@@ -111,6 +111,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     catch (const std::exception& ex)
     {
         // No action, this is normal...
+        qDebug() << "Worker allocation ended:" << ex.what();
     }
 
     if (outgoing.empty())
@@ -134,7 +135,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
         {
            for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
            {
-               MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+               MandelbrotIncomingDMA *next_incoming = new MandelbrotIncomingDMA(this, dyplo,
                        video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
                        (*it)->getNodeIndex());
                incoming.push_back(next_incoming);
@@ -173,7 +174,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
                 break; /* Stop setting things up */
             }
             /* Create incoming DMA node */
-            MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+            MandelbrotIncomingDMA *next_incoming = new MandelbrotIncomingDMA(this, dyplo,
                     video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
                     mux_node_id);
             incoming.push_back(next_incoming);
@@ -197,7 +198,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     {
         try {
             int node_index = outgoing[connectedNodes]->getNodeIndex();
-            MandelbrotIncoming *next_incoming = new MandelbrotIncoming(this, dyplo,
+            MandelbrotIncomingDMA *next_incoming = new MandelbrotIncomingDMA(this, dyplo,
                     video_lines_per_block * (video_width + SCANLINE_HEADER_SIZE),
                     node_index);
             incoming.push_back(next_incoming);
@@ -207,6 +208,21 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
             break; /* Stop trying */
         }
     }
+    /* And failing that, we can use a CPU node to fetch the data */
+    while (connectedNodes < outgoing.size())
+    {
+        try {
+            int node_index = outgoing[connectedNodes]->getNodeIndex();
+            MandelbrotIncomingCPU *next_incoming = new MandelbrotIncomingCPU(this, dyplo,
+                    video_width + SCANLINE_HEADER_SIZE, node_index);
+            incoming.push_back(next_incoming);
+            ++connectedNodes;
+        } catch (const std::exception& ex) {
+            qDebug() << __func__ << "Failed to aquire extra CPU node:\n" << ex.what();
+            break; /* Stop trying */
+        }
+    }
+
     if (!connectedNodes)
     {
         /* Nothing allocated, cannot start */
@@ -364,10 +380,18 @@ void MandelbrotPipeline::requestNext(unsigned short worker_index)
     }
 }
 
-
-MandelbrotIncoming::MandelbrotIncoming(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index):
+MandelbrotIncomingBase::MandelbrotIncomingBase(MandelbrotPipeline *parent):
     pipeline(parent),
-    fromLogicNotifier(NULL),
+    fromLogicNotifier(NULL)
+{
+}
+
+MandelbrotIncomingBase::~MandelbrotIncomingBase()
+{
+}
+
+MandelbrotIncomingDMA::MandelbrotIncomingDMA(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index):
+    MandelbrotIncomingBase(parent),
     from_logic(dyplo->createDMAFifo(O_RDONLY)),
     video_blocksize(blocksize)
 {
@@ -387,7 +411,7 @@ MandelbrotIncoming::MandelbrotIncoming(MandelbrotPipeline *parent, DyploContext 
     fromLogicNotifier->setEnabled(true);
 }
 
-MandelbrotIncoming::~MandelbrotIncoming()
+MandelbrotIncomingDMA::~MandelbrotIncomingDMA()
 {
     delete fromLogicNotifier;
     fromLogicNotifier = NULL;
@@ -395,7 +419,7 @@ MandelbrotIncoming::~MandelbrotIncoming()
     from_logic = NULL;
 }
 
-void MandelbrotIncoming::dataAvailable(int)
+void MandelbrotIncomingDMA::dataAvailable(int)
 {
     dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
     if (!block)
@@ -406,6 +430,49 @@ void MandelbrotIncoming::dataAvailable(int)
     block->bytes_used = video_blocksize;
     from_logic->enqueue(block);
 }
+
+MandelbrotIncomingCPU::MandelbrotIncomingCPU(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index):
+    MandelbrotIncomingBase(parent),
+    from_logic(new dyplo::HardwareFifo(dyplo->GetHardwareContext().openAvailableReadFifo())),
+    buffer(new uchar[blocksize]),
+    video_blocksize(blocksize),
+    bytes_in_buffer(0)
+{
+    from_logic->addRouteFrom(node_index);
+    from_logic->fcntl_set_flag(O_NONBLOCK);
+    from_logic->setDataTreshold(blocksize);
+    // Flush data from buffer
+    while (::read(from_logic->handle, buffer, blocksize) > 0)
+        ;
+    // Set up non-blocking IO on the GUI thread
+    fromLogicNotifier = new QSocketNotifier(from_logic->handle, QSocketNotifier::Read, this);
+    connect(fromLogicNotifier, SIGNAL(activated(int)), this, SLOT(dataAvailable(int)));
+    fromLogicNotifier->setEnabled(true);
+}
+
+MandelbrotIncomingCPU::~MandelbrotIncomingCPU()
+{
+    delete fromLogicNotifier;
+    fromLogicNotifier = NULL;
+    delete from_logic;
+    from_logic = NULL;
+    delete [] buffer;
+}
+
+void MandelbrotIncomingCPU::dataAvailable(int)
+{
+    ssize_t bytes = from_logic->read(buffer + bytes_in_buffer, video_blocksize - bytes_in_buffer);
+    if (bytes)
+    {
+        bytes_in_buffer += bytes;
+        if (bytes_in_buffer == video_blocksize)
+        {
+            pipeline->dataAvailable(buffer, video_blocksize);
+            bytes_in_buffer = 0;
+        }
+    }
+}
+
 
 MandelbrotWorker::MandelbrotWorker(DyploContext *dyplo):
     node(dyplo->createConfig(BITSTREAM_MANDELBROT))

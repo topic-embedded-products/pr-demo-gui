@@ -29,22 +29,47 @@ struct MandelbrotRequest;
 class MandelbrotWorker;
 typedef std::vector<MandelbrotWorker *> MandelbrotWorkerList;
 
-class MandelbrotIncoming : public QObject
+class MandelbrotIncomingBase : public QObject
 {
     Q_OBJECT
 protected:
     MandelbrotPipeline *pipeline;
     QSocketNotifier* fromLogicNotifier;
+public:
+    MandelbrotIncomingBase(MandelbrotPipeline *parent);
+    virtual ~MandelbrotIncomingBase();
+};
+
+
+class MandelbrotIncomingDMA : public MandelbrotIncomingBase
+{
+    Q_OBJECT
+protected:
     dyplo::HardwareDMAFifo *from_logic;
     unsigned int video_blocksize;
 public:
-    MandelbrotIncoming(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index);
-    ~MandelbrotIncoming();
+    MandelbrotIncomingDMA(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index);
+    ~MandelbrotIncomingDMA();
 private slots:
     void dataAvailable(int socket);
 };
 
-typedef std::vector<MandelbrotIncoming *> MandelbrotIncomingList;
+class MandelbrotIncomingCPU : public MandelbrotIncomingBase
+{
+    Q_OBJECT
+protected:
+    dyplo::HardwareFifo *from_logic;
+    uchar* buffer;
+    unsigned int video_blocksize;
+    unsigned int bytes_in_buffer;
+public:
+    MandelbrotIncomingCPU(MandelbrotPipeline *parent, DyploContext *dyplo, int blocksize, int node_index);
+    ~MandelbrotIncomingCPU();
+private slots:
+    void dataAvailable(int socket);
+};
+
+typedef std::vector<MandelbrotIncomingBase *> MandelbrotIncomingList;
 
 typedef std::vector<dyplo::HardwareConfig *> HardwareConfigList;
 
