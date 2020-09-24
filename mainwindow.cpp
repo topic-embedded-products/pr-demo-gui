@@ -382,6 +382,12 @@ void MainWindow::showMandelbrotStats(unsigned int frames, unsigned int milliseco
     else
         message = "-";
     ui_fractal->lblMandelbrotStats->setText(message);
+
+    for (std::vector< std::pair<int, int> >::const_iterator it = mandelbrot.completed_work.begin(); it != mandelbrot.completed_work.end(); ++it)
+    {
+        QLabel* l = getPrRegion(it->second);
+        l->setText(QString("mandelbrot\n%2").arg(it->first));
+    }
 }
 
 void MainWindow::buttonVideodemo_toggled(bool checked)

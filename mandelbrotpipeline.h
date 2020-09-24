@@ -98,6 +98,8 @@ public:
     double getY() const { return y; }
     double getZ() const { return z; }
 
+    std::vector< std::pair<int, int> > completed_work;
+
 public slots:
     void deactivate();
 

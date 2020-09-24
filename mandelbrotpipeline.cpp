@@ -99,6 +99,8 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     for (int i = 0; i < MANDELBROT_RENDER_IMAGES; ++i)
         rendered_image[i].lines_remaining = video_height;
 
+    completed_work.clear();
+
     /* Allocate the workers first */
     try
     {
@@ -236,6 +238,7 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
         outgoing.pop_back();
     }
     unsigned int outgoing_size = outgoing.size();
+
     /* Send out work for one frame or twice the number of workers, whichever is smaller */
     unsigned int lines_to_send = outgoing_size * video_lines_per_block * 2;
     if (lines_to_send > (unsigned int)video_height)
@@ -243,7 +246,10 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
     for (unsigned int line = 0; line < lines_to_send; ++line)
         requestNext(line  % outgoing_size);
     for (MandelbrotWorkerList::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
+    {
+        completed_work.push_back(std::pair<int, int>(0, (*it)->getNodeIndex()));
         (*it)->commit_work();
+    }
     emit setActive(true);
     return 0;
 }
@@ -324,6 +330,7 @@ void MandelbrotPipeline::dataAvailable(const uchar *data, unsigned int bytes_use
             currentImage->lines_remaining = video_height;
         }
 
+        ++completed_work[worker_index].first;
         requestNext(worker_index);
         data += video_width + SCANLINE_HEADER_SIZE;
     }
@@ -371,6 +378,7 @@ void MandelbrotPipeline::requestNext(unsigned short worker_index)
     request.incr = fixed_z;
 
     outgoing[worker_index]->work_to_do.push_back(request);
+
     ++current_scanline;
     if (current_scanline == video_height)
     {
