@@ -39,6 +39,8 @@ protected:
     void deactivate_impl();
     void allocYUVbuffer();
 
+    void update_buffer_sizes();
+
     VideoCapture capture;
     QSocketNotifier* captureNotifier;
     QSocketNotifier* fromLogicNotifier;
@@ -53,6 +55,9 @@ protected:
 
     unsigned int software_flags;
     unsigned int* yuv_buffer;
+    VideoCaptureSettings settings;
+    unsigned int yuv_size;
+    unsigned int rgb_size;
 };
 
 #endif // VIDEOPIPELINE_H

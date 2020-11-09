@@ -1,4 +1,10 @@
-
+struct VideoCaptureSettings {
+  unsigned int width;
+  unsigned int height;
+  unsigned int stride; /* Bytes per line */
+  unsigned int size;   /* Bytes per image */
+  unsigned int format; /* FOURCC code */
+};
 
 class VideoCapture
 {
@@ -7,7 +13,7 @@ public:
 	~VideoCapture();
 
     int open(const char* filename); /* returns -1 on error */
-    int setup(int width, int height, int fps);
+    int setup(int width, int height, int fps, /* out */ VideoCaptureSettings *settings);
     int start();
     int begin_grab(const void **data, unsigned int *bytesused);
     int end_grab();

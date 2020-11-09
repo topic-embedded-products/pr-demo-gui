@@ -85,7 +85,7 @@ static int set_framerate(int fd, int fps)
     return xioctl(fd, VIDIOC_S_PARM, &parm);
 }
 
-int VideoCapture::setup(int width, int height, int fps)
+int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *settings)
 {
     struct v4l2_cropcap cropcap;
     struct v4l2_crop crop;
@@ -134,6 +134,13 @@ int VideoCapture::setup(int width, int height, int fps)
     min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
     if (fmt.fmt.pix.sizeimage < min)
             fmt.fmt.pix.sizeimage = min;
+
+    settings->width  = fmt.fmt.pix.width;
+    settings->height = fmt.fmt.pix.height;
+    settings->stride = fmt.fmt.pix.bytesperline;
+    settings->size   = fmt.fmt.pix.sizeimage;
+    settings->format = fmt.fmt.pix.pixelformat;
+
     if (set_framerate(fd, fps) < 0) {
         qWarning() << "Failed to set" << fps << "FPS mode. Camera supports these:";
         /* Obtain possible settings for framerate... */

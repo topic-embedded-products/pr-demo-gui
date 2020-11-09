@@ -7,11 +7,7 @@
 #include <dyplo/hardware.hpp>
 #include "dyplocontext.h"
 
-#define VIDEO_WIDTH  640
-#define VIDEO_HEIGHT 480
 #define VIDEO_FRAMERATE 25
-#define VIDEO_YUV_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*2)
-#define VIDEO_RGB_SIZE (VIDEO_WIDTH*VIDEO_HEIGHT*3)
 
 static const char BITSTREAM_YUVTORGB[] = "yuvtorgb";
 static const char BITSTREAM_FILTER_YUV_GRAY[] = "grayscale";
@@ -21,6 +17,9 @@ static const char BITSTREAM_FILTER_YUV_TRESHOLD[] = "treshold";
 #define SOFTWARE_FLAG_CONTRAST 1
 #define SOFTWARE_FLAG_GRAY 2
 #define SOFTWARE_FLAG_THD 4
+
+#define DEFAULT_WIDTH  640
+#define DEFAULT_HEIGHT 480
 
 VideoPipeline::VideoPipeline():
     captureNotifier(NULL),
@@ -35,7 +34,6 @@ VideoPipeline::VideoPipeline():
     software_flags(0),
     yuv_buffer(NULL)
 {
-
 }
 
 VideoPipeline::~VideoPipeline()
@@ -55,11 +53,12 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
         return r;
     }
 
-    r = capture.setup(VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FRAMERATE);
+    r = capture.setup(DEFAULT_WIDTH, DEFAULT_WIDTH, VIDEO_FRAMERATE, &settings);
     if (r < 0) {
         qWarning() << "Failed to configure video capture device";
         return r;
     }
+    update_buffer_sizes();
 
     r = capture.start();
     if (r < 0) {
@@ -98,9 +97,9 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
             dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, headnode, 0);
             tailnode = headnode;
             from_logic = dyplo->createDMAFifo(O_RDONLY);
-            from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_RGB_SIZE, 2, true);
+            from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, rgb_size, 2, true);
             from_logic->addRouteFrom(tailnode);
-            to_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, VIDEO_YUV_SIZE, 2, false);
+            to_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, yuv_size, 2, false);
             to_logic->fcntl_set_flag(O_NONBLOCK);
             if (filterTreshold)
                 filterTreshold->enableNode();
@@ -113,7 +112,7 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
             for (unsigned int i = 0; i < from_logic->count(); ++i)
             {
                 dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
-                block->bytes_used = VIDEO_RGB_SIZE;
+                block->bytes_used = rgb_size;
                 from_logic->enqueue(block);
             }
             from_logic->fcntl_set_flag(O_NONBLOCK);
@@ -342,10 +341,10 @@ void VideoPipeline::frameAvailableSoft(int)
     }
 
     if (!rgb_buffer)
-        rgb_buffer = new unsigned char[VIDEO_RGB_SIZE];
+        rgb_buffer = new unsigned char[rgb_size];
 
-    if (size > VIDEO_YUV_SIZE)
-        size = VIDEO_YUV_SIZE;
+    if (size > yuv_size)
+        size = yuv_size;
     if (software_flags & SOFTWARE_FLAG_CONTRAST) {
         contrast((const unsigned int*)data, size, yuv_buffer);
         data = yuv_buffer;
@@ -359,7 +358,7 @@ void VideoPipeline::frameAvailableSoft(int)
     else
         torgb((const uchar*)data, size, rgb_buffer);
 
-    emit renderedImage(QImage(rgb_buffer, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888));
+    emit renderedImage(QImage(rgb_buffer, settings.width, settings.height, QImage::Format_RGB888));
 
     r = capture.end_grab();
     if (r < 0)
@@ -379,8 +378,8 @@ void VideoPipeline::frameAvailableHard(int)
             deactivate();
         return;
     }
-    if (size > VIDEO_YUV_SIZE)
-        size = VIDEO_YUV_SIZE;
+    if (size > yuv_size)
+        size = yuv_size;
 
     dyplo::HardwareDMAFifo::Block *block = to_logic->dequeue();
     if (block)
@@ -401,9 +400,9 @@ void VideoPipeline::frameAvailableDyplo(int)
     if (!block)
         return;
 
-    emit renderedImage(QImage((const uchar*)block->data, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888));
+    emit renderedImage(QImage((const uchar*)block->data, settings.width, settings.height, QImage::Format_RGB888));
 
-    block->bytes_used = VIDEO_RGB_SIZE;
+    block->bytes_used = rgb_size;
     from_logic->enqueue(block);
 }
 
@@ -411,6 +410,12 @@ void VideoPipeline::allocYUVbuffer()
 {
     if (!yuv_buffer)
     {
-        yuv_buffer = (unsigned int*)malloc(VIDEO_YUV_SIZE);
+        yuv_buffer = (unsigned int*)malloc(yuv_size);
     }
+}
+
+void VideoPipeline::update_buffer_sizes()
+{
+    yuv_size = settings.size;
+    rgb_size = settings.width * settings.height * 3;
 }
