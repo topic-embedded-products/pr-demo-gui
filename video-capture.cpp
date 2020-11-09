@@ -33,13 +33,15 @@ VideoCapture::VideoCapture():
       fd(-1),
       buffers(NULL),
       n_buffers(0),
-      current_buf(new struct v4l2_buffer)
+      current_buf(new struct v4l2_buffer),
+      current_planes(new struct v4l2_plane)
 {
 }
 
 VideoCapture::~VideoCapture()
 {
     close();
+    delete current_planes;
     delete current_buf;
 }
 
@@ -56,16 +58,24 @@ int VideoCapture::open(const char *filename)
 
     if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
        /* Not a V4L2 device */
+       // qDebug() << filename << "Not a V4L2 device (VIDIOC_QUERYCAP)";
        close();
        return -errno;
     }
 
-    if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
+    if (!(cap.device_caps & (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
+        // qDebug() << filename << "No capture capability (V4L2_CAP_VIDEO_CAPTURE[_MPLANE])";
         close();
         return -EINVAL;
     }
 
+    /* Xilinx video requires MPLANE interface */
+    multiplanar = (!(cap.device_caps & (V4L2_CAP_VIDEO_CAPTURE)));
+    if (multiplanar)
+        qDebug() << filename << "requires MPLANE";
+
     if (!(cap.device_caps & V4L2_CAP_STREAMING)) {
+        qDebug() << filename << "No streaming capability (V4L2_CAP_STREAMING)";
         close();
         return -EINVAL;
     }
@@ -73,16 +83,27 @@ int VideoCapture::open(const char *filename)
     return fd;
 }
 
-static int set_framerate(int fd, int fps)
+static int set_framerate(int fd, enum v4l2_buf_type type, int fps)
 {
     struct v4l2_streamparm parm;
 
     CLEAR(parm);
-    parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    parm.type = type;
     parm.parm.capture.capability = V4L2_CAP_TIMEPERFRAME;
     parm.parm.capture.timeperframe.numerator = 1;
     parm.parm.capture.timeperframe.denominator = fps;
     return xioctl(fd, VIDIOC_S_PARM, &parm);
+}
+
+static bool supports_frame_size(int fd)
+{
+    struct v4l2_frmsizeenum fse;
+    CLEAR(fse);
+    fse.index = 0;
+    fse.pixel_format = V4L2_PIX_FMT_YUYV;
+
+    int ret = xioctl(fd, VIDIOC_ENUM_FRAMESIZES, &fse);
+    return ret >= 0;
 }
 
 int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *settings)
@@ -90,13 +111,14 @@ int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *se
     struct v4l2_cropcap cropcap;
     struct v4l2_crop crop;
     struct v4l2_format fmt;
+    enum v4l2_buf_type type = multiplanar ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;
     unsigned int min;
 
     /* Select video input, video standard and tune here. */
 
     CLEAR(cropcap);
 
-    cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    cropcap.type = type;
 
     if (0 == xioctl(fd, VIDIOC_CROPCAP, &cropcap)) {
             crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -117,35 +139,75 @@ int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *se
     }
 
     CLEAR(fmt);
-
-    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    fmt.fmt.pix.width       = width;
-    fmt.fmt.pix.height      = height;
-    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-    fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
-
+    fmt.type = type;
+    /*
+     * Workaround issue with Xilinx' capture device that does not
+     * really support changing the resolution. It fails to enumerate
+     * so we use that as a way to determine whether we can set the
+     * output.
+     */
+    if (supports_frame_size(fd)) {
+        if (multiplanar) {
+            fmt.fmt.pix_mp.width       = width;
+            fmt.fmt.pix_mp.height      = height;
+            fmt.fmt.pix_mp.pixelformat = V4L2_PIX_FMT_YUYV;
+            fmt.fmt.pix_mp.field       = V4L2_FIELD_INTERLACED;
+            fmt.fmt.pix_mp.num_planes  = 1;
+        } else {
+            fmt.fmt.pix.width       = width;
+            fmt.fmt.pix.height      = height;
+            fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+            fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+        }
+    } else {
+        /* Retrieve format */
+        if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt)) {
+            qDebug() << "VIDIOC_G_FMT:" << errno;
+            return -errno;
+        }
+        if (multiplanar) {
+            fmt.fmt.pix_mp.pixelformat = V4L2_PIX_FMT_YUYV;
+            fmt.fmt.pix_mp.field       = V4L2_FIELD_INTERLACED;
+            fmt.fmt.pix_mp.num_planes  = 1;
+        } else {
+            fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+            fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+        }
+    }
     if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
         return -errno;
 
-    /* Buggy driver paranoia. */
-    min = fmt.fmt.pix.width * 2;
-    if (fmt.fmt.pix.bytesperline < min)
-            fmt.fmt.pix.bytesperline = min;
-    min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
-    if (fmt.fmt.pix.sizeimage < min)
-            fmt.fmt.pix.sizeimage = min;
+    if (multiplanar) {
+        if (fmt.fmt.pix_mp.num_planes != 1) {
+            qDebug() << "Unsupported num_planes:" << fmt.fmt.pix_mp.num_planes;
+        }
+        settings->width  = fmt.fmt.pix_mp.width;
+        settings->height = fmt.fmt.pix_mp.height;
+        settings->stride = fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
+        settings->size   = fmt.fmt.pix_mp.plane_fmt[0].sizeimage;
+        settings->format = fmt.fmt.pix_mp.pixelformat;
+    } else {
+        /* Buggy driver paranoia. */
+        min = fmt.fmt.pix.width * 2;
+        if (fmt.fmt.pix.bytesperline < min)
+                fmt.fmt.pix.bytesperline = min;
+        min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
+        if (fmt.fmt.pix.sizeimage < min)
+                fmt.fmt.pix.sizeimage = min;
 
-    settings->width  = fmt.fmt.pix.width;
-    settings->height = fmt.fmt.pix.height;
-    settings->stride = fmt.fmt.pix.bytesperline;
-    settings->size   = fmt.fmt.pix.sizeimage;
-    settings->format = fmt.fmt.pix.pixelformat;
+        settings->width  = fmt.fmt.pix.width;
+        settings->height = fmt.fmt.pix.height;
+        settings->stride = fmt.fmt.pix.bytesperline;
+        settings->size   = fmt.fmt.pix.sizeimage;
+        settings->format = fmt.fmt.pix.pixelformat;
+    }
 
-    if (set_framerate(fd, fps) < 0) {
+    if (set_framerate(fd, type, fps) < 0) {
         qWarning() << "Failed to set" << fps << "FPS mode. Camera supports these:";
         /* Obtain possible settings for framerate... */
         struct v4l2_frmivalenum frmival;
-        memset(&frmival,0,sizeof(frmival));
+        memset(&frmival, 0, sizeof(frmival));
+        frmival.type = type;
         frmival.pixel_format = fmt.fmt.pix.pixelformat;
         frmival.width = fmt.fmt.pix.width;
         frmival.height = fmt.fmt.pix.height;
@@ -167,22 +229,29 @@ int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *se
 
 int VideoCapture::start()
 {
-    enum v4l2_buf_type type;
+    enum v4l2_buf_type type = multiplanar ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
     for (unsigned int i = 0; i < n_buffers; ++i)
     {
             struct v4l2_buffer buf;
             CLEAR(buf);
-            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buf.type = type;
             buf.memory = V4L2_MEMORY_MMAP;
             buf.index = i;
-            if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
-                    return -errno;
+            if (multiplanar) {
+                buf.m.planes = current_planes;
+                buf.length = 1;
+            }
+            if (-1 == xioctl(fd, VIDIOC_QBUF, &buf)) {
+                qDebug() << "VIDIOC_QBUF:" << errno;
+                return -errno;
+            }
     }
 
-    type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    if (-1 == xioctl(fd, VIDIOC_STREAMON, &type))
+    if (-1 == xioctl(fd, VIDIOC_STREAMON, &type)) {
+        qDebug() << "VIDIOC_STREAMON:" << errno;
         return -errno;
+    }
 
     return 0;
 }
@@ -190,8 +259,12 @@ int VideoCapture::start()
 int VideoCapture::begin_grab(const void **data, unsigned int *bytesused)
 {
     CLEAR(*current_buf);
-    current_buf->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    current_buf->type = multiplanar ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;
     current_buf->memory = V4L2_MEMORY_MMAP;
+    if (multiplanar) {
+        current_buf->m.planes = current_planes;
+        current_buf->length = 1;
+    }
 
     if (-1 == xioctl(fd, VIDIOC_DQBUF, current_buf)) {
             switch (errno) {
@@ -209,7 +282,7 @@ int VideoCapture::begin_grab(const void **data, unsigned int *bytesused)
         return -EFAULT;
 
     *data = buffers[current_buf->index].start;
-    *bytesused = current_buf->bytesused;
+    *bytesused = multiplanar ? current_buf->m.planes[0].bytesused : current_buf->bytesused;
 
     return 1;
 }
@@ -224,7 +297,7 @@ int VideoCapture::end_grab()
 
 int VideoCapture::stop()
 {
-    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    enum v4l2_buf_type type = multiplanar ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;;
     if (-1 == xioctl(fd, VIDIOC_STREAMOFF, &type))
             return -errno;
     return 0;
@@ -259,7 +332,7 @@ int VideoCapture::init_mmap()
 
     CLEAR(req);
     req.count = 4;
-    req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    req.type = multiplanar ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;
     req.memory = V4L2_MEMORY_MMAP;
 
     if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
@@ -276,25 +349,43 @@ int VideoCapture::init_mmap()
     for (n_buffers = 0; n_buffers < req.count; ++n_buffers)
     {
         struct v4l2_buffer buf;
+        struct v4l2_plane planes[1];
 
         CLEAR(buf);
-        buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        buf.type        = multiplanar ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;
         buf.memory      = V4L2_MEMORY_MMAP;
         buf.index       = n_buffers;
+        if (multiplanar) {
+            buf.m.planes = planes;
+            buf.length = 1;
+        }
 
-        if (-1 == xioctl(fd, VIDIOC_QUERYBUF, &buf))
+        if (-1 == xioctl(fd, VIDIOC_QUERYBUF, &buf)) {
+                qDebug() << "VIDIOC_QUERYBUF failed:" << errno;
                 return -errno;
+        }
 
-        buffers[n_buffers].length = buf.length;
-        buffers[n_buffers].start =
-                mmap(NULL /* start anywhere */,
-                      buf.length,
-                      PROT_READ | PROT_WRITE /* required */,
-                      MAP_SHARED /* recommended */,
-                      fd, buf.m.offset);
-
-        if (MAP_FAILED == buffers[n_buffers].start)
-                return -EFAULT;
+        if (multiplanar) {
+            buffers[n_buffers].length = planes[0].length;
+            buffers[n_buffers].start =
+                    mmap(NULL /* start anywhere */,
+                          planes[0].length,
+                          PROT_READ | PROT_WRITE /* required */,
+                          MAP_SHARED /* recommended */,
+                          fd, planes[0].m.mem_offset);
+        } else {
+            buffers[n_buffers].length = buf.length;
+            buffers[n_buffers].start =
+                    mmap(NULL /* start anywhere */,
+                          buf.length,
+                          PROT_READ | PROT_WRITE /* required */,
+                          MAP_SHARED /* recommended */,
+                          fd, buf.m.offset);
+        }
+        if (MAP_FAILED == buffers[n_buffers].start) {
+            qDebug() << "mmap failed";
+            return -EFAULT;
+        }
     }
 
     return 0;

@@ -43,26 +43,36 @@ VideoPipeline::~VideoPipeline()
 
 int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd)
 {
+    int index;
     int r;
+    char dev[16];
 
-    r = capture.open("/dev/video1");
-    if (r < 0)
-        r = capture.open("/dev/video0");
-    if (r < 0) {
-        qWarning() << "Failed to open video capture device";
-        return r;
+    /* Walk downwards so we prefer the last addition to the system */
+    for (index = 9; index >= 0; --index)
+    {
+        snprintf(dev, sizeof(dev), "/dev/video%d", index);
+        r = capture.open(dev);
+        if (r < 0)
+            continue;
+
+        r = capture.setup(DEFAULT_WIDTH, DEFAULT_WIDTH, VIDEO_FRAMERATE, &settings);
+        if (r < 0) {
+            qDebug() << "Failed to configure video capture device" << dev;
+            continue;
+        }
+        update_buffer_sizes();
+
+        r = capture.start();
+        if (r < 0) {
+            qDebug() << "Failed to start video capture device" << dev;
+            continue;
+        }
+
+        break;
     }
 
-    r = capture.setup(DEFAULT_WIDTH, DEFAULT_WIDTH, VIDEO_FRAMERATE, &settings);
-    if (r < 0) {
-        qWarning() << "Failed to configure video capture device";
-        return r;
-    }
-    update_buffer_sizes();
-
-    r = capture.start();
-    if (r < 0) {
-        qWarning() << "Failed to start video capture device";
+    if (r) {
+        qWarning() << "No capture device available";
         return r;
     }
 

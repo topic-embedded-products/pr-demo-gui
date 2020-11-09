@@ -33,6 +33,8 @@ protected:
     buffer* buffers;
     unsigned int n_buffers;
     struct v4l2_buffer *current_buf;
+    struct v4l2_plane *current_planes;
+    bool multiplanar;
 
     int init_mmap();
 };
