@@ -40,6 +40,7 @@ VideoCapture::VideoCapture():
 VideoCapture::~VideoCapture()
 {
     close();
+    delete current_buf;
 }
 
 int VideoCapture::open(const char *filename)
