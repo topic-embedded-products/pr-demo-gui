@@ -169,6 +169,9 @@ int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *se
             fmt.fmt.pix_mp.pixelformat = V4L2_PIX_FMT_YUYV;
             fmt.fmt.pix_mp.field       = V4L2_FIELD_INTERLACED;
             fmt.fmt.pix_mp.num_planes  = 1;
+            /* Workaround for weird behavior of Xilinx capture device, which reports 1920/1 and similar nonsense */
+            if (fmt.fmt.pix_mp.width == 1920)
+                fmt.fmt.pix_mp.height = 1080;
         } else {
             fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
             fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
