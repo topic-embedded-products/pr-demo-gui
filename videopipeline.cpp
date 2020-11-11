@@ -18,9 +18,6 @@ static const char BITSTREAM_FILTER_YUV_TRESHOLD[] = "treshold";
 #define SOFTWARE_FLAG_GRAY 2
 #define SOFTWARE_FLAG_THD 4
 
-#define DEFAULT_WIDTH  640
-#define DEFAULT_HEIGHT 480
-
 VideoPipeline::VideoPipeline():
     captureNotifier(NULL),
     fromLogicNotifier(NULL),
@@ -41,11 +38,14 @@ VideoPipeline::~VideoPipeline()
     deactivate_impl();
 }
 
-int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd)
+int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd)
 {
     int index;
     int r;
     char dev[16];
+
+    /* Make sure width is a multiple of 4 */
+    width &= ~3;
 
     /* Walk downwards so we prefer the last addition to the system */
     for (index = 9; index >= 0; --index)
@@ -55,10 +55,32 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
         if (r < 0)
             continue;
 
-        r = capture.setup(DEFAULT_WIDTH, DEFAULT_WIDTH, VIDEO_FRAMERATE, &settings);
+        r = capture.setup(width, height, VIDEO_FRAMERATE, &settings);
         if (r < 0) {
             qDebug() << "Failed to configure video capture device" << dev;
             continue;
+        }
+        if ((int)settings.height > height)
+        {
+            crop_top = (settings.height - height) / 2;
+            crop_height = height;
+        }
+        else
+        {
+            crop_top = 0;
+            crop_height = settings.height;
+        }
+        if ((int)settings.width > width + 32) /* Only when worth the effort */
+        {
+            crop_left = (settings.width - width);
+            /* Align on multiple of 4 pixels */
+            crop_left &= ~3;
+            crop_width = ((unsigned int)(width + 3) >> 2) << 2;
+        }
+        else
+        {
+            crop_left = 0;
+            crop_width = settings.width;
         }
         update_buffer_sizes();
 
@@ -149,7 +171,7 @@ int VideoPipeline::activate(DyploContext *dyplo, bool hardwareYUV, bool filterCo
             software_flags |= SOFTWARE_FLAG_GRAY;
         if (filterThd)
             software_flags |= SOFTWARE_FLAG_THD;
-        if (software_flags)
+        if (software_flags || crop_width != settings.width)
             allocYUVbuffer();
         captureNotifier = new QSocketNotifier(capture.device_handle(), QSocketNotifier::Read, this);
         connect(captureNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableSoft(int)));
@@ -197,6 +219,8 @@ void VideoPipeline::deactivate_impl()
     capture.close();
     free(yuv_buffer);
     yuv_buffer = NULL;
+    free(rgb_buffer);
+    rgb_buffer = NULL;
 }
 
 void VideoPipeline::enumDyploResources(DyploNodeResourceList &list)
@@ -350,11 +374,28 @@ void VideoPipeline::frameAvailableSoft(int)
         return;
     }
 
+    /* Vertical cropping is easy, just move the pointer */
+    data = (const char*)data + crop_offset;
+    if (size > yuv_size)
+        size = yuv_size;
+
+    if (crop_width != settings.width)
+    {
+        unsigned int src_stride = settings.width * 2;
+        unsigned int dst_stride = crop_width * 2;
+        char *dest = (char*)yuv_buffer;
+        for (unsigned int y = 0; y < crop_height; ++y)
+        {
+            memcpy(dest, data, dst_stride);
+            dest += dst_stride;
+            data = (const char*)data + src_stride;
+        }
+        data = yuv_buffer;
+    }
+
     if (!rgb_buffer)
         rgb_buffer = new unsigned char[rgb_size];
 
-    if (size > yuv_size)
-        size = yuv_size;
     if (software_flags & SOFTWARE_FLAG_CONTRAST) {
         contrast((const unsigned int*)data, size, yuv_buffer);
         data = yuv_buffer;
@@ -368,7 +409,7 @@ void VideoPipeline::frameAvailableSoft(int)
     else
         torgb((const uchar*)data, size, rgb_buffer);
 
-    emit renderedImage(QImage(rgb_buffer, settings.width, settings.height, QImage::Format_RGB888));
+    emit renderedImage(QImage(rgb_buffer, crop_width, crop_height, QImage::Format_RGB888));
 
     r = capture.end_grab();
     if (r < 0)
@@ -388,6 +429,8 @@ void VideoPipeline::frameAvailableHard(int)
             deactivate();
         return;
     }
+    /* crop image vertically */
+    data = (const char*)data + crop_offset;
     if (size > yuv_size)
         size = yuv_size;
 
@@ -395,7 +438,23 @@ void VideoPipeline::frameAvailableHard(int)
     if (block)
     {
         block->bytes_used = size;
-        memcpy(block->data, data, size);
+
+        if (crop_width != settings.width)
+        {
+            unsigned int src_stride = settings.width * 2;
+            unsigned int dst_stride = crop_width * 2;
+            char *dest = (char*)block->data;
+            for (unsigned int y = 0; y < crop_height; ++y)
+            {
+                memcpy(dest, data, dst_stride);
+                dest += dst_stride;
+                data = (const char*)data + src_stride;
+            }
+        }
+        else
+        {
+            memcpy(block->data, data, size);
+        }
         to_logic->enqueue(block);
     }
 
@@ -410,7 +469,7 @@ void VideoPipeline::frameAvailableDyplo(int)
     if (!block)
         return;
 
-    emit renderedImage(QImage((const uchar*)block->data, settings.width, settings.height, QImage::Format_RGB888));
+    emit renderedImage(QImage((const uchar*)block->data, crop_width, crop_height, QImage::Format_RGB888));
 
     block->bytes_used = rgb_size;
     from_logic->enqueue(block);
@@ -426,6 +485,13 @@ void VideoPipeline::allocYUVbuffer()
 
 void VideoPipeline::update_buffer_sizes()
 {
-    yuv_size = settings.size;
-    rgb_size = settings.width * settings.height * 3;
+    crop_offset = settings.width * crop_top * 2;
+    crop_offset += crop_left * 2;
+    yuv_size = crop_width * crop_height * 2;
+    rgb_size = crop_width * crop_height * 3;
+
+    qDebug() << settings.width << "x" << settings.height <<
+                "crop=" << crop_offset << crop_left << crop_top << crop_width << crop_height <<
+                "yuvsize=" << yuv_size <<
+                "rgbsize=" << rgb_size;
 }

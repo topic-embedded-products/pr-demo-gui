@@ -31,5 +31,6 @@ void VideoWidget::updatePixmap(const QImage& image)
 {
     framerateCounter.frame();
     pixmap = QPixmap::fromImage(image);
+    pixmap.detach(); /* Make sure we're not sharing the data */
     update();
 }

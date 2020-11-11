@@ -397,6 +397,8 @@ void MainWindow::buttonVideodemo_toggled(bool checked)
         ui_video->lblVideoStats->setText("---");
         if (video.activate(
                     &dyploContext,
+                    ui_video->video->width(),
+                    ui_video->video->height(),
                     ui_video->cbYUVToRGB->isChecked(),
                     ui_video->cbFilterContrast->isChecked(),
                     ui_video->cbFilterGray->isChecked(),

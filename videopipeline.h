@@ -22,7 +22,7 @@ public:
     VideoPipeline();
     ~VideoPipeline();
 
-    int activate(DyploContext* dyplo, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd);
+    int activate(DyploContext* dyplo, int width, int height, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd);
     void deactivate();
 
     void enumDyploResources(DyploNodeResourceList& list);
@@ -58,6 +58,12 @@ protected:
     VideoCaptureSettings settings;
     unsigned int yuv_size;
     unsigned int rgb_size;
+
+    unsigned int crop_top;
+    unsigned int crop_left;
+    unsigned int crop_height;
+    unsigned int crop_width;
+    unsigned int crop_offset; /* in bytes */
 };
 
 #endif // VIDEOPIPELINE_H
