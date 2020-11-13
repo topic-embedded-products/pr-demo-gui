@@ -72,7 +72,7 @@ int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool har
         }
         if ((int)settings.width > width + 32) /* Only when worth the effort */
         {
-            crop_left = (settings.width - width);
+            crop_left = (settings.width - width) / 2;
             /* Align on multiple of 4 pixels */
             crop_left &= ~3;
             crop_width = ((unsigned int)(width + 3) >> 2) << 2;
