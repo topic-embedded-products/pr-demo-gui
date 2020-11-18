@@ -13,6 +13,9 @@ static const char BITSTREAM_YUVTORGB[] = "yuvtorgb";
 static const char BITSTREAM_FILTER_YUV_GRAY[] = "grayscale";
 static const char BITSTREAM_FILTER_YUV_CONTRAST[] = "contrast";
 static const char BITSTREAM_FILTER_YUV_TRESHOLD[] = "treshold";
+static const char BITSTREAM_FILTER_RGB32_GRAY[] = "rgb_grayscale";
+static const char BITSTREAM_FILTER_RGB32_CONTRAST[] = "rgb_contrast";
+static const char BITSTREAM_FILTER_RGB32_TRESHOLD[] = "rgb_treshold";
 
 #define SOFTWARE_FLAG_CONTRAST 1
 #define SOFTWARE_FLAG_GRAY 2
@@ -39,6 +42,80 @@ VideoPipeline::~VideoPipeline()
 {
     deactivate_impl();
 }
+
+int VideoPipeline::openIOCamera(DyploContext *dyplo, bool filterContr, bool filterGray, bool filterThd)
+{
+    try
+    {
+        ioCamera = dyplo->createConfig(BITSTREAM_CAMERA_XRGB);
+
+        /* Hardcoded settings */
+        settings.format = 0;
+        settings.width = 1920;
+        settings.height = 1080;
+        settings.stride = settings.width * 4;
+        settings.size = settings.stride * settings.height;
+        rgb_size = settings.size;
+        yuv_size = settings.size;
+        crop_width = settings.width;
+        crop_height = settings.height;
+        outputformat = QImage::Format_RGB32; /* IO camera outputs 32 bit color */
+
+        int tailnode = ioCamera->getNodeIndex();
+        ioCamera->disableNode();
+        ioCamera->resetWriteFifos(0xf);
+
+        if (filterContr) {
+            filterContrast = dyplo->createConfig(BITSTREAM_FILTER_RGB32_CONTRAST);
+            int id = filterContrast->getNodeIndex();
+            dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+            tailnode = id;
+        }
+        if (filterGray) {
+            filterGrayscale = dyplo->createConfig(BITSTREAM_FILTER_RGB32_GRAY);
+            int id = filterGrayscale->getNodeIndex();
+            dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+            tailnode = id;
+        }
+        if (filterThd) {
+            filterTreshold = dyplo->createConfig(BITSTREAM_FILTER_RGB32_TRESHOLD);
+            int id = filterTreshold->getNodeIndex();
+            dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+            tailnode = id;
+        }
+        from_logic = dyplo->createDMAFifo(O_RDONLY);
+        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, rgb_size, 2, true);
+        from_logic->addRouteFrom(tailnode);
+        /* Prime reader */
+        for (unsigned int i = 0; i < from_logic->count(); ++i)
+        {
+            dyplo::HardwareDMAFifo::Block *block = from_logic->dequeue();
+            block->bytes_used = rgb_size;
+            from_logic->enqueue(block);
+        }
+        from_logic->fcntl_set_flag(O_NONBLOCK);
+        fromLogicNotifier = new QSocketNotifier(from_logic->handle, QSocketNotifier::Read, this);
+        connect(fromLogicNotifier, SIGNAL(activated(int)), this, SLOT(frameAvailableDyplo(int)));
+        fromLogicNotifier->setEnabled(true);
+
+        if (filterTreshold)
+            filterTreshold->enableNode();
+        if (filterGrayscale)
+            filterGrayscale->enableNode();
+        if (filterContr)
+            filterContrast->enableNode();
+        ioCamera->enableNode();
+    }
+    catch (const std::exception& ex)
+    {
+        qCritical() << ex.what();
+        deactivate_impl(); /* Cleanup */
+        return -1; /* Hmm... */
+    }
+
+    return 0;
+}
+
 
 int VideoPipeline::openCaptureDevice(int width, int height)
 {
@@ -104,11 +181,22 @@ int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool har
     /* Make sure width is a multiple of 4 */
     width &= ~3;
 
+    r = openIOCamera(dyplo, filterContr, filterGray, filterThd);
+    if (r == 0)
+    {
+        /* We're done */
+        emit setActive(true);
+        return 0;
+    }
+
     r = openCaptureDevice(width, height);
     if (r) {
         qWarning() << "No capture device available";
         return r;
     }
+
+    /* Software camera outputs 24 bit color */
+    outputformat = QImage::Format_RGB888;
 
     if (hardwareYUV)
     {
