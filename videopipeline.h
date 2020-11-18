@@ -2,10 +2,10 @@
 #define VIDEOPIPELINE_H
 
 #include <QObject>
+#include <QImage>
 #include "video-capture.h"
 #include "dyploresources.h"
 
-class QImage;
 class QSocketNotifier;
 class DyploContext;
 
@@ -26,6 +26,7 @@ public:
     void deactivate();
 
     void enumDyploResources(DyploNodeResourceList& list);
+
 signals:
     void renderedImage(const QImage &image);
     void setActive(bool active);
@@ -36,6 +37,7 @@ private slots:
     void frameAvailableDyplo(int socket);
 
 protected:
+    int openCaptureDevice(int width, int height);
     void deactivate_impl();
     void allocYUVbuffer();
 
@@ -49,9 +51,10 @@ protected:
     dyplo::HardwareDMAFifo *to_logic;
     dyplo::HardwareDMAFifo *from_logic;
     dyplo::HardwareConfig *yuv2rgb;
-    dyplo::HardwareConfig *filter1;
+    dyplo::HardwareConfig *filterContrast;
     dyplo::HardwareConfig *filterTreshold;
-    dyplo::HardwareConfig *yuvfilter1;
+    dyplo::HardwareConfig *filterGrayscale;
+    dyplo::HardwareConfig *ioCamera;
 
     unsigned int software_flags;
     unsigned int* yuv_buffer;
@@ -64,6 +67,8 @@ protected:
     unsigned int crop_height;
     unsigned int crop_width;
     unsigned int crop_offset; /* in bytes */
+
+    enum QImage::Format outputformat;
 };
 
 #endif // VIDEOPIPELINE_H

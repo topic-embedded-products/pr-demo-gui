@@ -1,7 +1,6 @@
 #include "videopipeline.h"
 
 #include <QDebug>
-#include <QImage>
 #include <QSocketNotifier>
 
 #include <dyplo/hardware.hpp>
@@ -9,6 +8,7 @@
 
 #define VIDEO_FRAMERATE 25
 
+static const char BITSTREAM_CAMERA_XRGB[] = "camera_xrgb";
 static const char BITSTREAM_YUVTORGB[] = "yuvtorgb";
 static const char BITSTREAM_FILTER_YUV_GRAY[] = "grayscale";
 static const char BITSTREAM_FILTER_YUV_CONTRAST[] = "contrast";
@@ -25,11 +25,13 @@ VideoPipeline::VideoPipeline():
     to_logic(NULL),
     from_logic(NULL),
     yuv2rgb(NULL),
-    filter1(NULL),
+    filterContrast(NULL),
     filterTreshold(NULL),
-    yuvfilter1(NULL),
+    filterGrayscale(NULL),
+    ioCamera(NULL),
     software_flags(0),
-    yuv_buffer(NULL)
+    yuv_buffer(NULL),
+    outputformat(QImage::Format_RGB888)
 {
 }
 
@@ -38,17 +40,13 @@ VideoPipeline::~VideoPipeline()
     deactivate_impl();
 }
 
-int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool hardwareYUV, bool filterContrast, bool filterGray, bool filterThd)
+int VideoPipeline::openCaptureDevice(int width, int height)
 {
-    int index;
     int r;
     char dev[16];
 
-    /* Make sure width is a multiple of 4 */
-    width &= ~3;
-
     /* Walk downwards so we prefer the last addition to the system */
-    for (index = 9; index >= 0; --index)
+    for (int index = 9; index >= 0; --index)
     {
         snprintf(dev, sizeof(dev), "/dev/video%d", index);
         r = capture.open(dev);
@@ -90,9 +88,23 @@ int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool har
             continue;
         }
 
-        break;
+        /* Found one that works */
+        return 0;
     }
 
+    /* Failure */
+    return -1;
+}
+
+
+int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool hardwareYUV, bool filterContr, bool filterGray, bool filterThd)
+{
+    int r;
+
+    /* Make sure width is a multiple of 4 */
+    width &= ~3;
+
+    r = openCaptureDevice(width, height);
     if (r) {
         qWarning() << "No capture device available";
         return r;
@@ -106,15 +118,15 @@ int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool har
             to_logic = dyplo->createDMAFifo(O_RDWR);
             int tailnode = to_logic->getNodeAndFifoIndex();
 
-            if (filterContrast) {
-                filter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_CONTRAST);
-                int id = filter1->getNodeIndex();
+            if (filterContr) {
+                filterContrast = dyplo->createConfig(BITSTREAM_FILTER_YUV_CONTRAST);
+                int id = filterContrast->getNodeIndex();
                 dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
                 tailnode = id;
             }
             if (filterGray) {
-                yuvfilter1 = dyplo->createConfig(BITSTREAM_FILTER_YUV_GRAY);
-                int id = yuvfilter1->getNodeIndex();
+                filterGrayscale = dyplo->createConfig(BITSTREAM_FILTER_YUV_GRAY);
+                int id = filterGrayscale->getNodeIndex();
                 dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
                 tailnode = id;
             }
@@ -135,10 +147,10 @@ int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool har
             to_logic->fcntl_set_flag(O_NONBLOCK);
             if (filterTreshold)
                 filterTreshold->enableNode();
-            if (yuvfilter1)
-                yuvfilter1->enableNode();
-            if (filter1)
-                filter1->enableNode();
+            if (filterGrayscale)
+                filterGrayscale->enableNode();
+            if (filterContr)
+                filterContrast->enableNode();
             yuv2rgb->enableNode();
             /* Prime reader */
             for (unsigned int i = 0; i < from_logic->count(); ++i)
@@ -165,7 +177,7 @@ int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool har
     else
     {
         software_flags = 0;
-        if (filterContrast)
+        if (filterContr)
             software_flags |= SOFTWARE_FLAG_CONTRAST;
         if (filterGray)
             software_flags |= SOFTWARE_FLAG_GRAY;
@@ -213,9 +225,10 @@ void VideoPipeline::deactivate_impl()
     delete from_logic;
     from_logic = NULL;
     dispose_node(&yuv2rgb);
-    dispose_node(&filter1);
+    dispose_node(&filterContrast);
     dispose_node(&filterTreshold);
-    dispose_node(&yuvfilter1);
+    dispose_node(&filterGrayscale);
+    dispose_node(&ioCamera);
     capture.close();
     free(yuv_buffer);
     yuv_buffer = NULL;
@@ -227,12 +240,14 @@ void VideoPipeline::enumDyploResources(DyploNodeResourceList &list)
 {
     if (yuv2rgb)
         list.push_back(DyploNodeResource(yuv2rgb->getNodeIndex(), BITSTREAM_YUVTORGB));
-    if (filter1)
-        list.push_back(DyploNodeResource(filter1->getNodeIndex(), BITSTREAM_FILTER_YUV_CONTRAST));
-    if (yuvfilter1)
-        list.push_back(DyploNodeResource(yuvfilter1->getNodeIndex(), BITSTREAM_FILTER_YUV_GRAY));
+    if (filterContrast)
+        list.push_back(DyploNodeResource(filterContrast->getNodeIndex(), BITSTREAM_FILTER_YUV_CONTRAST));
+    if (filterGrayscale)
+        list.push_back(DyploNodeResource(filterGrayscale->getNodeIndex(), BITSTREAM_FILTER_YUV_GRAY));
     if (filterTreshold)
         list.push_back(DyploNodeResource(filterTreshold->getNodeIndex(), BITSTREAM_FILTER_YUV_TRESHOLD));
+    if (ioCamera)
+        list.push_back(DyploNodeResource(ioCamera->getNodeIndex(), BITSTREAM_CAMERA_XRGB));
 }
 
 static inline unsigned char thd_process(unsigned char y)
@@ -469,7 +484,7 @@ void VideoPipeline::frameAvailableDyplo(int)
     if (!block)
         return;
 
-    emit renderedImage(QImage((const uchar*)block->data, crop_width, crop_height, QImage::Format_RGB888));
+    emit renderedImage(QImage((const uchar*)block->data, crop_width, crop_height, outputformat));
 
     block->bytes_used = rgb_size;
     from_logic->enqueue(block);
