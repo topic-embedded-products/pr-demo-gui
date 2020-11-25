@@ -572,7 +572,14 @@ void VideoPipeline::frameAvailableDyplo(int)
     if (!block)
         return;
 
-    emit renderedImage(QImage((const uchar*)block->data, crop_width, crop_height, outputformat));
+    unsigned int bytes = block->bytes_used;
+    if (bytes)
+    {
+        unsigned int lines = bytes / crop_width;
+        if (lines > crop_height)
+            lines = crop_height;
+        emit renderedImage(QImage((const uchar*)block->data, crop_width, lines, outputformat));
+    }
 
     block->bytes_used = rgb_size;
     from_logic->enqueue(block);
