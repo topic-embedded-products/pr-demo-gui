@@ -84,7 +84,7 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, bool filterContr, bool filt
             tailnode = id;
         }
         from_logic = dyplo->createDMAFifo(O_RDONLY);
-        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, rgb_size, 2, true);
+        from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, rgb_size, 3, true);
         from_logic->addRouteFrom(tailnode);
         /* Prime reader */
         for (unsigned int i = 0; i < from_logic->count(); ++i)
