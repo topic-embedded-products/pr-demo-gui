@@ -30,7 +30,31 @@ void VideoWidget::mousePressEvent(QMouseEvent *event)
 void VideoWidget::updatePixmap(const QImage& image)
 {
     framerateCounter.frame();
-    pixmap = QPixmap::fromImage(image);
-    pixmap.detach(); /* Make sure we're not sharing the data */
+    int w = width();
+    int h = height();
+    if (image.width() <= w && image.height() <= h)
+    {
+        pixmap = QPixmap::fromImage(image);
+        pixmap.detach(); /* Make sure we're not sharing the data */
+    }
+    else
+    {
+        QRect r;
+        if (w > image.width()) {
+            r.setLeft(0);
+            r.setWidth(image.width());
+        } else {
+            r.setLeft((image.width() - w) >> 1);
+            r.setWidth(w);
+        }
+        if (h > image.height()) {
+            r.setTop(0);
+            r.setHeight(image.height());
+        } else {
+            r.setTop((image.height() - h) >> 1);
+            r.setHeight(h);
+        }
+        pixmap = QPixmap::fromImage(image.copy(r));
+    }
     update();
 }
