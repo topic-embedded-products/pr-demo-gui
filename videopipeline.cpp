@@ -16,6 +16,7 @@ static const char BITSTREAM_FILTER_YUV_TRESHOLD[] = "treshold";
 static const char BITSTREAM_FILTER_RGB32_GRAY[] = "rgb_grayscale";
 static const char BITSTREAM_FILTER_RGB32_CONTRAST[] = "rgb_contrast";
 static const char BITSTREAM_FILTER_RGB32_TRESHOLD[] = "rgb_treshold";
+static const char BITSTREAM_FILTER_RGB32_SCALER[] = "halve_resolution";
 
 #define SOFTWARE_FLAG_CONTRAST 1
 #define SOFTWARE_FLAG_GRAY 2
@@ -50,20 +51,24 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, bool filterContr, bool filt
         ioCamera = dyplo->createConfig(BITSTREAM_CAMERA_XRGB);
 
         /* Hardcoded settings */
-        settings.format = 0;
-        settings.width = 1920;
-        settings.height = 1080;
-        settings.stride = settings.width * 4;
-        settings.size = settings.stride * settings.height;
-        rgb_size = settings.size;
-        yuv_size = settings.size;
-        crop_width = settings.width;
-        crop_height = settings.height;
-        outputformat = QImage::Format_RGB32; /* IO camera outputs 32 bit color */
+        update_rgb_settings(1920, 1080);
 
         int tailnode = ioCamera->getNodeIndex();
         ioCamera->disableNode();
         ioCamera->resetWriteFifos(0xf);
+
+        try {
+            /* Abuse pointer for different filter... */
+            yuv2rgb = dyplo->createConfig(BITSTREAM_FILTER_RGB32_SCALER);
+            int id = yuv2rgb->getNodeIndex();
+            dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+            tailnode = id;
+            update_rgb_settings(settings.width / 2, settings.height / 2);
+        }
+        catch (const std::exception& ex)
+        {
+            qDebug() << "Scaler not available" << ex.what();
+        }
 
         if (filterContr) {
             filterContrast = dyplo->createConfig(BITSTREAM_FILTER_RGB32_CONTRAST);
@@ -104,6 +109,8 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, bool filterContr, bool filt
             filterGrayscale->enableNode();
         if (filterContr)
             filterContrast->enableNode();
+        if (yuv2rgb)
+            yuv2rgb->enableNode();
         ioCamera->enableNode();
     }
     catch (const std::exception& ex)
@@ -604,4 +611,18 @@ void VideoPipeline::update_buffer_sizes()
                 "crop=" << crop_offset << crop_left << crop_top << crop_width << crop_height <<
                 "yuvsize=" << yuv_size <<
                 "rgbsize=" << rgb_size;
+}
+
+void VideoPipeline::update_rgb_settings(int width, int height)
+{
+    settings.format = 0;
+    settings.width = width;
+    settings.height = height;
+    settings.stride = settings.width * 4;
+    settings.size = settings.stride * settings.height;
+    rgb_size = settings.size;
+    yuv_size = settings.size;
+    crop_width = settings.width;
+    crop_height = settings.height;
+    outputformat = QImage::Format_RGB32; /* IO camera outputs 32 bit color */
 }
