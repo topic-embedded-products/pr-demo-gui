@@ -43,6 +43,7 @@ protected:
     void allocYUVbuffer();
 
     void update_buffer_sizes();
+    void update_rgb_settings(int width, int height);
 
     VideoCapture capture;
     QSocketNotifier* captureNotifier;
