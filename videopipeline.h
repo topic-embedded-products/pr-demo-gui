@@ -55,6 +55,7 @@ protected:
     dyplo::HardwareDMAFifo *to_logic;
     dyplo::HardwareDMAFifo *from_logic;
     dyplo::HardwareConfig *yuv2rgb;
+    dyplo::HardwareConfig *filterScaler;
     dyplo::HardwareConfig *filterContrast;
     dyplo::HardwareConfig *filterTreshold;
     dyplo::HardwareConfig *filterGrayscale;
