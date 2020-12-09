@@ -44,6 +44,20 @@ VideoPipeline::~VideoPipeline()
     deactivate_impl();
 }
 
+static void startCameraStream()
+{
+    /* Hack to start the camera stream manually... */
+    static const char* one = "1";
+    int fd = ::open("/sys/devices/platform/amba/amba:topic_mediactl@1/stream_start", O_WRONLY);
+    if (fd == -1) {
+        qDebug() << "Failed to open stream_start file";
+        return;
+    }
+    if (::write(fd, one, 1) < 0)
+        qDebug() << "Failed to write stream_start file";
+    ::close(fd);
+}
+
 int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool filterContr, bool filterGray, bool filterThd)
 {
     try
@@ -123,6 +137,8 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool
         deactivate_impl(); /* Cleanup */
         return -1; /* Hmm... */
     }
+
+    startCameraStream();
 
     return 0;
 }
