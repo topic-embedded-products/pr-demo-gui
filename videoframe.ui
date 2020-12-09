@@ -277,6 +277,20 @@ QPushButton
       </layout>
      </item>
      <item>
+      <widget class="QLabel" name="lblViewportSize">
+       <property name="text">
+        <string>(Viewport size)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblVideoSize">
+       <property name="text">
+        <string>(Video size)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer_5">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -313,7 +327,7 @@ QPushButton
      </property>
      <property name="baseSize">
       <size>
-       <width>640</width>
+       <width>960</width>
        <height>480</height>
       </size>
      </property>

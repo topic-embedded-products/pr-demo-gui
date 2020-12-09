@@ -145,6 +145,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&video, SIGNAL(setActive(bool)), this, SLOT(updateVideoDemoState(bool)));
     connect(&dyploContext, SIGNAL(programmedPartial(int,const char*,uint,uint)), this, SLOT(showProgrammingMetrics(int,const char*,uint,uint)));
     connect(&ui_video->video->framerateCounter, SIGNAL(frameRate(uint,uint)), this, SLOT(showVideoStats(uint,uint)));
+    connect(ui_video->video, SIGNAL(resized(QWidget*)), this, SLOT(videoWindowResized(QWidget*)));
 
     connect(&mandelbrot, SIGNAL(renderedImage(QImage)), ui_fractal->mandelbrot, SLOT(updatePixmap(QImage)));
     connect(&mandelbrot, SIGNAL(setActive(bool)), this, SLOT(updateMandelbrotDemoState(bool)));
@@ -159,7 +160,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui_fractal->btnPresetC, SIGNAL(pressed()), this, SLOT(btnPresetC_clicked()));
 
     connect(ui_toppanel->pbTopicLogo, SIGNAL(clicked()), this, SLOT(pbTopicLogo_clicked()));
-    updateFloorplan();
+
+    /* Init UI state (also calls updateFloorPlan) */
+    updateVideoDemoState(false);
 }
 
 MainWindow::~MainWindow()
@@ -205,6 +208,10 @@ void MainWindow::showIn(const QRect &rec)
     }
     else
     {
+        ui_toppanel->lblPuzzlePieces->setVisible(false);
+        ui_toppanel->lblTitle->setVisible(false);
+        centralWidget()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        floorplanWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         vla->addWidget(floorplanWidget, 1);
 
         setGeometry(rec.right() - width(), rec.top(),
@@ -219,6 +226,8 @@ void MainWindow::showIn(const QRect &rec)
         videoWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::Window);
         videoWindow->setGeometry(rec.left(), rec.top(), videoWindow->width(), videoWindow->height());
         videoWindow->show();
+        ui_video->video->setMinimumHeight(240);
+        ui_video->video->setMinimumWidth(320);
 
         QMainWindow *fractalWindow = new QMainWindow(this);
         fractalWindow->setCentralWidget(fractalWidget);
@@ -500,6 +509,12 @@ void MainWindow::updateCpuStats()
     updateStatsRobin = (updateStatsRobin + 1) % 2;
 }
 
+void MainWindow::videoWindowResized(QWidget *sender)
+{
+    ui_video->lblViewportSize->setText(
+                QString("Viewport: %1 x %2").arg(sender->width()).arg(sender->height()));
+}
+
 void MainWindow::updateVideoDemoState(bool active)
 {
     ui_video->buttonVideodemo->setChecked(active);
@@ -508,6 +523,13 @@ void MainWindow::updateVideoDemoState(bool active)
     ui_video->cbFilterGray->setEnabled(!active);
     ui_video->cbFilterTreshold->setEnabled(!active);
     ui_video->lblVideoStats->setVisible(active);
+    ui_video->lblVideoSize->setVisible(active);
+    if (active)
+    {
+        QSize s = video.getVideoSize();
+        ui_video->lblVideoSize->setText(
+                    QString("Video: %1 x %2").arg(s.width()).arg(s.height()));
+    }
     updateFloorplan();
 }
 

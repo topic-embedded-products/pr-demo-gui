@@ -44,6 +44,7 @@ private slots:
     void showVideoStats(unsigned int frames,  unsigned int milliseconds);
     void showMandelbrotStats(unsigned int frames,  unsigned int milliseconds);
     void updateCpuStats();
+    void videoWindowResized(QWidget *sender);
 
     void buttonVideodemo_toggled(bool checked);
     void buttonMandelbrotDemo_toggled(bool checked);

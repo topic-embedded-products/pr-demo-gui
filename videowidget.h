@@ -15,12 +15,14 @@ public:
 protected:
     virtual void paintEvent(QPaintEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
+    void resizeEvent(QResizeEvent *);
 
 public slots:
     void updatePixmap(const QImage &image);
 
 signals:
     void clicked(QMouseEvent *event);
+    void resized(QWidget *sender);
 
 public:
     FrameRateCounter framerateCounter;
