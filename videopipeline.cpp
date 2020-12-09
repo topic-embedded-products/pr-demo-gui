@@ -29,6 +29,7 @@ VideoPipeline::VideoPipeline():
     to_logic(NULL),
     from_logic(NULL),
     yuv2rgb(NULL),
+    filterScaler(NULL),
     filterContrast(NULL),
     filterTreshold(NULL),
     filterGrayscale(NULL),
@@ -75,9 +76,8 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool
         if (width <= 1000 && height <= 600)
         {
             try {
-                /* Abuse pointer for different filter... */
-                yuv2rgb = dyplo->createConfig(BITSTREAM_FILTER_RGB32_SCALER);
-                int id = yuv2rgb->getNodeIndex();
+                filterScaler = dyplo->createConfig(BITSTREAM_FILTER_RGB32_SCALER);
+                int id = filterScaler->getNodeIndex();
                 dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
                 tailnode = id;
                 update_rgb_settings(settings.width / 2, settings.height / 2);
@@ -127,8 +127,8 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool
             filterGrayscale->enableNode();
         if (filterContr)
             filterContrast->enableNode();
-        if (yuv2rgb)
-            yuv2rgb->enableNode();
+        if (filterScaler)
+            filterScaler->enableNode();
         ioCamera->enableNode();
     }
     catch (const std::exception& ex)
@@ -340,6 +340,7 @@ void VideoPipeline::deactivate_impl()
     delete from_logic;
     from_logic = NULL;
     dispose_node(&yuv2rgb);
+    dispose_node(&filterScaler);
     dispose_node(&filterContrast);
     dispose_node(&filterTreshold);
     dispose_node(&filterGrayscale);
@@ -355,6 +356,8 @@ void VideoPipeline::enumDyploResources(DyploNodeResourceList &list)
 {
     if (yuv2rgb)
         list.push_back(DyploNodeResource(yuv2rgb->getNodeIndex(), BITSTREAM_YUVTORGB));
+    if (filterScaler)
+        list.push_back(DyploNodeResource(filterScaler->getNodeIndex(), "scaler"));
     if (filterContrast)
         list.push_back(DyploNodeResource(filterContrast->getNodeIndex(), BITSTREAM_FILTER_YUV_CONTRAST));
     if (filterGrayscale)
