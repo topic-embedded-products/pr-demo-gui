@@ -37,7 +37,7 @@ private slots:
     void frameAvailableDyplo(int socket);
 
 protected:
-    int openIOCamera(DyploContext *dyplo, bool filterContrast, bool filterGray, bool filterThd);
+    int openIOCamera(DyploContext *dyplo, int width, int height, bool filterContrast, bool filterGray, bool filterThd);
     int openCaptureDevice(int width, int height);
     void deactivate_impl();
     void allocYUVbuffer();
