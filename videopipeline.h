@@ -27,6 +27,8 @@ public:
 
     void enumDyploResources(DyploNodeResourceList& list);
 
+    QSize getVideoSize() const { return QSize(settings.width, settings.height); }
+
 signals:
     void renderedImage(const QImage &image);
     void setActive(bool active);

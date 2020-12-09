@@ -27,6 +27,11 @@ void VideoWidget::mousePressEvent(QMouseEvent *event)
     emit clicked(event);
 }
 
+void VideoWidget::resizeEvent(QResizeEvent *)
+{
+    emit resized(this);
+}
+
 void VideoWidget::updatePixmap(const QImage& image)
 {
     framerateCounter.frame();
