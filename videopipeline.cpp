@@ -44,7 +44,7 @@ VideoPipeline::~VideoPipeline()
     deactivate_impl();
 }
 
-int VideoPipeline::openIOCamera(DyploContext *dyplo, bool filterContr, bool filterGray, bool filterThd)
+int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool filterContr, bool filterGray, bool filterThd)
 {
     try
     {
@@ -57,17 +57,21 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, bool filterContr, bool filt
         ioCamera->disableNode();
         ioCamera->resetWriteFifos(0xf);
 
-        try {
-            /* Abuse pointer for different filter... */
-            yuv2rgb = dyplo->createConfig(BITSTREAM_FILTER_RGB32_SCALER);
-            int id = yuv2rgb->getNodeIndex();
-            dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
-            tailnode = id;
-            update_rgb_settings(settings.width / 2, settings.height / 2);
-        }
-        catch (const std::exception& ex)
+        /* Apply scaler if convenient for the target size, a few pixels border is acceptable to us */
+        if (width <= 1000 && height <= 600)
         {
-            qDebug() << "Scaler not available" << ex.what();
+            try {
+                /* Abuse pointer for different filter... */
+                yuv2rgb = dyplo->createConfig(BITSTREAM_FILTER_RGB32_SCALER);
+                int id = yuv2rgb->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+                tailnode = id;
+                update_rgb_settings(settings.width / 2, settings.height / 2);
+            }
+            catch (const std::exception& ex)
+            {
+                qDebug() << "Scaler not available" << ex.what();
+            }
         }
 
         if (filterContr) {
@@ -188,7 +192,7 @@ int VideoPipeline::activate(DyploContext *dyplo, int width, int height, bool har
     /* Make sure width is a multiple of 4 */
     width &= ~3;
 
-    r = openIOCamera(dyplo, filterContr, filterGray, filterThd);
+    r = openIOCamera(dyplo, width, height, filterContr, filterGray, filterThd);
     if (r == 0)
     {
         /* We're done */
