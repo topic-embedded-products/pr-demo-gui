@@ -16,6 +16,9 @@
 #include "ui_floorplanframe.h"
 #include "ui_topframe.h"
 
+/* Set to true to have the old all-in-one-window GUI */
+static const bool allow_all_in_one_window = false;
+
 static DyploContext dyploContext;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -180,7 +183,7 @@ void MainWindow::showIn(const QRect &rec)
     centralWidget()->setLayout(vla);
     centralWidget()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    if (rec.width() > 1600 && rec.height() > 900)
+    if (allow_all_in_one_window && rec.width() > 1600 && rec.height() > 900)
     {
         /* Enough space to fit it all in a single window */
         QHBoxLayout *hlb = new QHBoxLayout();
