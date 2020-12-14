@@ -603,7 +603,7 @@ void VideoPipeline::frameAvailableDyplo(int)
         return;
 
     unsigned int bytes = block->bytes_used;
-    if (bytes)
+    if (bytes >= rgb_size)
     {
         unsigned int lines = bytes / crop_width;
         if (lines > crop_height)
