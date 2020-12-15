@@ -168,6 +168,8 @@ int MandelbrotPipeline::activate(DyploContext *dyplo, int max_nodes)
                 dyplo::HardwareConfig *next_mux = dyplo->createConfig(BITSTREAM_MUX_NAME);
                 mux.push_back(next_mux);
                 mux_node_id = next_mux->getNodeIndex();
+                next_mux->resetWriteFifos(0xF); /* Resets internal state machine of the mux */
+                next_mux->resetReadFifos(0xF);
                 next_mux->enableNode();
             }
             catch (const std::exception& ex)
