@@ -59,6 +59,8 @@ static void startCameraStream()
     ::close(fd);
 }
 
+static const bool always_use_scaler = true;
+
 int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool filterContr, bool filterGray, bool filterThd)
 {
     try
@@ -71,22 +73,6 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool
         int tailnode = ioCamera->getNodeIndex();
         ioCamera->disableNode();
         ioCamera->resetWriteFifos(0xf);
-
-        /* Apply scaler if convenient for the target size, a few pixels border is acceptable to us */
-        if (width <= 1000 && height <= 600)
-        {
-            try {
-                filterScaler = dyplo->createConfig(BITSTREAM_FILTER_RGB32_SCALER);
-                int id = filterScaler->getNodeIndex();
-                dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
-                tailnode = id;
-                update_rgb_settings(settings.width / 2, settings.height / 2);
-            }
-            catch (const std::exception& ex)
-            {
-                qDebug() << "Scaler not available" << ex.what();
-            }
-        }
 
         if (filterContr) {
             filterContrast = dyplo->createConfig(BITSTREAM_FILTER_RGB32_CONTRAST);
@@ -106,6 +92,22 @@ int VideoPipeline::openIOCamera(DyploContext *dyplo, int width, int height, bool
             dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
             tailnode = id;
         }
+        /* Apply scaler if convenient for the target size, a few pixels border is acceptable to us */
+        if (always_use_scaler || (width <= 1000 && height <= 600))
+        {
+            try {
+                filterScaler = dyplo->createConfig(BITSTREAM_FILTER_RGB32_SCALER);
+                int id = filterScaler->getNodeIndex();
+                dyplo->GetHardwareControl().routeAddSingle(tailnode & 0xFF, tailnode >> 8, id, 0);
+                tailnode = id;
+                update_rgb_settings(settings.width / 2, settings.height / 2);
+            }
+            catch (const std::exception& ex)
+            {
+                qDebug() << "Scaler not available" << ex.what();
+            }
+        }
+
         from_logic = dyplo->createDMAFifo(O_RDONLY);
         from_logic->reconfigure(dyplo::HardwareDMAFifo::MODE_COHERENT, rgb_size, 3, true);
         from_logic->addRouteFrom(tailnode);
