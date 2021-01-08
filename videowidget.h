@@ -13,6 +13,7 @@ public:
     VideoWidget(QWidget *parent = 0);
 
 protected:
+    QSize previoussize;
     virtual void paintEvent(QPaintEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
     void resizeEvent(QResizeEvent *);

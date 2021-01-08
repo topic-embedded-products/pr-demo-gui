@@ -2,7 +2,8 @@
 #include "videowidget.h"
 
 VideoWidget::VideoWidget(QWidget *parent) :
-    QWidget(parent)
+    QWidget(parent),
+    previoussize(-1, -1)
 {
     setAttribute(Qt::WA_OpaquePaintEvent);
     //setAttribute(Qt::WA_PaintOnScreen);
@@ -18,8 +19,12 @@ void VideoWidget::paintEvent(QPaintEvent * /* event */)
 
     painter.drawPixmap(0, 0, pixmap);
     /* Paint the areas the pixmap did not cover in black */
-    painter.fillRect(pw, 0, w - pw, ph, Qt::black);
-    painter.fillRect(0, ph, w, h - ph, Qt::black);
+    if (previoussize.width() != pw || previoussize.height() != ph)
+    {
+        painter.fillRect(pw, 0, w - pw, ph, Qt::black);
+        painter.fillRect(0, ph, w, h - ph, Qt::black);
+        previoussize = QSize(pw, ph);
+    }
 }
 
 void VideoWidget::mousePressEvent(QMouseEvent *event)
@@ -29,6 +34,7 @@ void VideoWidget::mousePressEvent(QMouseEvent *event)
 
 void VideoWidget::resizeEvent(QResizeEvent *)
 {
+    previoussize = QSize(-1, -1);
     emit resized(this);
 }
 
