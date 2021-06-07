@@ -148,6 +148,13 @@ int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *se
         if (fmt.fmt.pix_mp.num_planes != 1) {
             qDebug() << "Unsupported num_planes:" << fmt.fmt.pix_mp.num_planes;
         }
+        /* The IMX274 has a 1280x540 non-square pixel format that we don't want to use */
+        if ((fmt.fmt.pix_mp.width == 1280) && (fmt.fmt.pix_mp.height == 540)) {
+            fmt.fmt.pix_mp.height = 720;
+            if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
+                return -errno;
+        }
+
         settings->width  = fmt.fmt.pix_mp.width;
         settings->height = fmt.fmt.pix_mp.height;
         settings->stride = fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
