@@ -95,17 +95,6 @@ static int set_framerate(int fd, enum v4l2_buf_type type, int fps)
     return xioctl(fd, VIDIOC_S_PARM, &parm);
 }
 
-static bool supports_frame_size(int fd)
-{
-    struct v4l2_frmsizeenum fse;
-    CLEAR(fse);
-    fse.index = 0;
-    fse.pixel_format = V4L2_PIX_FMT_YUYV;
-
-    int ret = xioctl(fd, VIDIOC_ENUM_FRAMESIZES, &fse);
-    return ret >= 0;
-}
-
 int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *settings)
 {
     struct v4l2_cropcap cropcap;
@@ -140,42 +129,17 @@ int VideoCapture::setup(int width, int height, int fps, VideoCaptureSettings *se
 
     CLEAR(fmt);
     fmt.type = type;
-    /*
-     * Workaround issue with Xilinx' capture device that does not
-     * really support changing the resolution. It fails to enumerate
-     * so we use that as a way to determine whether we can set the
-     * output.
-     */
-    if (supports_frame_size(fd)) {
-        if (multiplanar) {
+    if (multiplanar) {
             fmt.fmt.pix_mp.width       = width;
             fmt.fmt.pix_mp.height      = height;
             fmt.fmt.pix_mp.pixelformat = V4L2_PIX_FMT_YUYV;
             fmt.fmt.pix_mp.field       = V4L2_FIELD_INTERLACED;
             fmt.fmt.pix_mp.num_planes  = 1;
-        } else {
+    } else {
             fmt.fmt.pix.width       = width;
             fmt.fmt.pix.height      = height;
             fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
             fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
-        }
-    } else {
-        /* Retrieve format */
-        if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt)) {
-            qDebug() << "VIDIOC_G_FMT:" << errno;
-            return -errno;
-        }
-        if (multiplanar) {
-            fmt.fmt.pix_mp.pixelformat = V4L2_PIX_FMT_YUYV;
-            fmt.fmt.pix_mp.field       = V4L2_FIELD_INTERLACED;
-            fmt.fmt.pix_mp.num_planes  = 1;
-            /* Workaround for weird behavior of Xilinx capture device, which reports 1920/1 and similar nonsense */
-            if (fmt.fmt.pix_mp.width == 1920)
-                fmt.fmt.pix_mp.height = 1080;
-        } else {
-            fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-            fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
-        }
     }
     if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
         return -errno;
