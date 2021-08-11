@@ -49,7 +49,9 @@ static void startCameraStream()
 {
     /* Hack to start the camera stream manually... */
     static const char* one = "1";
-    int fd = ::open("/sys/devices/platform/amba/amba:topic_mediactl@1/stream_start", O_WRONLY);
+    int fd = ::open("/sys/devices/platform/axi/axi:topic_mediactl@1/stream_start", O_WRONLY);
+    if (fd == -1)
+        fd = ::open("/sys/devices/platform/amba/amba:topic_mediactl@1/stream_start", O_WRONLY);
     if (fd == -1) {
         qDebug() << "Failed to open stream_start file";
         return;
