@@ -14,6 +14,10 @@ Set PKG_CONFIG_PATH to find it
 Just open in Qt Creator and build.
   qtcreator pr-demo-gui.pro
 
+On recent Ubuntu versions, qtcreator doesn't install the Qt5 kit, to get it
+into your system use:
+  sudo apt install qt5-doc qt5-doc-html qtbase5-doc-html qtbase5-dev qt5-qmake
+After that, in "manage kits" add `/usr/lib/qt5/bin/qmake`.
 
 To cross-compile and debug directly on target, see:
   http://downloads.topic.nl/dev.html
