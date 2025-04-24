@@ -149,13 +149,13 @@ SupplyCurrentSensor::SupplyCurrentSensor()
                 path += entry->d_name;
                 path += "/";
                 filename_cpu = path + "curr1_input";
-                if (access(filename_cpu.c_str(), R_OK) != 0)
+                if (::access(filename_cpu.c_str(), R_OK) != 0)
                 {
                     filename_cpu.clear();
                     break;
                 }
                 filename_fpga = path + "curr2_input";
-                break;
+                return;
         }
     }
 }
