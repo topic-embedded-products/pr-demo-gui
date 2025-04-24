@@ -274,7 +274,7 @@ static void hideLabel(QLabel* label)
         return;
 
     label->setStyleSheet("background-color: rgba(0,0,0,0%);\n"
-                         "color: rgba(0,0,0);\n");
+                         "color: rgb(0,0,0);\n");
     label->setText("");
 }
 
