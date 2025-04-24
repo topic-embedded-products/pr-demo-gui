@@ -114,14 +114,14 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     } else {
         try {
-            tempSensor = new IIOTempSensor("in_temp0_ps_temp"); /* For Ultrascale */
+            tempSensor = new IIOTempSensor("in_temp7"); /* For Ultrascale */
         } catch (const std::exception&) {
             tempSensor = NULL;
             ui_toppanel->lblTemperature->setText("n.a.");
             ui_toppanel->lblTemperature->setEnabled(false);
         }
         try {
-            tempSensorPL = new IIOTempSensor("in_temp2_pl_temp");
+            tempSensorPL = new IIOTempSensor("in_temp20");
             ui_toppanel->lblCurrentFpga->setText("...");
         } catch (const std::exception&) {
             tempSensorPL = NULL;
@@ -129,7 +129,7 @@ MainWindow::MainWindow(QWidget *parent) :
             ui_toppanel->lblCurrentFpga->setEnabled(false);
         }
         try {
-            tempSensorRemote = new IIOTempSensor("in_temp1_remote_temp");
+            tempSensorRemote = new IIOTempSensor("in_temp8");
             ui_toppanel->lblHeadCurrentCpu->setText("Remote");
             ui_toppanel->lblCurrentCpu->setText("...");
         } catch (const std::exception&) {
