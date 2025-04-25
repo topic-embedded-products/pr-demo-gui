@@ -467,7 +467,7 @@ void MainWindow::updateCpuStats()
         {
             try {
                 int t = tempSensor->getTempMilliDegrees() / 1000;
-                ui_toppanel->lblTemperature->setText(QString("%1 \xB0" "C").arg(t));
+                ui_toppanel->lblTemperature->setText(QString("%1 °C").arg(t));
             } catch (const std::exception& ex) {
                 qDebug() << "Failed reading PS temperature:" << ex.what();
             }
@@ -489,7 +489,7 @@ void MainWindow::updateCpuStats()
             {
                 try {
                     int t = tempSensorPL->getTempMilliDegrees() / 1000;
-                    ui_toppanel->lblCurrentFpga->setText(QString("%1 \xB0" "C").arg(t));
+                    ui_toppanel->lblCurrentFpga->setText(QString("%1 °C").arg(t));
                 } catch (const std::exception& ex) {
                     qDebug() << "Failed reading PL temperature:" << ex.what();
                 }
@@ -498,7 +498,7 @@ void MainWindow::updateCpuStats()
             {
                 try {
                     int t = tempSensorRemote->getTempMilliDegrees() / 1000;
-                    ui_toppanel->lblCurrentCpu->setText(QString("%1 \xB0" "C").arg(t));
+                    ui_toppanel->lblCurrentCpu->setText(QString("%1 °C").arg(t));
                 } catch (const std::exception& ex) {
                     qDebug() << "Failed reading remote temperature:" << ex.what();
                 }
